@@ -378,10 +378,8 @@ function QrOrder() {
       (it.nameAm && it.nameAm.toLowerCase().includes(searchQuery.toLowerCase()))
     ) : true;
     
-    if (activeCategory === "All") return matchesSearch;
     if (activeCategory === "Favorites") return matchesSearch && favorites.includes(it.id);
-    
-    return matchesSearch && it.categoryId === activeCategory;
+    return matchesSearch;
   });
 
   const cartCount = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
@@ -656,10 +654,8 @@ function QrOrder() {
             // Filter items under this category
             const categoryFilteredItems = filteredItems.filter(it => it.categoryId === c.id);
             
-            // Only render category sections if they have matching search results,
-            // or if we are displaying "All" or specifically this category
-            const shouldRender = categoryFilteredItems.length > 0 && 
-              (activeCategory === "All" || activeCategory === "Favorites" || activeCategory === c.id);
+            // Only render category sections if they have matching search results
+            const shouldRender = categoryFilteredItems.length > 0;
 
             if (!shouldRender) return null;
 
