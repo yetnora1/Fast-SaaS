@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-brand-bg font-sans text-brand-foreground antialiased;
+  font-feature-settings: "cv05", "ss01";
+}
+
+/* Display face for headings (Playfair Display). */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+/* Tabular figures for data, prices, counters, timers (no layout shift). */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Minimum 48px touch targets for POS/tablet roles (spec requirement). */
+.touch-target {
+  @apply min-h-[48px] min-w-[48px];
+}
+
+/* ── Motion: entrance animations for cards, lists, modals ── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: fade-in-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade {
+  animation: fade-in 0.2s ease-out both;
+}
+
+/* Skeleton shimmer for loading states. */
+.skeleton {
+  @apply relative overflow-hidden rounded-md bg-brand-surface2;
+}
+.skeleton::after {
+  content: "";
+  @apply absolute inset-0 -translate-x-full;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.06),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-in,
+  .animate-fade,
+  .skeleton::after,
+  .animate-pulse-soft {
+    animation: none;
+  }
+}
+
+/* ── Accessible focus ring (keyboard users only) ── */
+:focus-visible {
+  @apply outline-none ring-2 ring-brand-accent/70 ring-offset-2 ring-offset-brand-bg;
+}
+
+/* ── Themed selection + scrollbar to match the dark palette ── */
+::selection {
+  @apply bg-brand-accent/30 text-white;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: theme("colors.brand.surface2") transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-brand-surface2;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-white/20;
+  background-clip: content-box;
+}

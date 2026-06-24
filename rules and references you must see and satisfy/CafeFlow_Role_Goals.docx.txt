@@ -1,0 +1,446 @@
+﻿CafeFlow SaaS
+Role Goals & System Requirements
+━━━━━━━━━━━━━━━━━━━━━━
+8 Roles  •  30,000 ETB / 6 months  •  7-Day Free Trial
+Built for Ethiopian Café Operations
+
+👑 SaaS Owner
+🏪 Cafe Owner
+📋 Cafe Manager
+🍽️ Waiter
+
+💳 Cashier
+☕ Barista
+🍳 Kitchen
+📦 Store Manager
+
+8 Roles covered
+Complete goal list per role
+Step-by-step flows
+Every action documented
+Success metrics
+KPIs that prove it works
+
+Role Overview
+This document defines the complete goals, success metrics, step-by-step flows, and technical requirements for each of the 8 roles in CafeFlow SaaS. When all role goals are simultaneously satisfied, the system is considered complete and production-ready.
+
+Role
+Primary Responsibility
+Key Goal
+👑 SaaS Owner
+Platform administration
+Subscription billing & tenant control
+🏪 Cafe Owner
+Business management
+Revenue visibility & menu control
+📋 Cafe Manager
+Daily operations
+Shift control & escalation authority
+🍽️ Waiter
+Customer service & order taking
+Fast order flow & delivery tracking
+💳 Cashier
+Payment processing
+Zero-error payments & ERCA receipts
+☕ Barista
+Drinks preparation
+Color-timed queue & ready alerts
+🍳 Kitchen
+Food preparation
+Course sequencing & allergy hard-blocks
+📦 Store Manager
+Inventory control
+Zero stockouts & supplier management
+
+👑  SaaS Owner
+Platform god-mode — owns everything
+
+▸  GOALS THAT MUST BE SATISFIED
+
+✓  Tenant control
+Create, suspend, terminate any café tenant instantly
+✓  Billing approval
+Review and approve or reject uploaded bank receipts
+✓  Revenue visibility
+See MRR, ARR and subscription status across all tenants
+✓  Platform config
+Set bank account, VAT rate and feature flags globally
+✓  Audit oversight
+Full log of every action across entire platform
+✓  Feature gates
+Toggle modules per tenant — KDS, loyalty, offline mode
+
+▸  SUCCESS METRICS
+
+30,000 ETB
+Per 6 months
+7 days
+Free trial
+3 days
+Grace period
+180 days
+Subscription term
+
+▸  STEP-BY-STEP SERVICE FLOW
+
+Step 1:  Tenant signs up → trial starts automatically for 7 days
+Step 2:  Trial ends → subscription gate modal appears on café dashboard
+Step 3:  Café owner uploads bank transfer receipt as image or PDF
+Step 4:  SaaS Owner reviews receipt in /saas-admin/billing/approvals
+Step 5:  Clicks Approve → café access instantly restored for 180 days
+Step 6:  System sends confirmation email to café owner automatically
+Step 7:  At T-7 days before expiry → warning banner reappears on café dashboard
+Step 8:  Reject flow: SaaS Owner enters reason → café owner re-uploads receipt
+
+▸  TECHNICAL REQUIREMENTS
+
+NextAuth MFA
+Full audit log
+Tenant isolation
+Feature flags per tenant
+
+
+🏪  Cafe Owner
+Full control of their café and subscription
+
+▸  GOALS THAT MUST BE SATISFIED
+
+✓  Subscription payment
+Upload receipt, track approval status, avoid lockout
+✓  Multi-branch view
+Aggregated revenue, orders and profit across all branches
+✓  Menu management
+Create and publish menu with EN + AM names, prices, VAT flags
+✓  Staff oversight
+Invite staff, assign roles and branches, view performance
+✓  Financial reports
+Daily sales, VAT report for ERCA, payroll summary export
+✓  Business insights
+Top items, payment breakdown, peak hour analysis dashboard
+
+▸  SUCCESS METRICS
+
+24,500 ETB
+Revenue today
+128
+Orders today
+50%
+Profit margin
+86
+Active customers
+
+▸  STEP-BY-STEP SERVICE FLOW
+
+Step 1:  Register → verify email → 7-day trial starts automatically
+Step 2:  Day 7: subscription gate appears — full-screen, non-dismissible
+Step 3:  Transfer 30,000 ETB to SaaS Owner bank account
+Step 4:  Upload bank receipt screenshot or PDF via dashboard
+Step 5:  Pending state: read-only dashboard until SaaS Owner approves
+Step 6:  Approved: full access restored for 180 days immediately
+Step 7:  Day 173: warning banner reappears — pay before lockout
+
+▸  TECHNICAL REQUIREMENTS
+
+Owner dashboard
+Menu CRUD
+Staff invite
+VAT reports
+Branch config
+
+
+📋  Cafe Manager
+Daily ops — shifts, escalations, monitoring
+
+▸  GOALS THAT MUST BE SATISFIED
+
+✓  Shift open/close
+Record opening float, close with full cash reconciliation
+✓  Live order monitor
+See all orders in real-time, resolve delays and escalations
+✓  Void and refund auth
+Approve voids and refunds with PIN verification
+✓  Staff scheduling
+Build weekly shift calendar and publish to staff
+✓  Table management
+Visual floor plan — merge, reassign and track table status
+✓  Inventory alerts
+Act on low stock alerts and send restock requests to store
+
+▸  SUCCESS METRICS
+
+< 20 min
+Order target time
+50 ETB
+Max cash variance
+15 min
+Late clock-in flag
+3 lanes
+KDS order lanes
+
+▸  STEP-BY-STEP SERVICE FLOW
+
+Step 1:  Start of shift: enter opening cash float → confirm staff roster
+Step 2:  Monitor live order board via Firebase real-time during service
+Step 3:  Escalations arrive: void request → enter PIN → approve or reject
+Step 4:  Refund requests: review reason → approve → cashier executes refund
+Step 5:  Table merge or split as needed during busy service periods
+Step 6:  End of shift: count drawer → enter actual cash → close shift
+Step 7:  PDF shift report auto-generated and emailed to Cafe Owner
+
+▸  TECHNICAL REQUIREMENTS
+
+Shift management
+Live KDS
+Void/refund PIN auth
+Schedule builder
+
+
+🍽️  Waiter
+Customer-facing — orders, delivery, service
+
+▸  GOALS THAT MUST BE SATISFIED
+
+✓  Table assignment
+See my tables on visual floor map, manage seating
+✓  Order taking
+Build orders with modifiers, notes and special requests
+✓  KDS coordination
+Receive ready alerts from barista and kitchen in real-time
+✓  Item delivery
+Mark each item delivered as I bring it to the table
+✓  QR order confirm
+Review and confirm customer self-orders from QR scan
+✓  Bill request
+Send bill request to cashier when customer is ready to pay
+
+▸  SUCCESS METRICS
+
+< 2 min
+Order send time
+Real-time
+Ready alerts
+PWA
+Offline capable
+48px+
+Min touch target
+
+▸  STEP-BY-STEP SERVICE FLOW
+
+Step 1:  Customer seated → tap table on floor map → New Order
+Step 2:  Browse menu by category → tap item → choose modifiers
+Step 3:  Add special notes per item — no ice, allergy, temperature
+Step 4:  Review cart → tap Send → order splits to Barista and Kitchen KDS
+Step 5:  Receive push notification when each item is ready
+Step 6:  Deliver item to table → tap Delivered on my screen
+Step 7:  Customer requests bill → tap Request Bill → goes to Cashier queue
+Step 8:  Table freed after payment → resets to available (green) on floor map
+
+▸  TECHNICAL REQUIREMENTS
+
+PWA offline
+Touch-optimized UI
+QR self-orders
+Firebase push
+Floor map
+
+
+💳  Cashier
+Payment processing and shift reconciliation
+
+▸  GOALS THAT MUST BE SATISFIED
+
+✓  Bill processing
+Open bill from queue, show itemized total with VAT 15%
+✓  Multi-method payment
+Handle cash, Telebirr, CBE Birr and split payments
+✓  Change calculation
+Auto-calculate change due for cash transactions
+✓  Receipt generation
+Ethiopian ERCA-compliant receipt — print and digital copy
+✓  Refund execution
+Execute manager-approved refunds and log them with reason
+✓  Shift reconciliation
+Count drawer, enter actual cash, flag discrepancies > 50 ETB
+
+▸  SUCCESS METRICS
+
+15%
+Ethiopian VAT
+50 ETB
+Variance alert
+< 3s
+Payment confirm
+ESC/POS
+Thermal print
+
+▸  STEP-BY-STEP SERVICE FLOW
+
+Step 1:  Bill request arrives from Waiter in POS queue
+Step 2:  Open bill: see itemized list, subtotal, VAT 15%, total in ETB
+Step 3:  Cash: enter amount tendered → system shows change due
+Step 4:  Telebirr: enter customer phone → generate payment request → wait for webhook
+Step 5:  CBE Birr: generate reference → customer pays → webhook confirms automatically
+Step 6:  Payment confirmed → receipt generated — print and email/SMS option
+Step 7:  Table status resets to Available — Waiter notified immediately
+Step 8:  Shift close: actual cash counted → variance calculated → discrepancy report
+
+▸  TECHNICAL REQUIREMENTS
+
+Telebirr API
+CBE Birr API
+ESC/POS thermal print
+VAT receipt
+Cash reconcile
+
+
+☕  Barista
+Drinks KDS — queue, preparation and ready alerts
+
+▸  GOALS THAT MUST BE SATISFIED
+
+✓  Drinks queue
+See all drink orders in real-time on KDS wall display
+✓  Prep tracking
+Move orders through Start → In Progress → Ready stages
+✓  Waiter notification
+Tap Ready → waiter gets instant push notification on device
+✓  Ingredient alerts
+Flag low stock on any ingredient immediately to Store Manager
+✓  Item unavailable
+Mark item unavailable → menu updates for new orders instantly
+✓  Waste logging
+Record wasted ingredients with quantity and reason
+
+▸  SUCCESS METRICS
+
+< 5 min
+Target green zone
+5–10 min
+Yellow warning
+> 10 min
+Red flag
+Audio
+New order alert
+
+▸  STEP-BY-STEP SERVICE FLOW
+
+Step 1:  Drink order fires to KDS → audio alert plays on display
+Step 2:  Review items and special notes — sugar level, temperature, add-ons
+Step 3:  Tap Start Preparing → card moves to In Progress lane on KDS
+Step 4:  Timer starts — color shifts green → yellow → red by elapsed time
+Step 5:  Tap Ready on each drink as it is completed
+Step 6:  All drinks ready → tap Order Ready → Waiter notified instantly
+Step 7:  Completed card disappears from board after 2 minutes automatically
+
+▸  TECHNICAL REQUIREMENTS
+
+Firebase real-time KDS
+Color timers
+Audio alerts
+Low stock flag
+Wall display
+
+
+🍳  Kitchen
+Food KDS — cooking queue and timing synchronization
+
+▸  GOALS THAT MUST BE SATISFIED
+
+✓  Food queue
+Receive food orders instantly on kitchen wall display
+✓  Course ordering
+Manage starter → main → dessert sequence per table
+✓  Allergy alerts
+Hard red banner for every allergy note — must acknowledge
+✓  Bar sync
+Hold food ready if drinks not yet done — coordinate delivery
+✓  Prep time tracking
+Actual vs target time per dish for menu engineering reports
+✓  Waste logging
+Log food waste with reason and quantity at end of service
+
+▸  SUCCESS METRICS
+
+Accept
+First tap action
+4 steps
+Accept→Start→Plate→Ready
+Sync
+Bar coordination
+Red banner
+Allergy — no dismiss
+
+▸  STEP-BY-STEP SERVICE FLOW
+
+Step 1:  Food order fires to Kitchen KDS on Waiter confirmation
+Step 2:  Chef taps Accept → order acknowledged on display
+Step 3:  Start cooking → tap Start on each menu item
+Step 4:  Complex dish: tap Plating when final prep stage begins
+Step 5:  Tap Ready → system checks if drinks for same table are also ready
+Step 6:  If drinks not ready: show Hold — Waiting for Bar state
+Step 7:  Both ready → Waiter notified: full order ready for the table
+Step 8:  End of service: log any wasted items with quantity and reason
+
+▸  TECHNICAL REQUIREMENTS
+
+Allergy hard-block
+Course sequencing
+Bar sync
+Waste log
+Wall display
+
+
+📦  Store Manager
+Inventory — stock levels, suppliers and procurement
+
+▸  GOALS THAT MUST BE SATISFIED
+
+✓  Stock levels
+See all ingredients with current qty, min threshold and unit
+✓  Stockout forecast
+Estimated time until each critical item runs out at current rate
+✓  Receive deliveries
+Log received stock, update quantities, record invoice cost
+✓  Purchase orders
+Create POs, send to suppliers, mark as received on arrival
+✓  Supplier directory
+Manage contacts, pricing history and delivery performance
+✓  Stock count audit
+Physical count vs system levels — adjust variances with reasons
+
+▸  SUCCESS METRICS
+
+Real-time
+Consumption tracking
+Auto
+Stockout forecast
+PO flow
+Purchase orders
+Audit
+Physical stock count
+
+▸  STEP-BY-STEP SERVICE FLOW
+
+Step 1:  Monitor dashboard: see all critical and low-stock items
+Step 2:  Alert received from Barista or Kitchen → create restock request
+Step 3:  Create Purchase Order → select supplier → add line items with cost
+Step 4:  PO approved by Manager or Owner if above spend threshold
+Step 5:  Delivery arrives: open Receive Delivery → enter items and quantities
+Step 6:  System updates stock levels → critical alert automatically resolved
+Step 7:  Barista and Kitchen notified that ingredient is back in stock
+Step 8:  Monthly: run stock count audit → adjust variances → save report
+
+▸  TECHNICAL REQUIREMENTS
+
+Stock forecast
+PO management
+Supplier CRM
+Physical audit
+Auto-alerts
+
+
+
+CafeFlow SaaS — Role Goals Document
+When all 8 role goals are satisfied simultaneously — the system is complete.
+Confidential — ZAD Cafe / Abrham Minbale — 2025
+

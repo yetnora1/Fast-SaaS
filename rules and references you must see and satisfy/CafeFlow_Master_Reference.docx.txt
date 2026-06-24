@@ -1,0 +1,1305 @@
+﻿CafeFlow SaaS
+Master Reference Document
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Role Goals  •  Flows  •  Checklists  •  DB Schema  •  API Routes
+8 Roles  •  4 Build Phases  •  30,000 ETB / 6mo  •  Production-Ready
+
+👑 SaaS
+🏪 Owner
+📋 Manager
+🍽️ Waiter
+💳 Cashier
+☕ Barista
+🍳 Kitchen
+📦 Store
+
+P1 Foundation
+P2 Order Flow
+P3 Payments
+P4 Launch
+
+Tech Stack & Infrastructure
+
+Layer
+Technology
+Frontend
+Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn/ui, Recharts
+Backend API
+Next.js API Routes + tRPC, Prisma ORM, Zod validation
+Database
+PostgreSQL 15 with PLpgSQL stored procedures (process_order_payment, get_dashboard_kpis)
+Realtime
+Firebase Firestore — live orders, KDS updates, push notifications (FCM)
+Auth
+NextAuth.js v5 — JWT + role + tenant_id in session, PIN for POS tablets
+Payments
+Telebirr API + CBE Birr API + Chapa SDK — all with webhook receivers
+File Storage
+Firebase Storage — receipts, avatars, shift reports (private bucket)
+Email
+Resend — transactional emails (invite, approval, expiry warning)
+Offline
+Service Worker + IndexedDB via Dexie.js — local engine for unstable WiFi
+Deployment
+Vercel (frontend + API) + Railway (PostgreSQL) + Firebase (Firestore/Storage)
+Monitoring
+Sentry (errors) + Vercel Analytics (Core Web Vitals) + UptimeRobot
+CI/CD
+GitHub Actions → lint → type-check → Jest → Playwright → deploy to Vercel
+
+BUILD PHASE OVERVIEW
+
+Phase
+What gets built
+P1 — Foundation (Wk 1–3)
+DB schema, auth, tenant isolation, SaaS Owner panel, subscription gate, menu CRUD, staff invite
+P2 — Order Flow (Wk 4–6)
+Firebase KDS, waiter app, order builder, barista/kitchen boards, cashier POS, shift open/close
+P3 — Payments (Wk 7–9)
+Telebirr + CBE Birr + webhooks, ERCA receipts, ESC/POS, full inventory, QR ordering, stock count
+P4 — Polish (Wk 10–16)
+PWA offline, Amharic toggle, Telegram bot, analytics reports, load testing, security audit, launch
+
+
+Complete Order Lifecycle
+This is the spine of the system. Every role connects through this flow. Build this in P2 and everything else plugs into it.
+
+DINE-IN ORDER — FULL ROLE SEQUENCE
+
+Step
+What happens
+1. Waiter seats customer
+Taps table on floor map → table turns orange (occupied)
+2. Waiter builds order
+Browses menu, selects items, chooses modifiers, adds notes
+3. Waiter sends order
+Taps Send → server splits: drinks → barista_kds, food → kitchen_kds
+4. Barista receives
+Drink cards appear on KDS → audio alert → tap Start Preparing
+5. Kitchen receives
+Food cards appear on KDS → tap Accept → Start cooking
+6. Barista completes
+Taps Ready on each drink → Order Ready → FCM push to Waiter
+7. Kitchen completes
+Taps Ready → checks bar sync → if both ready → FCM to Waiter
+8. Waiter delivers
+Receives notification → delivers items → taps Delivered per item
+9. Bill requested
+Customer ready → Waiter taps Request Bill → appears in Cashier queue
+10. Cashier processes
+Opens bill → selects payment method → confirms payment
+11. Receipt generated
+ERCA-compliant receipt printed/sent → table freed → Waiter notified
+12. System updates
+Inventory decremented, order logged, shift totals updated, KPIs refresh
+
+ORDER STATE MACHINE
+
+State
+Meaning
+DRAFT
+Waiter is building the order — not yet sent
+SUBMITTED
+Sent to system — being routed to KDS
+IN_PREPARATION
+Barista/Kitchen actively working on items
+PARTIALLY_READY
+Some items done, others still in progress
+READY
+All items prepared, waiting for delivery
+DELIVERED
+All items confirmed delivered by Waiter
+BILL_REQUESTED
+Bill request sent to Cashier queue
+PAYMENT_PENDING
+Cashier opened bill, awaiting payment confirmation
+COMPLETED
+Paid, receipt issued, table freed — final state
+VOIDED
+Manager cancelled pre-payment (with PIN + reason)
+REFUNDED
+Refund processed post-payment by Cashier
+
+SUBSCRIPTION GATE STATE MACHINE
+
+State
+Condition and Access Level
+TRIAL
+0–7 days after signup — full access, countdown banner shown
+PENDING
+Receipt uploaded, awaiting SaaS Owner approval — read-only access
+ACTIVE
+Approved — full access for 180 days
+WARNING
+T-7 days before expiry — banner + modal on next login, full access
+GRACE
+Expired — 3-day grace period, degraded view-only access
+EXPIRED
+Grace over — full lockout, gate modal on every route
+SUSPENDED
+Manually suspended by SaaS Owner — immediate lockout, no modal
+
+
+Database Schema
+All tables require tenant_id (except platform_config) for multi-tenant isolation enforced at both Prisma query layer and PostgreSQL RLS (Row Level Security).
+
+Table
+Key Columns
+tenants
+id, name, status, trial_end, sub_start, sub_end, created_at
+users
+id, tenant_id, name, email, role, branch_id, pin_hash, active
+branches
+id, tenant_id, name, address, manager_id, settings_json
+menu_categories
+id, tenant_id, name, name_am, sort_order, active
+menu_items
+id, category_id, name, name_am, price, cost, vat, available, course
+modifiers
+id, item_id, group_name, option, extra_price
+tables
+id, branch_id, number, capacity, status, x_pos, y_pos
+orders
+id, tenant_id, branch_id, table_id, waiter_id, status, type, created_at
+order_items
+id, order_id, menu_item_id, qty, modifiers_json, notes, status, course
+payments
+id, order_id, method, amount, reference, cashier_id, verified_at
+subscriptions
+id, tenant_id, amount, period_start, period_end, receipt_url, status, approved_by
+shifts
+id, branch_id, opened_by, open_time, close_time, opening_float, actual_cash
+staff_schedules
+id, user_id, branch_id, date, shift_start, shift_end, status
+staff_attendance
+id, user_id, shift_id, clock_in, clock_out, late_flag
+inventory_items
+id, tenant_id, branch_id, name, unit, quantity, min_threshold, cost_per_unit
+stock_movements
+id, item_id, type, quantity, reason, user_id, created_at
+purchase_orders
+id, tenant_id, supplier_id, status, total, approved_by, created_at
+po_items
+id, po_id, inventory_item_id, quantity, unit_cost
+suppliers
+id, tenant_id, name, contact, phone, email, payment_terms
+waste_log
+id, tenant_id, item_id, quantity, reason, user_id, created_at
+notifications
+id, user_id, type, title, body, read, created_at
+audit_logs
+id, tenant_id, user_id, action, entity, entity_id, meta_json, ip
+platform_config
+key, value, updated_by, updated_at
+
+
+Role Goals, Flows & Implementation Checklists
+Each section covers: goals that must be satisfied, success KPIs, step-by-step service flow, implementation checklist (goal → DB → API → UI → phase), and engineering notes.
+
+👑  SaaS Owner
+Platform god-mode — billing approvals, tenant control, global config
+
+GOALS THAT MUST BE SATISFIED
+
+✓  Tenant control
+Create, suspend and terminate any café tenant instantly
+✓  Billing approval
+Review and approve or reject uploaded bank receipts
+✓  Revenue visibility
+See MRR, ARR and subscription status across all tenants
+✓  Platform config
+Set bank account, VAT rate and feature flags globally
+✓  Audit oversight
+Full log of every action across the entire platform
+✓  Feature gates
+Toggle modules per tenant — KDS, loyalty, offline mode
+
+SUCCESS METRICS
+
+30,000 ETB
+Per 6 months
+7 days
+Free trial
+3 days
+Grace period
+180 days
+Subscription term
+
+STEP-BY-STEP SERVICE FLOW
+
+1.  Tenant signs up → trial starts automatically for 7 days
+2.  Trial ends → subscription gate modal appears on café dashboard
+3.  Café owner uploads bank transfer receipt as image or PDF
+4.  SaaS Owner reviews receipt in /saas-admin/billing/approvals
+5.  Clicks Approve → café access restored for 180 days immediately
+6.  System sends confirmation email to café owner automatically
+7.  T-7 days before expiry → warning banner reappears on café
+8.  Reject flow: SaaS Owner enters reason → café owner re-uploads
+
+IMPLEMENTATION CHECKLIST — GOAL → DB → API → UI → PHASE
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph
+Tenant create
+tenants, users
+POST /saas/tenants
+<TenantCreateForm />
+P1
+Tenant list/search
+tenants
+GET /saas/tenants
+<TenantTable />
+P1
+Tenant detail
+tenants,users,branches
+GET /saas/tenants/:id
+<TenantDetail />
+P1
+Suspend tenant
+tenants
+PATCH /saas/tenants/:id/suspend
+<SuspendModal />
+P1
+Terminate tenant
+tenants
+PATCH /saas/tenants/:id/term
+<TerminateModal />
+P4
+Extend trial
+tenants
+PATCH /saas/tenants/:id/trial
+<TrialExtendModal />
+P2
+View pending receipts
+subscriptions
+GET /saas/billing/approvals
+<ApprovalQueue />
+P1
+Approve receipt
+subscriptions
+POST /saas/billing/approve/:id
+<ApprovalCard />
+P1
+Reject receipt
+subscriptions
+POST /saas/billing/reject/:id
+<RejectModal />
+P1
+MRR / ARR metrics
+subscriptions,tenants
+GET /saas/metrics
+<RevenueKPICards />
+P3
+Set bank account
+platform_config
+PUT /saas/config
+<BankConfigForm />
+P1
+Set feature flags
+tenant_features
+PUT /saas/tenants/:id/features
+<FeatureFlagToggles />
+P3
+Audit log viewer
+audit_logs
+GET /saas/audit-log
+<AuditLogTable />
+P4
+Platform health
+system_metrics
+GET /saas/health
+<HealthDashboard />
+P4
+
+ENGINEERING NOTES
+
+Build SaaS Owner auth FIRST — isolated /saas-admin routes, separate from café login
+Subscription approval is P1 — without it no café can go live after trial ends
+Bank account config must be set before any café owner sees the subscription modal
+All SaaS Owner actions must write to audit_logs: ip + action + meta_json
+
+TECHNICAL STACK BADGES
+
+NextAuth MFA
+Full audit log
+Tenant isolation
+Feature flags per tenant
+
+
+🏪  Cafe Owner
+Business management — dashboard, menu, staff, reports, subscription
+
+GOALS THAT MUST BE SATISFIED
+
+✓  Subscription payment
+Upload receipt, track approval status, avoid lockout
+✓  Multi-branch view
+Aggregated revenue, orders and profit across all branches
+✓  Menu management
+Create and publish menu with EN + AM names, prices, VAT flags
+✓  Staff oversight
+Invite staff, assign roles and branches, view performance
+✓  Financial reports
+Daily sales, VAT report for ERCA, payroll summary export
+✓  Business insights
+Top items, payment breakdown, peak hour analysis
+
+SUCCESS METRICS
+
+24,500 ETB
+Revenue today
+128
+Orders today
+50%
+Profit margin
+86
+Active customers
+
+STEP-BY-STEP SERVICE FLOW
+
+1.  Register → verify email → 7-day trial starts automatically
+2.  Day 7: subscription gate appears — full-screen, non-dismissible
+3.  Transfer 30,000 ETB to SaaS Owner bank account
+4.  Upload bank receipt screenshot or PDF via dashboard
+5.  Pending state: read-only until SaaS Owner approves
+6.  Approved: full access for 180 days restored immediately
+7.  Day 173: warning banner reappears — pay before lockout
+
+IMPLEMENTATION CHECKLIST — GOAL → DB → API → UI → PHASE
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph
+Register + email verify
+tenants,users
+POST /auth/register
+<RegisterForm />
+P1
+Trial countdown banner
+tenants
+GET /owner/subscription/status
+<TrialCountdownBanner />
+P1
+Subscription gate modal
+subscriptions
+GET /owner/subscription/status
+<SubscriptionModal />
+P1
+Receipt upload
+subscriptions
+POST /owner/subscription/upload
+<ReceiptUploadZone />
+P1
+Pending approval state
+subscriptions
+GET /owner/subscription/status
+<PendingApprovalState />
+P1
+Aggregated KPI dashboard
+orders,payments
+GET /owner/dashboard
+<KPIDashboard />
+P2
+Sales line chart
+orders,payments
+GET /owner/reports/sales
+<SalesLineChart />
+P2
+Multi-branch compare
+branches,orders
+GET /owner/branches/compare
+<BranchCompareBar />
+P3
+Top selling items
+order_items,menu_items
+GET /owner/reports/top-items
+<TopItemsList />
+P2
+Payment breakdown
+payments
+GET /owner/reports/payments
+<PaymentPieChart />
+P3
+Menu category CRUD
+menu_categories
+CRUD /owner/menu/categories
+<CategoryManager />
+P1
+Menu item CRUD + VAT
+menu_items,modifiers
+CRUD /owner/menu/items
+<MenuItemForm />
+P1
+EN + AM bilingual names
+menu_items
+PUT /owner/menu/items/:id
+<BilingualNameInput />
+P2
+Publish menu draft
+menu_items
+POST /owner/menu/publish
+<PublishMenuBtn />
+P2
+Staff invite by email
+users,invitations
+POST /owner/staff/invite
+<StaffInviteForm />
+P1
+Assign staff roles
+users
+PATCH /owner/staff/:id/role
+<RoleSelector />
+P1
+Branch CRUD
+branches
+CRUD /owner/branches
+<BranchConfigForm />
+P2
+VAT report (ERCA)
+payments,orders
+GET /owner/reports/vat
+<VATReportExport />
+P3
+Payroll summary export
+shifts,staff_schedules
+GET /owner/reports/staff
+<PayrollReport />
+P4
+Daily briefing card
+orders,inventory_items
+GET /owner/dashboard/briefing
+<DailyBriefingCard />
+P4
+
+ENGINEERING NOTES
+
+Subscription gate must block ALL routes server-side — not just hide UI elements
+Receipt upload: validate jpg/png/pdf, max 5MB, store in Firebase Storage private bucket
+Menu must have EN name always; AM name optional, shown when Amharic toggle is active
+VAT report must match ERCA format exactly — validate with an accountant before shipping
+
+TECHNICAL STACK BADGES
+
+Owner dashboard
+Menu CRUD
+Staff invite
+VAT reports
+Branch config
+
+
+📋  Cafe Manager
+Daily operations — shifts, live orders, escalations, scheduling
+
+GOALS THAT MUST BE SATISFIED
+
+✓  Shift open/close
+Record opening float, close with full cash reconciliation
+✓  Live order monitor
+See all orders in real-time, resolve delays and issues
+✓  Void & refund auth
+Approve voids and refunds with PIN verification
+✓  Staff scheduling
+Build weekly shift calendar and publish to staff
+✓  Table management
+Visual floor plan — merge, reassign, track table status
+✓  Inventory alerts
+Act on low stock alerts, send restock requests to store
+
+SUCCESS METRICS
+
+< 20 min
+Order target time
+50 ETB
+Max cash variance
+15 min
+Late clock-in flag
+3 lanes
+KDS order lanes
+
+STEP-BY-STEP SERVICE FLOW
+
+1.  Start of shift: enter opening cash float → confirm staff roster
+2.  Monitor live Firebase order board throughout service
+3.  Escalation: void request → enter PIN → approve or reject
+4.  Refund requests: review reason → approve → cashier executes
+5.  Table merge/split as needed during busy periods
+6.  End of shift: count drawer → enter actual cash → close
+7.  PDF shift report auto-generated and emailed to Cafe Owner
+
+IMPLEMENTATION CHECKLIST — GOAL → DB → API → UI → PHASE
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph
+Open shift + float
+shifts
+POST /manager/shifts/open
+<ShiftOpenForm />
+P2
+Close shift + reconcile
+shifts,payments
+POST /manager/shifts/close
+<ShiftCloseWizard />
+P2
+Shift PDF report
+shifts,orders
+GET /manager/shifts/:id/report
+<ShiftReportPDF />
+P3
+Live order board
+orders,order_items
+GET /manager/orders/live
+<LiveOrderBoard />
+P2
+Void order (PIN)
+orders,audit_logs
+PATCH /manager/orders/:id/void
+<VoidOrderModal />
+P2
+Approve refund
+payments,refunds
+POST /manager/orders/:id/refund
+<RefundApprovalModal />
+P2
+Table status map
+tables
+GET /manager/tables
+<TableStatusMap />
+P2
+Table merge
+tables,orders
+POST /manager/tables/merge
+<TableMergeModal />
+P3
+Weekly schedule builder
+staff_schedules
+CRUD /manager/schedule
+<ScheduleCalendar />
+P3
+Publish schedule
+staff_schedules
+POST /manager/schedule/publish
+<PublishScheduleBtn />
+P3
+Attendance tracking
+staff_attendance
+POST /manager/attendance/clockin
+<AttendanceTracker />
+P3
+Low stock alert list
+inventory_items
+GET /manager/inventory/alerts
+<LowStockPanel />
+P2
+Restock request
+restock_requests
+POST /manager/inventory/restock
+<RestockRequestForm />
+P2
+Staff on-duty list
+staff_attendance,users
+GET /manager/staff/oncall
+<StaffOnDutyList />
+P2
+
+ENGINEERING NOTES
+
+Void requires Manager 4-digit PIN — store bcrypt-hashed in users.pin_hash
+Shift open/close are the accounting boundary — lock all orders after shift close
+Schedule publish triggers Firebase FCM push notification to affected staff
+Cash variance > 50 ETB must auto-notify Cafe Owner via email + in-app notification
+
+TECHNICAL STACK BADGES
+
+Shift management
+Live Firebase KDS
+Void/refund PIN
+Schedule builder
+
+
+🍽️  Waiter
+Customer-facing — orders, delivery, QR confirmation, PWA offline
+
+GOALS THAT MUST BE SATISFIED
+
+✓  Table assignment
+See my tables on visual floor map, manage seating
+✓  Order taking
+Build orders with modifiers, notes and special requests
+✓  KDS coordination
+Receive ready alerts from barista and kitchen instantly
+✓  Item delivery
+Mark each item delivered as I bring it to the table
+✓  QR order confirm
+Review and confirm customer self-orders from QR scan
+✓  Bill request
+Send bill request to cashier when customer is ready
+
+SUCCESS METRICS
+
+< 2 min
+Order send time
+Real-time
+Ready alerts
+PWA
+Offline capable
+48px+
+Min touch target
+
+STEP-BY-STEP SERVICE FLOW
+
+1.  Customer seated → tap table on floor map → New Order
+2.  Browse menu by category → tap item → choose modifiers
+3.  Add notes per item — no ice, allergy, temperature
+4.  Review cart → tap Send → order splits to Barista + Kitchen
+5.  Receive push notification when each item is ready
+6.  Deliver item → tap Delivered on my screen
+7.  Customer asks for bill → tap Request Bill → Cashier queue
+8.  Table resets to available after payment confirmed
+
+IMPLEMENTATION CHECKLIST — GOAL → DB → API → UI → PHASE
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph
+PIN login (tablet)
+users
+POST /auth/login/pin
+<PINLoginScreen />
+P1
+View my tables (map)
+tables
+GET /waiter/tables
+<FloorMap />
+P2
+Start new order
+orders
+POST /waiter/orders
+<NewOrderBtn />
+P2
+Browse menu
+menu_categories,menu_items
+GET /waiter/menu
+<MenuBrowser />
+P2
+Select modifiers
+modifiers
+GET /waiter/menu/items/:id
+<ModifierBottomSheet />
+P2
+Add item notes
+order_items
+POST /waiter/orders/:id/items
+<ItemNoteInput />
+P2
+Send order to KDS
+orders,order_items
+POST /waiter/orders
+<SendOrderBtn />
+P2
+Add items to open order
+order_items
+POST /waiter/orders/:id/items
+<AddToOrderBtn />
+P2
+Mark item delivered
+order_items
+PATCH /waiter/.../deliver
+<DeliverItemBtn />
+P2
+Request bill
+orders
+POST /waiter/orders/:id/bill
+<RequestBillBtn />
+P2
+QR orders queue
+orders
+GET /waiter/qr-orders
+<QROrderQueue />
+P3
+Confirm QR order
+orders
+POST /waiter/qr-orders/:id/confirm
+<ConfirmQROrderBtn />
+P3
+Order ready notification
+notifications
+Firebase FCM listener
+<NotificationBell />
+P2
+Offline order (PWA)
+IndexedDB (Dexie.js)
+Service Worker sync
+<OfflineBadge />
+P4
+
+ENGINEERING NOTES
+
+PWA Service Worker must be set up in P1 — install without offline orders first, add full sync in P4
+Floor map colors: green=available, orange=occupied, red=needs attention
+Order split is server-side: items category=drinks → barista_kds, else → kitchen_kds
+Minimum 48px touch targets — critical for tablet use in a noisy, busy café environment
+
+TECHNICAL STACK BADGES
+
+PWA offline
+Touch-optimized UI
+QR self-orders
+Firebase push
+Floor map
+
+
+💳  Cashier
+Payments — cash, Telebirr, CBE Birr, ERCA receipts, shift reconciliation
+
+GOALS THAT MUST BE SATISFIED
+
+✓  Bill processing
+Open bill from queue, show itemized total with VAT 15%
+✓  Multi-method payment
+Handle cash, Telebirr, CBE Birr and split payments
+✓  Change calculation
+Auto-calculate change due for all cash transactions
+✓  Receipt generation
+Ethiopian ERCA-compliant receipt — print and digital
+✓  Refund execution
+Execute manager-approved refunds and log with reason
+✓  Shift reconciliation
+Count drawer, enter actual cash, flag variance > 50 ETB
+
+SUCCESS METRICS
+
+15%
+Ethiopian VAT
+50 ETB
+Variance alert
+< 3s
+Payment confirm
+ESC/POS
+Thermal print
+
+STEP-BY-STEP SERVICE FLOW
+
+1.  Bill request arrives from Waiter in POS queue
+2.  Open bill: items, subtotal, VAT 15%, total in ETB
+3.  Cash: enter amount tendered → auto-calculate change due
+4.  Telebirr: enter phone → request → wait for webhook confirm
+5.  CBE Birr: generate reference → customer pays → webhook
+6.  Payment confirmed → receipt generated (print + digital)
+7.  Table resets to Available — Waiter notified instantly
+8.  Shift close: count cash → enter actual → variance report
+
+IMPLEMENTATION CHECKLIST — GOAL → DB → API → UI → PHASE
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph
+Bill queue view
+orders
+GET /cashier/bill-queue
+<BillQueue />
+P2
+Open bill detail
+orders,order_items
+GET /cashier/orders/:id/bill
+<BillDetail />
+P2
+VAT calculation display
+orders,payments
+computed server-side
+<VATBreakdown />
+P2
+Cash payment + change
+payments
+POST /cashier/payments
+<CashTenderInput />
+P2
+Telebirr init
+payments
+POST /cashier/payments/tel/init
+<TelebirrFlow />
+P3
+Telebirr webhook
+payments
+POST /api/webhooks/telebirr
+(server handler)
+P3
+CBE Birr init
+payments
+POST /cashier/payments/cbe/init
+<CBEBirrFlow />
+P3
+CBE Birr webhook
+payments
+POST /api/webhooks/cbe
+(server handler)
+P3
+Split payment
+payments
+POST /cashier/payments (split)
+<SplitPaymentAllocator />
+P3
+Ethiopian ERCA receipt
+payments,orders
+GET /cashier/receipts/:id
+<ReceiptPreview />
+P2
+ESC/POS thermal print
+payments
+POST /cashier/receipts/:id/print
+<PrintReceiptBtn />
+P3
+Email/SMS receipt
+payments,users
+POST /cashier/receipts/:id/send
+<SendReceiptBtn />
+P4
+Refund execution
+payments,refunds
+POST /cashier/refunds
+<ProcessRefundBtn />
+P3
+Shift running totals
+payments,shifts
+GET /cashier/shift/summary
+<DrawerStatusPanel />
+P2
+
+ENGINEERING NOTES
+
+Telebirr and CBE Birr both use webhooks — use ngrok in dev, real URL in production
+Receipt must include: café TIN, ERCA format, VAT 15% line, items, and payment method
+ESC/POS: use escpos npm package, connect via USB or network to thermal printer
+PLpgSQL stored proc process_order_payment() must be fully atomic — no partial saves allowed
+
+TECHNICAL STACK BADGES
+
+Telebirr API
+CBE Birr API
+ESC/POS thermal
+VAT receipt
+Cash reconcile
+
+
+☕  Barista
+Drinks KDS — real-time queue, color timers, instant alerts
+
+GOALS THAT MUST BE SATISFIED
+
+✓  Drinks queue
+See all drink orders in real-time on KDS wall display
+✓  Prep tracking
+Move cards through Start → In Progress → Ready stages
+✓  Waiter notification
+Tap Ready → waiter gets instant push notification
+✓  Ingredient alerts
+Flag low stock on any ingredient to Store Manager
+✓  Item unavailable
+Mark item unavailable → menu updates for new orders
+✓  Waste logging
+Record wasted ingredients with quantity and reason
+
+SUCCESS METRICS
+
+< 5 min
+Green zone
+5–10 min
+Yellow warning
+> 10 min
+Red flag
+Audio
+New order alert
+
+STEP-BY-STEP SERVICE FLOW
+
+1.  New drink order fires to KDS → audio alert plays
+2.  Review items and notes (sugar, temperature, add-ons)
+3.  Tap Start Preparing → card moves to In Progress lane
+4.  Timer starts — color shifts green → yellow → red
+5.  Tap Ready on each drink as completed
+6.  All drinks ready → tap Order Ready → Waiter notified
+7.  Completed card disappears after 2 minutes automatically
+
+IMPLEMENTATION CHECKLIST — GOAL → DB → API → UI → PHASE
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph
+Drinks-only KDS board
+orders,order_items
+GET /kds/drinks
+<BaristaKDSBoard />
+P2
+New order audio alert
+Firebase Firestore
+Firestore onSnapshot listener
+<AudioAlert />
+P2
+Order card with timer
+orders
+Firestore real-time
+<KDSOrderCard />
+P2
+Color timer (G/Y/R)
+orders
+client-side timer logic
+<TimerBadge />
+P2
+Start preparing action
+order_items
+PATCH /kds/items/:id/start
+<StartPrepBtn />
+P2
+Mark item ready
+order_items
+PATCH /kds/items/:id/ready
+<ItemReadyBtn />
+P2
+Mark order ready
+orders
+PATCH /kds/orders/:id/ready
+<OrderReadyBtn />
+P2
+Waiter FCM push
+notifications
+Firebase FCM on ready
+(server FCM call)
+P2
+Kanban 3-lane board
+orders
+Firestore real-time
+<KanbanBoard />
+P2
+Special notes display
+order_items
+Firestore real-time
+<SpecialNoteTag />
+P2
+Ingredient low flag
+inventory_items
+POST /kds/ingredients/:id/flag
+<FlagIngredientBtn />
+P3
+Mark item unavailable
+menu_items
+PATCH /kds/items/:id/unavail
+<UnavailableBtn />
+P3
+Waste log entry
+waste_log
+POST /kds/waste
+<WasteLogModal />
+P3
+Auto-clear 2min
+orders
+client-side timer
+<AutoClearLogic />
+P2
+
+ENGINEERING NOTES
+
+KDS must work without page refresh — Firestore onSnapshot is the only update source
+Audio alert: Web Audio API, allow volume config in /barista/settings page
+Timer: elapsed = now - order.submitted_at, refresh every 10 seconds client-side
+Order card hides 2 min after DELIVERED status — do NOT delete from DB
+
+TECHNICAL STACK BADGES
+
+Firebase real-time
+Color timers
+Audio alerts
+Low stock flag
+Wall display
+
+
+🍳  Kitchen
+Food KDS — course sequencing, allergy hard-blocks, bar sync
+
+GOALS THAT MUST BE SATISFIED
+
+✓  Food queue
+Receive food orders instantly on kitchen wall display
+✓  Course ordering
+Manage starter → main → dessert sequence per table
+✓  Allergy alerts
+Hard red banner for every allergy note — must acknowledge
+✓  Bar sync
+Hold food if drinks not yet ready — coordinate delivery
+✓  Prep time tracking
+Actual vs target per dish for menu engineering reports
+✓  Waste logging
+Log food waste with reason and quantity end of service
+
+SUCCESS METRICS
+
+Accept
+First tap action
+4 steps
+Accept→Start→Plate→Ready
+Sync
+Bar coordination
+Red banner
+Allergy — no dismiss
+
+STEP-BY-STEP SERVICE FLOW
+
+1.  Food order fires on Waiter confirmation
+2.  Chef taps Accept → order acknowledged
+3.  Start cooking → tap Start on each item
+4.  Complex dish: tap Plating for final prep
+5.  Tap Ready → system checks if drinks also ready
+6.  If drinks not ready: Hold — Waiting for Bar
+7.  Both ready → Waiter notified for full table order
+8.  End of service: log wasted items with reason
+
+IMPLEMENTATION CHECKLIST — GOAL → DB → API → UI → PHASE
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph
+Food-only KDS view
+orders,order_items
+GET /kds/food
+<KitchenKDSBoard />
+P2
+Accept order
+orders
+PATCH /kds/orders/:id/accept
+<AcceptOrderBtn />
+P2
+Start item cooking
+order_items
+PATCH /kds/items/:id/start
+<StartCookBtn />
+P2
+Plating step
+order_items
+PATCH /kds/items/:id/plate
+<PlatingBtn />
+P2
+Mark item ready
+order_items
+PATCH /kds/items/:id/ready
+<ItemReadyBtn />
+P2
+Bar sync check
+orders,order_items
+GET /kds/orders/:id/sync-status
+<BarSyncIndicator />
+P2
+Hold for bar
+orders
+PATCH /kds/orders/:id/hold
+<HoldForBarBtn />
+P2
+Full order ready
+orders
+PATCH /kds/orders/:id/ready
+<OrderReadyBtn />
+P2
+Allergy hard-block banner
+order_items
+Firestore real-time
+<AllergyAlertBanner />
+P1
+Allergy acknowledge
+orders
+POST /kds/orders/:id/ack-allergy
+<AllergyAckBtn />
+P1
+Course sequencing lanes
+order_items
+client-side course grouping
+<CourseLanes />
+P3
+Prep time display
+order_items
+PATCH /kds/items/:id/start
+<PrepTimerDisplay />
+P3
+Waste log entry
+waste_log
+POST /kds/waste
+<WasteLogSwipe />
+P3
+Ingredient unavailable
+menu_items
+PATCH /kds/items/:id/unavail
+<UnavailableBtn />
+P3
+
+ENGINEERING NOTES
+
+ALLERGY ALERT is safety-critical — cannot be dismissed without explicit acknowledge tap
+Bar sync: query Firestore for same order_id drink items before allowing food ready
+Course lanes: group order_items by item.course field (starter / main / dessert)
+Prep time data feeds Owner reports — store actual_start and actual_end timestamps
+
+TECHNICAL STACK BADGES
+
+Allergy hard-block
+Course sequencing
+Bar sync
+Waste log
+Wall display
+
+
+📦  Store Manager
+Inventory — stock levels, suppliers, purchase orders, physical audits
+
+GOALS THAT MUST BE SATISFIED
+
+✓  Stock levels
+All ingredients with current qty, min threshold and unit
+✓  Stockout forecast
+Estimated time until critical items run out at current rate
+✓  Receive deliveries
+Log received stock, update quantities, record invoice cost
+✓  Purchase orders
+Create POs, send to suppliers, mark received on arrival
+✓  Supplier directory
+Manage contacts, pricing history, delivery performance
+✓  Stock count audit
+Physical count vs system — adjust variances with reasons
+
+SUCCESS METRICS
+
+Real-time
+Consumption tracking
+Auto
+Stockout forecast
+PO flow
+Purchase orders
+Audit
+Physical count
+
+STEP-BY-STEP SERVICE FLOW
+
+1.  Monitor dashboard: see critical and low-stock items
+2.  Alert from Barista/Kitchen → create restock request
+3.  Create PO → select supplier → add line items with cost
+4.  PO approved by Manager/Owner above spend threshold
+5.  Delivery arrives: open Receive Delivery → enter items
+6.  System updates stock → critical alert auto-resolved
+7.  Barista and Kitchen notified ingredient is restocked
+8.  Monthly: stock count audit → adjust variances → report
+
+IMPLEMENTATION CHECKLIST — GOAL → DB → API → UI → PHASE
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph
+Inventory overview
+inventory_items
+GET /store/inventory
+<InventoryTable />
+P1
+Low/critical badges
+inventory_items
+GET /store/inventory
+<StockStatusBadge />
+P1
+Stockout forecast
+inventory_items,stock_mvmt
+GET /store/inventory/forecast
+<StockoutForecast />
+P3
+Receive delivery
+inventory_items,stock_mvmt
+POST /store/inventory/:id/receive
+<ReceiveDeliveryForm />
+P2
+Manual adjustment
+inventory_items,stock_mvmt
+POST /store/inventory/:id/adjust
+<AdjustmentForm />
+P2
+Create PO
+purchase_orders,po_items
+POST /store/purchase-orders
+<PurchaseOrderForm />
+P2
+PO approval
+purchase_orders
+PATCH /store/po/:id/approve
+<POApprovalBtn />
+P2
+Mark PO received
+purchase_orders,inventory
+PATCH /store/po/:id/receive
+<MarkPOReceivedBtn />
+P2
+Supplier CRUD
+suppliers
+CRUD /store/suppliers
+<SupplierForm />
+P2
+Supplier performance
+purchase_orders
+GET /store/suppliers/:id/perf
+<SupplierPerfCard />
+P4
+Initiate stock count
+stock_counts
+POST /store/stock-count
+<StartCountBtn />
+P3
+Enter counted quantities
+stock_counts
+PUT /store/stock-count/:id
+<CountEntryGrid />
+P3
+Variance review table
+stock_counts
+GET /store/stock-count/:id
+<VarianceReviewTable />
+P3
+Submit adjustments
+inventory_items,stock_mvmt
+POST /store/stock-count/:id/submit
+<SubmitCountBtn />
+P3
+Consumption report
+stock_movements
+GET /store/reports/consumption
+<ConsumptionReport />
+P4
+
+ENGINEERING NOTES
+
+inventory_items needs: id, tenant_id, branch_id, name, unit, quantity, min_threshold, cost_per_unit
+stock_movements logs every change: type, qty, reason, user_id, created_at
+Stockout forecast = quantity / avg_daily_consumption — recompute nightly via cron job
+PO amounts above threshold (default 5,000 ETB) require Cafe Owner approval before sending
+
+TECHNICAL STACK BADGES
+
+Stock forecast
+PO management
+Supplier CRM
+Physical audit
+Auto-alerts
+
+
+
+CafeFlow SaaS — Master Reference Document
+When every checklist row is ticked across all 8 roles — the system is production-ready.
+Confidential — ZAD Cafe / Abrham Minbale — 2025
+

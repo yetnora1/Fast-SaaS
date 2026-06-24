@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(firecrawl:firecrawl-parse)",
+      "Skill(firecrawl:firecrawl-parse:*)",
+      "Bash(netstat -ano)"
+    ]
+  }
+}

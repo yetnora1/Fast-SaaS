@@ -1,0 +1,934 @@
+﻿CafeFlow SaaS
+Implementation Checklist
+━━━━━━━━━━━━━━━━━━━━━━━━
+Every role goal  →  DB table  →  API route  →  UI component
+8 Roles  •  4 Build Phases  •  Production-Ready
+
+P1  Foundation (Wk 1-3)
+P2  Core Flow (Wk 4-6)
+P3  Payments (Wk 7-9)
+P4  Polish (Wk 10+)
+
+Ph = Build Phase. Each goal is tagged P1–P4 so you can build in priority order. Complete P1 first — it is the foundation every other phase depends on.
+
+Build Phases — What to build when
+Build in strict phase order. P1 is the skeleton — nothing else works without it. Each phase produces a testable milestone.
+
+P1 — FOUNDATION
+
+PostgreSQL schema + Prisma migrations for all core tables
+NextAuth.js v5 — JWT with role + tenant_id in session token
+Tenant isolation middleware — every query scoped to tenant_id
+Row Level Security (RLS) on PostgreSQL for tenant data isolation
+SaaS Owner admin panel + approval workflow (most critical)
+Subscription state machine: TRIAL → PENDING → ACTIVE → EXPIRED
+Server-side subscription gate middleware (not just UI hide)
+Menu CRUD — minimum viable menu before any orders can flow
+Staff invite + role assignment
+PIN auth for POS tablet login
+Allergy alert framework in order_items schema
+
+P2 — CORE ORDER FLOW
+
+Firebase Firestore project setup + real-time listeners
+Waiter floor map + order builder (biggest UI piece)
+Order split logic: drinks → barista_kds, food → kitchen_kds
+Barista KDS board + Kitchen KDS board (both Firebase real-time)
+Order state machine: DRAFT→SUBMITTED→PREPARING→READY→DELIVERED
+Cashier POS: bill queue + cash payment + basic receipt
+Shift open/close + cash reconciliation
+Manager live order board + void (PIN) + refund approve
+Firebase Cloud Messaging (FCM) push notifications
+Table status map for waiter and manager
+Low stock alerts + restock request flow
+
+P3 — PAYMENTS & INVENTORY
+
+Telebirr API integration + webhook endpoint
+CBE Birr API integration + webhook endpoint
+Ethiopian ERCA-compliant receipt (VAT 15% breakdown)
+ESC/POS thermal printer integration (escpos npm)
+Full inventory module: receive, adjust, PO, supplier CRUD
+Stock count audit wizard
+Stockout forecast algorithm (PLpgSQL stored proc)
+Multi-branch comparison dashboard
+Shift PDF report generation (pdf-lib or puppeteer)
+QR self-ordering customer flow
+Staff scheduling calendar
+
+P4 — POLISH & LAUNCH
+
+Service Worker (PWA) offline mode + IndexedDB sync
+Amharic (AM) language toggle for all UI text
+Ethiopian calendar support (Ge'ez) for scheduling
+Telegram bot integration for daily owner summaries
+Analytics: VAT report, payroll summary, consumption report
+Load testing (k6) — 50 orders/min, 100 concurrent users
+Security audit: penetration test, rate limiting, input sanitization
+Sentry error tracking + Vercel Analytics
+Staff performance leaderboard + ratings
+Daily briefing card (AI-style insight summary)
+Full audit log viewer for SaaS Owner
+
+
+Role-by-Role Implementation Checklist
+Each table maps one goal to: the database tables it touches, the API route that serves it, the React component that renders it, and its build phase.
+
+👑  SaaS Owner
+Platform administration — billing, tenants, config
+
+IMPLEMENTATION CHECKLIST
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph.
+Tenant create
+tenants, users
+POST /saas/tenants
+<TenantCreateForm />
+P1
+Tenant list/search
+tenants
+GET /saas/tenants
+<TenantTable />
+P1
+Tenant detail view
+tenants, users, branches
+GET /saas/tenants/:id
+<TenantDetail />
+P1
+Suspend tenant
+tenants
+PATCH /saas/tenants/:id/suspend
+<SuspendModal />
+P1
+Terminate tenant
+tenants
+PATCH /saas/tenants/:id/term
+<TerminateModal />
+P4
+Extend trial
+tenants
+PATCH /saas/tenants/:id/trial
+<TrialExtendModal />
+P2
+View pending receipts
+subscriptions
+GET /saas/billing/approvals
+<ApprovalQueue />
+P1
+Approve receipt
+subscriptions
+POST /saas/billing/approve/:id
+<ApprovalCard />
+P1
+Reject receipt
+subscriptions
+POST /saas/billing/reject/:id
+<RejectModal />
+P1
+MRR / ARR metrics
+subscriptions, tenants
+GET /saas/metrics
+<RevenueKPICards />
+P3
+Set bank account
+platform_config
+PUT /saas/config
+<BankConfigForm />
+P1
+Set feature flags
+tenant_features
+PUT /saas/tenants/:id/features
+<FeatureFlagToggles />
+P3
+Audit log viewer
+audit_logs
+GET /saas/audit-log
+<AuditLogTable />
+P4
+Platform health
+system_metrics
+GET /saas/health
+<HealthDashboard />
+P4
+Email template edit
+email_templates
+PUT /saas/email-templates
+<EmailTemplateEditor />
+P4
+
+ENGINEERING NOTES
+
+Build SaaS Owner auth FIRST — isolated /saas-admin route group, separate from cafe routes
+Subscription approval is P1 — without it no cafe can go live after trial
+Bank account config must be set before any cafe owner sees the subscription modal
+All SaaS Owner actions must write to audit_logs with ip + action + meta_json
+
+
+🏪  Cafe Owner
+Business management — dashboard, menu, staff, reports
+
+IMPLEMENTATION CHECKLIST
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph.
+Register + email verify
+tenants, users
+POST /auth/register
+<RegisterForm />
+P1
+Trial countdown banner
+tenants
+GET /owner/subscription/status
+<TrialCountdownBanner />
+P1
+Subscription gate modal
+subscriptions
+GET /owner/subscription/status
+<SubscriptionModal />
+P1
+Receipt upload
+subscriptions, file_storage
+POST /owner/subscription/upload
+<ReceiptUploadZone />
+P1
+Pending approval state
+subscriptions
+GET /owner/subscription/status
+<PendingApprovalState />
+P1
+Aggregated KPI dashboard
+orders, payments
+GET /owner/dashboard
+<KPIDashboard />
+P2
+Sales line chart
+orders, payments
+GET /owner/reports/sales
+<SalesLineChart />
+P2
+Multi-branch comparison
+branches, orders
+GET /owner/branches/compare
+<BranchCompareBar />
+P3
+Top selling items
+order_items, menu_items
+GET /owner/reports/top-items
+<TopItemsList />
+P2
+Payment breakdown chart
+payments
+GET /owner/reports/payments
+<PaymentPieChart />
+P3
+Menu category CRUD
+menu_categories
+CRUD /owner/menu/categories
+<CategoryManager />
+P1
+Menu item CRUD
+menu_items, modifiers
+CRUD /owner/menu/items
+<MenuItemForm />
+P1
+EN + AM menu names
+menu_items
+PUT /owner/menu/items/:id
+<BilingualNameInput />
+P2
+Publish menu draft
+menu_items
+POST /owner/menu/publish
+<PublishMenuBtn />
+P2
+Staff invite by email
+users, invitations
+POST /owner/staff/invite
+<StaffInviteForm />
+P1
+Assign staff roles
+users
+PATCH /owner/staff/:id/role
+<RoleSelector />
+P1
+Staff performance view
+orders, staff_ratings
+GET /owner/staff/:id/performance
+<StaffPerformanceCard />
+P3
+Branch create/config
+branches
+CRUD /owner/branches
+<BranchConfigForm />
+P2
+Floor plan editor
+tables
+PUT /owner/branches/:id/floor
+<FloorPlanEditor />
+P3
+VAT report (ERCA)
+payments, orders
+GET /owner/reports/vat
+<VATReportExport />
+P3
+Payroll summary export
+shifts, staff_schedules
+GET /owner/reports/staff
+<PayrollReport />
+P4
+Daily briefing card
+orders, inventory_items
+GET /owner/dashboard/briefing
+<DailyBriefingCard />
+P4
+
+ENGINEERING NOTES
+
+Subscription gate logic must block ALL routes (server-side middleware) — not just hide UI
+Receipt upload: validate file type (jpg/png/pdf), max 5MB, store in Firebase Storage
+Menu must have EN name always; AM name optional but shown when Amharic toggle is active
+VAT report must match ERCA format exactly — validate with accountant before shipping
+
+
+📋  Cafe Manager
+Daily operations — shifts, escalations, scheduling
+
+IMPLEMENTATION CHECKLIST
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph.
+Open shift + float entry
+shifts
+POST /manager/shifts/open
+<ShiftOpenForm />
+P2
+Close shift + reconcile
+shifts, payments
+POST /manager/shifts/close
+<ShiftCloseWizard />
+P2
+Shift report PDF gen
+shifts, orders
+GET /manager/shifts/:id/report
+<ShiftReportPDF />
+P3
+Live order board
+orders, order_items
+GET /manager/orders/live
+<LiveOrderBoard />
+P2
+Void order (PIN auth)
+orders, audit_logs
+PATCH /manager/orders/:id/void
+<VoidOrderModal />
+P2
+Approve refund
+payments, refunds
+POST /manager/orders/:id/refund
+<RefundApprovalModal />
+P2
+Table status map
+tables
+GET /manager/tables
+<TableStatusMap />
+P2
+Table merge
+tables, orders
+POST /manager/tables/merge
+<TableMergeModal />
+P3
+Weekly schedule builder
+staff_schedules
+CRUD /manager/schedule
+<ScheduleCalendar />
+P3
+Publish schedule
+staff_schedules
+POST /manager/schedule/publish
+<PublishScheduleBtn />
+P3
+Attendance / clock-in
+staff_attendance
+POST /manager/attendance/clockin
+<AttendanceTracker />
+P3
+Low stock alert list
+inventory_items
+GET /manager/inventory/alerts
+<LowStockPanel />
+P2
+Restock request
+restock_requests
+POST /manager/inventory/restock
+<RestockRequestForm />
+P2
+Staff on-duty list
+staff_attendance, users
+GET /manager/staff/oncall
+<StaffOnDutyList />
+P2
+Cash discrepancy alert
+shifts
+GET /manager/shifts/current
+<VarianceAlert />
+P2
+
+ENGINEERING NOTES
+
+Void requires Manager 4-digit PIN — store bcrypt-hashed in users.pin_hash column
+Shift open/close are the accounting boundary — lock orders after shift close
+Schedule publish triggers Firebase push notification to all affected staff users
+Cash variance > 50 ETB must auto-notify Cafe Owner via email + in-app
+
+
+🍽️  Waiter
+Customer service — orders, delivery, QR confirmation
+
+IMPLEMENTATION CHECKLIST
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph.
+PIN login (tablet)
+users
+POST /auth/login/pin
+<PINLoginScreen />
+P1
+View my tables (floor map)
+tables
+GET /waiter/tables
+<FloorMap />
+P2
+Start new order
+orders
+POST /waiter/orders
+<NewOrderBtn />
+P2
+Browse menu (categories)
+menu_categories,menu_items
+GET /waiter/menu
+<MenuBrowser />
+P2
+Select modifiers
+modifiers
+GET /waiter/menu/items/:id
+<ModifierBottomSheet />
+P2
+Add item notes
+order_items
+POST /waiter/orders/:id/items
+<ItemNoteInput />
+P2
+Send order to KDS
+orders,order_items
+POST /waiter/orders
+<SendOrderBtn />
+P2
+Add items to open order
+order_items
+POST /waiter/orders/:id/items
+<AddToOrderBtn />
+P2
+Remove item (pre-prep)
+order_items
+DELETE /waiter/orders/:id/items/:i
+<RemoveItemBtn />
+P2
+Mark item delivered
+order_items
+PATCH /waiter/.../deliver
+<DeliverItemBtn />
+P2
+Request bill
+orders
+POST /waiter/orders/:id/bill
+<RequestBillBtn />
+P2
+QR orders queue
+orders
+GET /waiter/qr-orders
+<QROrderQueue />
+P3
+Confirm QR order
+orders
+POST /waiter/qr-orders/:id/confirm
+<ConfirmQROrderBtn />
+P3
+Order ready notification
+notifications
+Firebase push listener
+<NotificationBell />
+P2
+Offline order (PWA)
+IndexedDB (Dexie.js)
+Service Worker sync
+<OfflineBadge />
+P4
+
+ENGINEERING NOTES
+
+PWA Service Worker must be set up in P1 — install without offline orders first, add sync in P4
+Floor map table colors: green=available, orange=occupied, red=needs attention
+Order split happens server-side: items with category=drinks → barista_kds, else kitchen_kds
+Minimum touch target 48px — critical for tablet use in a busy café environment
+
+
+💳  Cashier
+Payments — cash, Telebirr, CBE Birr, receipts, reconciliation
+
+IMPLEMENTATION CHECKLIST
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph.
+Bill queue view
+orders
+GET /cashier/bill-queue
+<BillQueue />
+P2
+Open bill detail
+orders, order_items
+GET /cashier/orders/:id/bill
+<BillDetail />
+P2
+VAT calculation display
+orders, payments
+computed server-side
+<VATBreakdown />
+P2
+Cash payment + change
+payments
+POST /cashier/payments
+<CashTenderInput />
+P2
+Telebirr payment init
+payments
+POST /cashier/payments/tel/init
+<TelebirrFlow />
+P3
+Telebirr webhook receive
+payments
+POST /api/webhooks/telebirr
+(server-side handler)
+P3
+CBE Birr payment init
+payments
+POST /cashier/payments/cbe/init
+<CBEBirrFlow />
+P3
+CBE Birr webhook receive
+payments
+POST /api/webhooks/cbe
+(server-side handler)
+P3
+Split payment
+payments
+POST /cashier/payments (split)
+<SplitPaymentAllocator />
+P3
+Ethiopian receipt gen
+payments, orders
+GET /cashier/receipts/:id
+<ReceiptPreview />
+P2
+ESC/POS thermal print
+payments
+POST /cashier/receipts/:id/print
+<PrintReceiptBtn />
+P3
+Email/SMS receipt
+payments, users
+POST /cashier/receipts/:id/send
+<SendReceiptBtn />
+P4
+Refund execution
+payments, refunds
+POST /cashier/refunds
+<ProcessRefundBtn />
+P3
+Shift running totals
+payments, shifts
+GET /cashier/shift/summary
+<DrawerStatusPanel />
+P2
+Cash reconciliation
+shifts, payments
+POST /manager/shifts/close
+<CashReconcileForm />
+P2
+
+ENGINEERING NOTES
+
+Telebirr and CBE Birr both use webhooks — set up ngrok/tunnel in dev, real URL in prod
+Receipt must include: cafe TIN, ERCA format, VAT 15%, order items, payment method
+ESC/POS: use escpos npm package, connect via USB or network to thermal printer
+PLpgSQL stored procedure process_order_payment() must be atomic — no partial saves
+
+
+☕  Barista
+Drinks KDS — real-time queue, timers, alerts
+
+IMPLEMENTATION CHECKLIST
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph.
+Drinks-only KDS view
+orders, order_items
+GET /kds/drinks
+<BaristKDSBoard />
+P2
+New order audio alert
+Firebase Firestore
+Firestore onSnapshot listener
+<AudioAlert />
+P2
+Order card with timer
+orders
+Firestore real-time
+<KDSOrderCard />
+P2
+Color timer (G/Y/R)
+orders
+client-side timer logic
+<TimerBadge />
+P2
+Start preparing action
+order_items
+PATCH /kds/items/:id/start
+<StartPrepBtn />
+P2
+Mark item ready
+order_items
+PATCH /kds/items/:id/ready
+<ItemReadyBtn />
+P2
+Mark order ready
+orders
+PATCH /kds/orders/:id/ready
+<OrderReadyBtn />
+P2
+Waiter push notification
+notifications
+Firebase FCM trigger on ready
+(server-side FCM call)
+P2
+Kanban 3-lane board
+orders
+Firestore real-time listener
+<KanbanBoard />
+P2
+Special notes display
+order_items
+Firestore real-time
+<SpecialNoteTag />
+P2
+Ingredient low flag
+inventory_items
+POST /kds/ingredients/:id/flag
+<FlagIngredientBtn />
+P3
+Mark item unavailable
+menu_items
+PATCH /kds/items/:id/unavail
+<UnavailableBtn />
+P3
+Waste log entry
+waste_log
+POST /kds/waste
+<WasteLogModal />
+P3
+Auto-clear completed (2m)
+orders
+client-side timer
+<AutoClearLogic />
+P2
+Modifiers on card
+order_items, modifiers
+Firestore real-time
+<ModifierChips />
+P2
+
+ENGINEERING NOTES
+
+KDS screen must work without page refresh — Firestore onSnapshot is the only update mechanism
+Audio alert: use Web Audio API, allow volume config in /barista/settings
+Timer logic: calculate elapsed = now - order.submitted_at, refresh every 10 seconds
+Order card disappears 2 min after status=DELIVERED — do NOT delete from DB, just hide
+
+
+🍳  Kitchen
+Food KDS — course sequencing, allergy blocks, bar sync
+
+IMPLEMENTATION CHECKLIST
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph.
+Food-only KDS view
+orders, order_items
+GET /kds/food
+<KitchenKDSBoard />
+P2
+Accept order
+orders
+PATCH /kds/orders/:id/accept
+<AcceptOrderBtn />
+P2
+Start item cooking
+order_items
+PATCH /kds/items/:id/start
+<StartCookBtn />
+P2
+Plating intermediate step
+order_items
+PATCH /kds/items/:id/plate
+<PlatingBtn />
+P2
+Mark item ready
+order_items
+PATCH /kds/items/:id/ready
+<ItemReadyBtn />
+P2
+Bar sync check
+orders, order_items
+GET /kds/orders/:id/sync-status
+<BarSyncIndicator />
+P2
+Hold — waiting for bar
+orders
+PATCH /kds/orders/:id/hold
+<HoldForBarBtn />
+P2
+Full order ready signal
+orders
+PATCH /kds/orders/:id/ready
+<OrderReadyBtn />
+P2
+Allergy hard-block banner
+order_items
+Firestore real-time
+<AllergyAlertBanner />
+P1
+Allergy acknowledge
+orders
+POST /kds/orders/:id/ack-allergy
+<AllergyAckBtn />
+P1
+Course sequencing
+order_items
+client-side course grouping
+<CourseLanes />
+P3
+Prep time tracking
+order_items
+PATCH /kds/items/:id/start
+<PrepTimerDisplay />
+P3
+Waste log entry
+waste_log
+POST /kds/waste
+<WasteLogSwipe />
+P3
+Ingredient unavailable
+menu_items
+PATCH /kds/items/:id/unavail
+<UnavailableBtn />
+P3
+End-of-service summary
+orders, waste_log
+GET /kds/summary
+<ServiceSummaryModal />
+P4
+
+ENGINEERING NOTES
+
+ALLERGY ALERT: This is safety-critical. Cannot be dismissed without explicit acknowledge tap
+Bar sync: query Firestore for same order_id drink items status before allowing food ready
+Course lanes: group order_items by item.course field (starter/main/dessert)
+Prep time data feeds Owner reports for menu engineering — store actual_start and actual_end
+
+
+📦  Store Manager
+Inventory — stock, suppliers, purchase orders, audits
+
+IMPLEMENTATION CHECKLIST
+
+Goal / Feature
+DB Tables
+API Route
+UI Component
+Ph.
+Inventory overview table
+inventory_items
+GET /store/inventory
+<InventoryTable />
+P1
+Low/critical stock badges
+inventory_items
+GET /store/inventory
+<StockStatusBadge />
+P1
+Stockout time forecast
+inventory_items,stock_mvmt
+GET /store/inventory/forecast
+<StockoutForecast />
+P3
+Receive delivery form
+inventory_items,stock_mvmt
+POST /store/inventory/:id/receive
+<ReceiveDeliveryForm />
+P2
+Manual stock adjustment
+inventory_items,stock_mvmt
+POST /store/inventory/:id/adjust
+<AdjustmentForm />
+P2
+Create purchase order
+purchase_orders, po_items
+POST /store/purchase-orders
+<PurchaseOrderForm />
+P2
+PO approval flow
+purchase_orders
+PATCH /store/po/:id/approve
+<POApprovalBtn />
+P2
+Mark PO received
+purchase_orders, inventory
+PATCH /store/po/:id/receive
+<MarkPOReceivedBtn />
+P2
+Supplier CRUD
+suppliers
+CRUD /store/suppliers
+<SupplierForm />
+P2
+Supplier performance
+purchase_orders
+GET /store/suppliers/:id/perf
+<SupplierPerfCard />
+P4
+Initiate stock count
+stock_counts
+POST /store/stock-count
+<StartCountBtn />
+P3
+Enter counted quantities
+stock_counts
+PUT /store/stock-count/:id
+<CountEntryGrid />
+P3
+Variance review table
+stock_counts
+GET /store/stock-count/:id
+<VarianceReviewTable />
+P3
+Submit adjustments
+inventory_items,stock_mvmt
+POST /store/stock-count/:id/submit
+<SubmitCountBtn />
+P3
+Consumption report
+stock_movements
+GET /store/reports/consumption
+<ConsumptionReport />
+P4
+Waste log report
+waste_log
+GET /store/reports/waste
+<WasteReport />
+P4
+Stock valuation report
+inventory_items
+GET /store/reports/valuation
+<ValuationReport />
+P4
+
+ENGINEERING NOTES
+
+inventory_items must have: id, tenant_id, branch_id, name, unit, quantity, min_threshold, cost_per_unit
+stock_movements log every change: type (receive/consume/adjust/waste), qty, reason, user_id
+Stockout forecast = quantity / avg_daily_consumption — recompute nightly via cron
+PO amounts above threshold (configurable, default 5000 ETB) require Cafe Owner approval
+
+
+Database Schema Quick Reference
+All tables require tenant_id (except platform_config and email_templates) for multi-tenant isolation enforced at both the Prisma query layer and PostgreSQL RLS.
+
+Table Name
+Key Columns (abbreviated)
+tenants
+id, name, status, trial_end, sub_start, sub_end, created_at
+users
+id, tenant_id, name, email, role, branch_id, pin_hash, active
+branches
+id, tenant_id, name, address, manager_id, settings_json
+menu_categories
+id, tenant_id, name, name_am, sort_order, active
+menu_items
+id, category_id, name, name_am, price, cost, vat, available
+modifiers
+id, item_id, group_name, option, extra_price
+tables
+id, branch_id, number, capacity, status, x_pos, y_pos
+orders
+id, tenant_id, branch_id, table_id, waiter_id, status, type
+order_items
+id, order_id, menu_item_id, qty, modifiers_json, notes, status, course
+payments
+id, order_id, method, amount, reference, cashier_id, verified_at
+subscriptions
+id, tenant_id, amount, period_start, period_end, receipt_url, status
+shifts
+id, branch_id, opened_by, open_time, close_time, float, actual_cash
+staff_schedules
+id, user_id, branch_id, date, shift_start, shift_end, status
+staff_attendance
+id, user_id, shift_id, clock_in, clock_out, late_flag
+inventory_items
+id, tenant_id, branch_id, name, unit, quantity, min_threshold, cost
+stock_movements
+id, item_id, type, quantity, reason, user_id, created_at
+purchase_orders
+id, tenant_id, supplier_id, status, total, approved_by, created_at
+po_items
+id, po_id, inventory_item_id, quantity, unit_cost
+suppliers
+id, tenant_id, name, contact, phone, email, payment_terms
+stock_counts
+id, branch_id, initiated_by, status, created_at
+waste_log
+id, tenant_id, item_id, quantity, reason, user_id, created_at
+notifications
+id, user_id, type, title, body, read, created_at
+audit_logs
+id, tenant_id, user_id, action, entity, entity_id, meta_json, ip
+platform_config
+key, value, updated_by, updated_at
+email_templates
+id, type, subject, body_html, updated_at
+
+
+CafeFlow SaaS — Implementation Checklist
+When every row in every checklist is ticked — the system is production-ready.
+Confidential — ZAD Cafe / Abrham Minbale — 2025
+
