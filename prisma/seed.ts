@@ -19,12 +19,18 @@ async function upsertUser(opts: {
   role: Role;
   tenantId?: string | null;
   branchId?: string | null;
+  password?: string;
 }) {
-  const passwordHash = await bcrypt.hash(PW, 10);
+  const passwordHash = await bcrypt.hash(opts.password ?? PW, 10);
   const pinHash = await bcrypt.hash(PIN, 10);
   return prisma.user.upsert({
     where: { email: opts.email },
-    update: { role: opts.role, tenantId: opts.tenantId ?? null, branchId: opts.branchId ?? null },
+    update: { 
+      role: opts.role, 
+      tenantId: opts.tenantId ?? null, 
+      branchId: opts.branchId ?? null,
+      passwordHash,
+    },
     create: {
       email: opts.email,
       name: opts.name,
@@ -65,6 +71,7 @@ async function main() {
     name: "Platform Admin",
     role: "saas_owner",
     tenantId: null,
+    password: "Yetnora@1",
   });
 
   // ── Demo tenant ────────────────────────────────────────────────────
