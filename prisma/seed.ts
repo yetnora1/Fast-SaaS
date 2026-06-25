@@ -67,7 +67,7 @@ async function main() {
 
   // ── SaaS owner (platform-level, no tenant) ─────────────────────────
   await upsertUser({
-    email: "saas@cafeflow.app",
+    email: "fast.saas.cafe@gmail.com",
     name: "Platform Admin",
     role: "saas_owner",
     tenantId: null,
