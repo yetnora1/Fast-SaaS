@@ -199,7 +199,7 @@ async function main() {
 
   console.log("\nSeed complete. Demo accounts (password for all: %s, PIN: %s):", PW, PIN);
   console.table([
-    { role: "SaaS Owner", email: "saas@cafeflow.app" },
+    { role: "SaaS Owner", email: "fast.saas.cafe@gmail.com" },
     { role: "Cafe Owner", email: "owner@zadcafe.et" },
     { role: "Manager", email: "manager@zadcafe.et" },
     { role: "Waiter", email: "waiter@zadcafe.et" },
