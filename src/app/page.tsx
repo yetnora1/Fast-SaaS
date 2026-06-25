@@ -21,10 +21,6 @@ export default function Home() {
           SaaS Admin
         </Link>
       </div>
-      <div className="max-w-md text-xs text-brand-muted">
-        Demo accounts (password <code className="rounded bg-brand-surface2 px-1 py-0.5 text-brand-foreground">Password123!</code>): owner@zadcafe.et, manager@zadcafe.et, waiter@zadcafe.et,
-        cashier@zadcafe.et, barista@zadcafe.et, kitchen@zadcafe.et, store@zadcafe.et · SaaS: fast.saas.cafe@gmail.com (password: <code className="rounded bg-brand-surface2 px-1 py-0.5 text-brand-foreground">Yetnora@1</code>)
-      </div>
     </main>
   );
 }
