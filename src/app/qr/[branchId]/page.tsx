@@ -1,5 +1,5 @@
 "use client";
-import React, { Suspense, useState, useEffect, useRef, useCallback, memo } from "react";
+import React, { Suspense, useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { api, usePoll } from "@/components/fetcher";
 import { GlobeIcon, CheckCircleIcon, ClockIcon, AlertTriangleIcon, PlusIcon, ClipboardIcon } from "@/components/icons";
@@ -177,6 +177,7 @@ function QrOrder() {
   const [tableNumber, setTableNumber] = useState(tableParam || "");
   const [txRef, setTxRef] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isClickScrolling = useRef(false);
 
   // Set default theme from localStorage on load
   useEffect(() => {
@@ -377,27 +378,34 @@ function QrOrder() {
     }
   };
 
-  // Filter items matching query
-  const allItems = data?.categories.flatMap(c => c.items) || [];
-  const searchResults = searchQuery.trim() ? allItems.filter(it => 
-    it.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (it.nameAm && it.nameAm.toLowerCase().includes(searchQuery.toLowerCase()))
-  ) : [];
+  // ── Memoised derived state to prevent re-computation on every render ──
+  const allItems = useMemo(() => data?.categories.flatMap(c => c.items) || [], [data?.categories]);
 
-  const filteredItems = allItems.filter(it => {
-    const matchesSearch = searchQuery ? (
-      it.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (it.nameAm && it.nameAm.toLowerCase().includes(searchQuery.toLowerCase()))
-    ) : true;
-    
-    if (activeCategory === "Favorites") return matchesSearch && favorites.includes(it.id);
-    return matchesSearch;
-  });
+  const queryLower = useMemo(() => searchQuery.trim().toLowerCase(), [searchQuery]);
 
-  const cartCount = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
-  const cartSubtotal = Object.values(cart).reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const vat = cartSubtotal * 0.15;
-  const cartTotal = cartSubtotal + vat;
+  const searchResults = useMemo(() => {
+    if (!queryLower) return [];
+    return allItems.filter(it =>
+      it.name.toLowerCase().includes(queryLower) ||
+      (it.nameAm && it.nameAm.toLowerCase().includes(queryLower))
+    );
+  }, [allItems, queryLower]);
+
+  const favoritesSet = useMemo(() => new Set(favorites), [favorites]);
+
+  const filteredItems = useMemo(() => {
+    return allItems.filter(it => {
+      if (queryLower && !it.name.toLowerCase().includes(queryLower) && !(it.nameAm && it.nameAm.toLowerCase().includes(queryLower))) return false;
+      if (activeCategory === "Favorites") return favoritesSet.has(it.id);
+      return true;
+    });
+  }, [allItems, queryLower, activeCategory, favoritesSet]);
+
+  const cartValues = useMemo(() => Object.values(cart), [cart]);
+  const cartCount = useMemo(() => cartValues.reduce((sum, item) => sum + item.qty, 0), [cartValues]);
+  const cartSubtotal = useMemo(() => cartValues.reduce((sum, item) => sum + (item.price * item.qty), 0), [cartValues]);
+  const vat = useMemo(() => cartSubtotal * 0.15, [cartSubtotal]);
+  const cartTotal = useMemo(() => cartSubtotal + vat, [cartSubtotal, vat]);
 
   // Active Order view (Order Tracker)
   if (activeOrderId) {
@@ -410,7 +418,7 @@ function QrOrder() {
           theme === "dark" ? "bg-slate-950/80 border-slate-900" : "bg-[#faf9f6]/80 border-slate-200"
         }`}>
           <h1 className="font-display text-lg font-bold">
-            {data?.branch.name ?? "ZAD Cafe"} {tableParam && `· ${t("table")} ${tableParam}`}
+            {data?.branch?.name ?? "ZAD Cafe"} {tableParam && `· ${t("table")} ${tableParam}`}
           </h1>
           <div className="flex items-center gap-2">
             <button onClick={toggle} className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1 bg-[#c87a53]/10 text-[#c87a53] border border-[#c87a53]/20">
@@ -446,26 +454,26 @@ function QrOrder() {
   }
 
   return (
-    <div className={`min-h-dvh transition-colors duration-300 pb-20 relative ${
+    <div className={`min-h-dvh pb-20 relative ${
       theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-[#faf9f6] text-slate-800"
     }`}>
       {/* Sticky Header Navigation */}
-      <header className={`sticky top-0 z-nav border-b backdrop-blur-md transition-colors duration-300 ${
-        theme === "dark" ? "bg-slate-950/80 border-slate-900/80" : "bg-[#faf9f6]/80 border-slate-200/80"
+      <header className={`sticky top-0 z-nav border-b ${
+        theme === "dark" ? "bg-slate-950/95 border-slate-900/80" : "bg-[#faf9f6]/95 border-slate-200/80"
       }`}>
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-1.5 cursor-pointer">
             <span className="text-[#c87a53] text-xl font-black">☕</span>
             <span className="font-display text-lg font-bold uppercase tracking-wider">
-              {data?.branch.name || "ZAD CAFE"}
+              {data?.branch?.name || "ZAD CAFE"}
             </span>
           </div>
 
           {/* Toolbar */}
           <div className="flex items-center gap-2.5">
             {/* Lang */}
-            <button onClick={toggle} className="h-9 px-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 bg-[#c87a53]/10 text-[#c87a53] hover:bg-[#c87a53]/20 transition-all border border-[#c87a53]/15">
+            <button onClick={toggle} className="h-9 px-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 bg-[#c87a53]/10 text-[#c87a53] hover:bg-[#c87a53]/20 transition-colors border border-[#c87a53]/15">
               <GlobeIcon className="h-4 w-4" />
               {lang === "en" ? "አማርኛ" : "English"}
             </button>
@@ -473,7 +481,7 @@ function QrOrder() {
             {/* Theme Toggle */}
             <button 
               onClick={handleToggleTheme}
-              className={`h-9 w-9 rounded-xl border flex items-center justify-center transition-colors ${
+              className={`h-9 w-9 rounded-xl border flex items-center justify-center transition-[background-color] ${
                 theme === "dark" ? "border-slate-800 hover:bg-slate-900 text-yellow-500" : "border-slate-200 hover:bg-slate-100 text-slate-700"
               }`}
               title="Toggle Theme"
@@ -489,7 +497,7 @@ function QrOrder() {
             {cartCount > 0 && (
               <button 
                 onClick={() => setIsCartOpen(true)}
-                className="h-9 px-3.5 bg-[#c87a53] text-white hover:bg-[#b3663d] rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
+                className="h-9 px-3.5 bg-[#c87a53] text-white hover:bg-[#b3663d] rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-[background-color,transform]"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-4 w-4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
                 <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]">{cartCount}</span>
@@ -507,7 +515,7 @@ function QrOrder() {
               {lang === "en" ? "Self-Service Ordering" : "ራስ-አገልግሎት ማዘዣ"}
             </span>
             <h1 className="font-display text-2xl sm:text-3.5xl font-extrabold tracking-tight mt-1">
-              {data?.branch.name || "ZAD CAFE"}
+              {data?.branch?.name || "ZAD CAFE"}
             </h1>
           </div>
           {tableParam && (
@@ -534,7 +542,7 @@ function QrOrder() {
               setSearchQuery(e.target.value);
               setShowSearchDropdown(true);
             }}
-            className={`w-full border rounded-2xl py-3.5 pl-11 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-[#c87a53]/40 transition-all placeholder:text-slate-400 ${
+            className={`w-full border rounded-2xl py-3.5 pl-11 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-[#c87a53]/40 transition-[border-color] placeholder:text-slate-400 ${
               theme === "dark" 
                 ? "bg-slate-900/90 border-slate-800 text-white focus:border-[#c87a53] focus:bg-slate-900" 
                 : "bg-white border-slate-200 text-slate-900 focus:border-[#c87a53] focus:bg-white"
@@ -605,17 +613,17 @@ function QrOrder() {
         </div>
 
         {/* Sticky Category Selector Navbar Row */}
-        <div className={`sticky top-16 z-40 backdrop-blur py-3.5 border-b -mx-4 px-4 overflow-x-auto flex gap-2 no-scrollbar scroll-smooth transition-colors duration-300 ${
-          theme === "dark" ? "bg-slate-950/90 border-slate-900/60" : "bg-[#faf9f6]/95 border-slate-200/60"
+        <div className={`sticky top-16 z-40 py-3.5 border-b -mx-4 px-4 overflow-x-auto flex gap-2 no-scrollbar scroll-smooth ${
+          theme === "dark" ? "bg-slate-950/95 border-slate-900/60" : "bg-[#faf9f6]/98 border-slate-200/60"
         }`}>
           <button 
             onClick={() => {
               setActiveCategory("All");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-[background-color,color] ${
               activeCategory === "All" 
-                ? "bg-[#c87a53] text-white shadow-md scale-105" 
+                ? "bg-[#c87a53] text-white shadow-md" 
                 : theme === "dark" 
                 ? "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white" 
                 : "bg-white border border-slate-200 text-slate-650 hover:text-slate-900"
@@ -629,9 +637,9 @@ function QrOrder() {
               setActiveCategory("Favorites");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-[background-color,color] flex items-center gap-1.5 ${
               activeCategory === "Favorites" 
-                ? "bg-[#ef4444] text-white shadow-md scale-105" 
+                ? "bg-[#ef4444] text-white shadow-md" 
                 : theme === "dark" 
                 ? "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white" 
                 : "bg-white border border-slate-200 text-slate-650 hover:text-slate-900"
@@ -647,9 +655,9 @@ function QrOrder() {
                 setActiveCategory(c.id);
                 scrollToSection(`cat-section-${c.id}`);
               }}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-[background-color,color] ${
                 activeCategory === c.id 
-                  ? "bg-[#c87a53] text-white shadow-md scale-105" 
+                  ? "bg-[#c87a53] text-white shadow-md" 
                   : theme === "dark" 
                   ? "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white" 
                   : "bg-white border border-slate-200 text-slate-650 hover:text-slate-900"
@@ -665,17 +673,14 @@ function QrOrder() {
           {data?.categories.map((c) => {
             // Filter items under this category
             const categoryFilteredItems = filteredItems.filter(it => it.categoryId === c.id);
-            
-            // Only render category sections if they have matching search results
-            const shouldRender = categoryFilteredItems.length > 0;
-
-            if (!shouldRender) return null;
+            if (categoryFilteredItems.length === 0) return null;
 
             return (
               <div 
                 id={`cat-section-${c.id}`} 
                 key={c.id} 
                 className="space-y-4 pt-6 scroll-mt-32 border-t border-slate-800/10 dark:border-slate-800/50 first:border-none first:pt-0"
+                style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 400px' }}
               >
                 <div className="flex items-center gap-2 border-l-4 border-[#c87a53] pl-3 text-left">
                   <span className="text-lg">{getCategoryEmoji(c.name)}</span>
@@ -691,7 +696,7 @@ function QrOrder() {
                       item={it}
                       theme={theme}
                       lang={lang}
-                      isFavorite={favorites.includes(it.id)}
+                      isFavorite={favoritesSet.has(it.id)}
                       t={t}
                       tr={tr}
                       onSelect={handleSelectItem}
@@ -724,7 +729,7 @@ function QrOrder() {
 
       {/* Floating Bottom Cart Bar */}
       {cartCount > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 border bg-opacity-95 backdrop-blur-md px-4 py-3 flex items-center justify-between rounded-2xl shadow-xl z-modal animate-in transition-colors duration-300 border-[#c87a53]/35 bg-slate-900">
+        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 border px-4 py-3 flex items-center justify-between rounded-2xl shadow-xl z-modal animate-in border-[#c87a53]/35 bg-slate-900/98">
           <div className="flex items-center gap-2">
             <div className="relative h-9 w-9 rounded-xl bg-[#c87a53]/20 flex items-center justify-center text-[#c87a53]">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
@@ -739,7 +744,7 @@ function QrOrder() {
           </div>
           <button 
             onClick={() => setIsCartOpen(true)}
-            className="bg-[#c87a53] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1 shadow-md hover:bg-[#b3663d] active:scale-95 transition-all"
+            className="bg-[#c87a53] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1 shadow-md hover:bg-[#b3663d] active:scale-95 transition-[background-color,transform]"
           >
             {lang === "en" ? "View Cart" : "ትዕዛዝ እይ / ክፈል"}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-3.5 w-3.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1747,7 +1752,7 @@ const MenuItemCard = memo(function MenuItemCard({
 
   return (
     <div 
-      className={`group flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 cursor-pointer relative ${
+      className={`group flex flex-col justify-between overflow-hidden rounded-2xl border transition-[border-color,box-shadow] duration-200 cursor-pointer relative ${
         theme === "dark" 
           ? "bg-slate-900/60 border-slate-900 hover:border-slate-800 hover:shadow-lg" 
           : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md"
@@ -1759,12 +1764,14 @@ const MenuItemCard = memo(function MenuItemCard({
         <img 
           src={getLocalItemImage(item.name, item.imageUrl)} 
           alt={item.name} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover" 
         />
         {/* Heart icon button overlay */}
         <button 
           onClick={handleToggle}
-          className="absolute top-2 left-2 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-950/70 backdrop-blur-md flex items-center justify-center text-white hover:text-[#ef4444] transition-all scale-95 shadow-md border border-white/10"
+          className="absolute top-2 left-2 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-950/70 flex items-center justify-center text-white hover:text-[#ef4444] transition-colors scale-95 shadow-md border border-white/10"
         >
           <svg 
             viewBox="0 0 24 24" 
@@ -1777,7 +1784,7 @@ const MenuItemCard = memo(function MenuItemCard({
           </svg>
         </button>
         {/* Calorie Indicator badge */}
-        <div className="absolute top-2 right-2 bg-slate-950/75 backdrop-blur-md text-[9px] font-semibold text-white/95 px-2 py-0.5 rounded-full border border-white/5 font-mono">
+        <div className="absolute top-2 right-2 bg-slate-950/75 text-[9px] font-semibold text-white/95 px-2 py-0.5 rounded-full border border-white/5 font-mono">
           🔥 {getItemCalories(item.id, item.name)} cal
         </div>
       </div>
@@ -1807,7 +1814,7 @@ const MenuItemCard = memo(function MenuItemCard({
             {Number(item.price).toLocaleString()} ETB
           </span>
           <button 
-            className="bg-[#c87a53] hover:bg-[#b3663d] text-white h-7 px-3 rounded-lg text-xxs font-bold flex items-center gap-1 active:scale-95 transition-transform shrink-0"
+            className="bg-[#c87a53] hover:bg-[#b3663d] text-white h-7 px-3 rounded-lg text-xxs font-bold flex items-center gap-1 active:scale-95 transition-[background-color,transform] shrink-0"
             onClick={handleAdd}
           >
             <PlusIcon className="h-3 w-3 stroke-[3.5]" />
