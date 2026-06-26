@@ -714,7 +714,7 @@
       },
       {
         "name": "Tea Cup",
-        "nameAm": "የሻይ ኩባያ",
+        "nameAm": "ሻይ በ ክኩባያ",
         "description": "Extra cup for sharing",
         "price": "20",
         "cost": "0",
@@ -732,7 +732,7 @@
       },
       {
         "name": "Juice Cup",
-        "nameAm": "የጁስ ኩባያ",
+        "nameAm": "ጁስ በ ኩባያ",
         "description": "Extra cup for your juice",
         "price": "30",
         "cost": "0",
