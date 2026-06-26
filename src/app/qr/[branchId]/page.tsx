@@ -341,26 +341,32 @@ function QrOrder() {
   // Scroll spy effect to highlight category pill on manual page scrolling
   useEffect(() => {
     if (!data?.categories || data.categories.length === 0) return;
-    
-    const handleScroll = () => {
-      const scrollPos = window.scrollY + 120;
-      
-      let currentActive = "All";
-      for (const cat of data.categories) {
-        const el = document.getElementById(`cat-section-${cat.id}`);
-        if (el) {
-          const top = el.offsetTop;
-          if (scrollPos >= top) {
-            currentActive = cat.id;
-          }
-        }
-      }
-      
-      setActiveCategory(currentActive);
+
+    const observerOptions = {
+      root: null,
+      rootMargin: "-120px 0px -60% 0px", // Trigger when section header is near the top of the viewport
+      threshold: 0
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      // Find the first intersecting entry
+      const visible = entries.find(entry => entry.isIntersecting);
+      if (visible) {
+        const id = visible.target.id.replace("cat-section-", "");
+        setActiveCategory(id);
+      }
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    data.categories.forEach(cat => {
+      const el = document.getElementById(`cat-section-${cat.id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
   }, [data?.categories]);
 
   // Navigate to element smoothly
