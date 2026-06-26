@@ -8,7 +8,7 @@ function num(v: string | undefined, fallback: number): number {
 export const config = {
   authSecret: process.env.AUTH_SECRET ?? "dev-insecure-secret-change-me-please-32",
   authUrl: process.env.AUTH_URL ?? "http://localhost:3000",
-  sessionTtlHours: num(process.env.SESSION_TTL_HOURS, 8),
+  sessionTtlHours: num(process.env.SESSION_TTL_HOURS, 8760),
 
   subscription: {
     amount: num(process.env.SAAS_SUBSCRIPTION_AMOUNT, 30000),

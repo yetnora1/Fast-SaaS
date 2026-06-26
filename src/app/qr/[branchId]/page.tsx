@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState, useEffect, useRef } from "react";
+import React, { Suspense, useState, useEffect, useRef, useCallback, memo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { api, usePoll } from "@/components/fetcher";
 import { GlobeIcon, CheckCircleIcon, ClockIcon, AlertTriangleIcon, PlusIcon, ClipboardIcon } from "@/components/icons";
@@ -273,20 +273,26 @@ function QrOrder() {
     }
   };
 
-  // Favorite toggle
-  const toggleFavorite = (itemId: string, e: React.MouseEvent) => {
+  // Stable selection and interactions to prevent unnecessary card re-renders
+  const handleSelectItem = useCallback((item: MenuItem) => {
+    setSelectedItem(item);
+  }, []);
+
+  const handleToggleFavorite = useCallback((itemId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    let newFavs = [...favorites];
-    if (newFavs.includes(itemId)) {
-      newFavs = newFavs.filter(id => id !== itemId);
-    } else {
-      newFavs.push(itemId);
-    }
-    setFavorites(newFavs);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(`cafeflow_favorites_${branchId}`, JSON.stringify(newFavs));
-    }
-  };
+    setFavorites((prev) => {
+      const next = prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId];
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`cafeflow_favorites_${branchId}`, JSON.stringify(next));
+      }
+      return next;
+    });
+  }, [branchId]);
+
+  const handleAddClick = useCallback((item: MenuItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedItem(item);
+  }, []);
 
   // Place Order Checkout
   const handlePlaceOrder = async () => {
@@ -674,77 +680,18 @@ function QrOrder() {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {categoryFilteredItems.map((it) => (
-                    <div 
-                      key={it.id} 
-                      className={`group flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 cursor-pointer relative ${
-                        theme === "dark" 
-                          ? "bg-slate-900/60 border-slate-900 hover:border-slate-800 hover:shadow-lg" 
-                          : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md"
-                      }`}
-                      onClick={() => setSelectedItem(it)}
-                    >
-                      {/* Image panel */}
-                      <div className="relative h-32 sm:h-40 w-full overflow-hidden bg-slate-850">
-                        <img 
-                          src={getLocalItemImage(it.name, it.imageUrl)} 
-                          alt={it.name} 
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                        />
-                        {/* Heart icon button overlay */}
-                        <button 
-                          onClick={(e) => toggleFavorite(it.id, e)}
-                          className="absolute top-2 left-2 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-950/70 backdrop-blur-md flex items-center justify-center text-white hover:text-[#ef4444] transition-all scale-95 shadow-md border border-white/10"
-                        >
-                          <svg 
-                            viewBox="0 0 24 24" 
-                            fill={favorites.includes(it.id) ? "currentColor" : "none"} 
-                            stroke="currentColor" 
-                            strokeWidth={2} 
-                            className={`h-4.5 w-4.5 ${favorites.includes(it.id) ? "text-[#ef4444]" : "text-white"}`}
-                          >
-                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-                          </svg>
-                        </button>
-                        {/* Calorie Indicator badge */}
-                        <div className="absolute top-2 right-2 bg-slate-950/75 backdrop-blur-md text-[9px] font-semibold text-white/95 px-2 py-0.5 rounded-full border border-white/5 font-mono">
-                          🔥 {getItemCalories(it.id, it.name)} cal
-                        </div>
-                      </div>
-
-                      {/* Card details */}
-                      <div className="p-3.5 space-y-2 flex flex-col justify-between flex-grow">
-                        <div className="text-left space-y-1">
-                          <h4 className={`font-bold text-xs sm:text-sm transition-colors group-hover:text-[#c87a53] line-clamp-1 leading-tight ${
-                            theme === "dark" ? "text-white" : "text-slate-900"
-                          }`}>
-                            {lang === "en" ? it.name : (it.nameAm || it.name)}
-                          </h4>
-                          <h5 className="text-[10px] text-slate-400 line-clamp-1 leading-none font-medium">
-                            {lang === "en" ? (it.nameAm || "") : it.name}
-                          </h5>
-                          {it.description && (
-                            <p className="text-[10px] sm:text-xs text-slate-400 line-clamp-1 leading-snug font-light mt-1">
-                              {it.description}
-                            </p>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center justify-between pt-1.5 gap-2">
-                          <span className={`font-mono text-xs sm:text-sm font-bold whitespace-nowrap ${
-                            theme === "dark" ? "text-slate-100" : "text-slate-900"
-                          }`}>
-                            {Number(it.price).toLocaleString()} ETB
-                          </span>
-                          <button 
-                            className="bg-[#c87a53] hover:bg-[#b3663d] text-white h-7 px-3 rounded-lg text-xxs font-bold flex items-center gap-1 active:scale-95 transition-transform shrink-0"
-                            onClick={(e) => { e.stopPropagation(); setSelectedItem(it); }}
-                          >
-                            <PlusIcon className="h-3 w-3 stroke-[3.5]" />
-                            {t("add")}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <MenuItemCard
+                      key={it.id}
+                      item={it}
+                      theme={theme}
+                      lang={lang}
+                      isFavorite={favorites.includes(it.id)}
+                      t={t}
+                      tr={tr}
+                      onSelect={handleSelectItem}
+                      onToggleFavorite={handleToggleFavorite}
+                      onAddClick={handleAddClick}
+                    />
                   ))}
                 </div>
               </div>
@@ -1763,3 +1710,106 @@ function OrderTracker({
     </div>
   );
 }
+
+// ── Memoized Menu Item Card Component to eliminate rendering lag ──────────────────
+interface MenuItemCardProps {
+  item: MenuItem;
+  theme: string;
+  lang: string;
+  isFavorite: boolean;
+  t: (key: string) => string;
+  tr: (en: string, am: string | null) => string;
+  onSelect: (item: MenuItem) => void;
+  onToggleFavorite: (itemId: string, e: React.MouseEvent) => void;
+  onAddClick: (item: MenuItem, e: React.MouseEvent) => void;
+}
+
+const MenuItemCard = memo(function MenuItemCard({
+  item,
+  theme,
+  lang,
+  isFavorite,
+  t,
+  tr,
+  onSelect,
+  onToggleFavorite,
+  onAddClick
+}: MenuItemCardProps) {
+  const handleSelect = () => onSelect(item);
+  const handleToggle = (e: React.MouseEvent) => onToggleFavorite(item.id, e);
+  const handleAdd = (e: React.MouseEvent) => onAddClick(item, e);
+
+  return (
+    <div 
+      className={`group flex flex-col justify-between overflow-hidden rounded-2xl border transition-all duration-300 cursor-pointer relative ${
+        theme === "dark" 
+          ? "bg-slate-900/60 border-slate-900 hover:border-slate-800 hover:shadow-lg" 
+          : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md"
+      }`}
+      onClick={handleSelect}
+    >
+      {/* Image panel */}
+      <div className="relative h-32 sm:h-40 w-full overflow-hidden bg-slate-850">
+        <img 
+          src={getLocalItemImage(item.name, item.imageUrl)} 
+          alt={item.name} 
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+        />
+        {/* Heart icon button overlay */}
+        <button 
+          onClick={handleToggle}
+          className="absolute top-2 left-2 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-950/70 backdrop-blur-md flex items-center justify-center text-white hover:text-[#ef4444] transition-all scale-95 shadow-md border border-white/10"
+        >
+          <svg 
+            viewBox="0 0 24 24" 
+            fill={isFavorite ? "currentColor" : "none"} 
+            stroke="currentColor" 
+            strokeWidth={2} 
+            className={`h-4.5 w-4.5 ${isFavorite ? "text-[#ef4444]" : "text-white"}`}
+          >
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+          </svg>
+        </button>
+        {/* Calorie Indicator badge */}
+        <div className="absolute top-2 right-2 bg-slate-950/75 backdrop-blur-md text-[9px] font-semibold text-white/95 px-2 py-0.5 rounded-full border border-white/5 font-mono">
+          🔥 {getItemCalories(item.id, item.name)} cal
+        </div>
+      </div>
+
+      {/* Card details */}
+      <div className="p-3.5 space-y-2 flex flex-col justify-between flex-grow">
+        <div className="text-left space-y-1">
+          <h4 className={`font-bold text-xs sm:text-sm transition-colors group-hover:text-[#c87a53] line-clamp-1 leading-tight ${
+            theme === "dark" ? "text-white" : "text-slate-900"
+          }`}>
+            {lang === "en" ? item.name : (item.nameAm || item.name)}
+          </h4>
+          <h5 className="text-[10px] text-slate-400 line-clamp-1 leading-none font-medium">
+            {lang === "en" ? (item.nameAm || "") : item.name}
+          </h5>
+          {item.description && (
+            <p className="text-[10px] sm:text-xs text-slate-400 line-clamp-1 leading-snug font-light mt-1">
+              {item.description}
+            </p>
+          )}
+        </div>
+        
+        <div className="flex items-center justify-between pt-1.5 gap-2">
+          <span className={`font-mono text-xs sm:text-sm font-bold whitespace-nowrap ${
+            theme === "dark" ? "text-slate-100" : "text-slate-900"
+          }`}>
+            {Number(item.price).toLocaleString()} ETB
+          </span>
+          <button 
+            className="bg-[#c87a53] hover:bg-[#b3663d] text-white h-7 px-3 rounded-lg text-xxs font-bold flex items-center gap-1 active:scale-95 transition-transform shrink-0"
+            onClick={handleAdd}
+          >
+            <PlusIcon className="h-3 w-3 stroke-[3.5]" />
+            {t("add")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+

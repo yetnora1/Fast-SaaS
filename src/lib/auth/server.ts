@@ -75,12 +75,19 @@ export async function loginWithPin(branchId: string, pin: string): Promise<Sessi
   const users = await prisma.user.findMany({
     where: { branchId, active: true, pinHash: { not: null } },
   });
-  for (const user of users) {
-    if (user.pinHash && (await bcrypt.compare(pin, user.pinHash))) {
-      const claims = toClaims(user);
-      await setCookie(await createSessionToken(claims));
-      return claims;
-    }
+  const results = await Promise.all(
+    users.map(async (user) => {
+      if (user.pinHash && (await bcrypt.compare(pin, user.pinHash))) {
+        return user;
+      }
+      return null;
+    })
+  );
+  const matchedUser = results.find((u) => u !== null);
+  if (matchedUser) {
+    const claims = toClaims(matchedUser);
+    await setCookie(await createSessionToken(claims));
+    return claims;
   }
   return null;
 }
