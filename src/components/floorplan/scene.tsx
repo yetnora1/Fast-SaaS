@@ -218,7 +218,7 @@ export function FloorScene({
   const floorRef = useRef(null);
 
   return (
-    <Canvas shadows camera={{ position: [0, 8.5, 10], fov: 42 }} dpr={[1, 2]}>
+    <Canvas frameloop="demand" shadows camera={{ position: [0, 8.5, 10], fov: 42 }} dpr={[1, 2]}>
       <color attach="background" args={["#020617"]} />
       <fog attach="fog" args={["#020617", 14, 30]} />
       <ambientLight intensity={0.55} />

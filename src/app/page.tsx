@@ -17,9 +17,7 @@ export default function Home() {
         <Link href="/register" className="rounded-xl bg-brand-surface2 px-6 py-3 font-medium transition-colors hover:bg-white/10">
           Register your Café
         </Link>
-        <Link href="/saas-admin/login" className="rounded-xl border border-brand-border px-6 py-3 font-medium transition-colors hover:bg-white/5">
-          SaaS Admin
-        </Link>
+
       </div>
     </main>
   );

@@ -33,11 +33,23 @@ export function usePoll<T>(url: string | null, intervalMs = 4000) {
   }, [url]);
 
   useEffect(() => {
-    load();
-    if (url && intervalMs > 0) {
-      timer.current = setInterval(load, intervalMs);
-      return () => clearInterval(timer.current);
+    let mounted = true;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    async function tick() {
+      if (!mounted) return;
+      await load();
+      if (mounted && url && intervalMs > 0) {
+        timeoutId = setTimeout(tick, intervalMs);
+      }
     }
+
+    tick();
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [load, url, intervalMs]);
 
   return { data, error, loading, reload: load };
