@@ -162,7 +162,8 @@ function QrOrder() {
   const tableParam = searchParams.get("table");
   const { lang, toggle, t, tr } = useLang();
 
-  const isKiosk = searchParams.get("kiosk") === "true" || searchParams.get("public") === "true";
+  // Temporarily disabled public kiosk mode (set to true to re-enable)
+  const isKiosk = false; // searchParams.get("kiosk") === "true" || searchParams.get("public") === "true";
 
   // States
   const { data } = usePoll<{ branch: { name: string; tenantId: string }; categories: Category[] }>(`/api/qr/${branchId}/menu`, 0);
