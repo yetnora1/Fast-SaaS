@@ -5,6 +5,7 @@ import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { FloorScene } from "./scene";
 import type { FloorTable, TableShape, TableStatus } from "./types";
+import QRCode from "qrcode";
 
 const SHAPES: TableShape[] = ["round", "square", "rectangle", "booth"];
 const SHAPE_ICON: Record<TableShape, string> = { round: "●", square: "■", rectangle: "▬", booth: "🛋" };
@@ -39,12 +40,69 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
 
   // Pause polling while editing so live updates don't clobber in-progress edits.
   const poll = usePoll<{ tables: FloorTable[] }>(editMode ? null : "/api/manager/tables", 5000);
-  const me = usePoll<{ role: string } | null>("/api/auth/me", 0);
+  const me = usePoll<{ role: string; branchId?: string } | null>("/api/auth/me", 0);
   const canEdit = allowEdit && !!me.data && EDIT_ROLES.includes(me.data.role);
+
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
+  const [printTables, setPrintTables] = useState<FloorTable[]>([]);
 
   useEffect(() => {
     if (poll.data && !editMode) setTables(poll.data.tables);
   }, [poll.data, editMode]);
+
+  useEffect(() => {
+    if (showQRModal && tables.length) {
+      const origin = window.location.origin;
+      const activeBranchId = tables[0]?.branchId || me.data?.branchId || "";
+      const urls: Record<string, string> = {};
+      Promise.all(
+        tables.map(async (table) => {
+          const qrUrl = `${origin}/qr/${activeBranchId}?table=${table.number}`;
+          try {
+            const dataUrl = await QRCode.toDataURL(qrUrl, {
+              width: 300,
+              margin: 1,
+              color: {
+                dark: "#000000",
+                light: "#ffffff",
+              },
+            });
+            urls[table.id] = dataUrl;
+          } catch (err) {
+            console.error("Error generating QR", err);
+          }
+        }),
+      ).then(() => {
+        setQrDataUrls(urls);
+      });
+    }
+  }, [showQRModal, tables, me.data]);
+
+  const handlePrintSingle = (table: FloorTable) => {
+    setPrintTables([table]);
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
+  const handlePrintAll = () => {
+    setPrintTables(tables);
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
+  const handleDownload = (table: FloorTable) => {
+    const dataUrl = qrDataUrls[table.id];
+    if (!dataUrl) return;
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `table-${table.number}-qr.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const selected = tables.find((t) => t.id === selectedId) ?? null;
 
@@ -156,6 +214,15 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
         </div>
         {canEdit && (
           <div className="pointer-events-auto flex items-center gap-2">
+            {!editMode && (
+              <button
+                onClick={() => setShowQRModal(true)}
+                className="rounded-xl bg-black/55 px-3 py-1.5 text-xs font-semibold text-white shadow-card transition-colors hover:bg-black/70 flex items-center gap-1.5"
+              >
+                <span>🖨️</span>
+                <span>QR Codes</span>
+              </button>
+            )}
             {editMode && (
               <button
                 onClick={addTable}
@@ -286,6 +353,144 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
           Could not load tables.
         </div>
       )}
+
+      {showQRModal && (
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm animate-fade">
+          <div className="relative flex max-h-[85vh] w-full max-w-4xl flex-col rounded-2xl border border-brand-border bg-brand-surface text-brand-foreground shadow-pop">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-brand-border/70 px-6 py-4">
+              <div>
+                <h3 className="font-display text-lg font-bold text-[#c87a53]">Table QR Codes</h3>
+                <p className="text-xs text-brand-muted">Print or download high-contrast QR codes for customer self-ordering.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handlePrintAll}
+                  className="rounded-xl bg-brand-accent px-4 py-2 text-xs font-semibold text-brand-accentFg shadow-button transition-colors hover:bg-brand-accent/90"
+                >
+                  🖨️ Print All Tickets
+                </button>
+                <button
+                  onClick={() => setShowQRModal(false)}
+                  className="text-brand-muted hover:text-white text-lg p-1.5"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="grid grid-cols-2 gap-4 p-6 overflow-y-auto sm:grid-cols-3 md:grid-cols-4">
+              {tables.map((table) => {
+                const hasQR = !!qrDataUrls[table.id];
+                return (
+                  <div
+                    key={table.id}
+                    className="flex flex-col items-center justify-between rounded-xl border border-brand-border/60 bg-brand-bg/40 p-4 transition-all hover:border-brand-border"
+                  >
+                    <div className="text-center">
+                      <span className="font-display text-xs font-bold uppercase tracking-wider text-brand-muted">
+                        Table {table.number}
+                      </span>
+                      <div className="mt-0.5 text-[10px] text-brand-muted/70">
+                        {table.capacity} Seats · {table.shape}
+                      </div>
+                    </div>
+
+                    <div className="my-4 flex h-36 w-36 items-center justify-center rounded-lg bg-white p-2">
+                      {hasQR ? (
+                        <img
+                          src={qrDataUrls[table.id]}
+                          className="h-full w-full object-contain"
+                          alt={`Table ${table.number} QR`}
+                        />
+                      ) : (
+                        <div className="text-xs text-slate-400">Generating...</div>
+                      )}
+                    </div>
+
+                    <div className="flex w-full gap-1.5">
+                      <button
+                        onClick={() => handlePrintSingle(table)}
+                        disabled={!hasQR}
+                        className="flex-1 rounded-lg bg-brand-surface2 py-1.5 text-xxs font-medium text-brand-foreground transition-colors hover:bg-white/10 disabled:opacity-50"
+                      >
+                        🖨️ Print
+                      </button>
+                      <button
+                        onClick={() => handleDownload(table)}
+                        disabled={!hasQR}
+                        className="flex-1 rounded-lg bg-brand-surface2 py-1.5 text-xxs font-medium text-brand-foreground transition-colors hover:bg-white/10 disabled:opacity-50"
+                      >
+                        💾 Download
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Print-only container */}
+      <div id="cf-print-area" className="hidden">
+        {printTables.map((table) => {
+          const origin = typeof window !== "undefined" ? window.location.origin : "";
+          const activeBranchId = table.branchId || tables[0]?.branchId || me.data?.branchId || "";
+          const qrUrl = `${origin}/qr/${activeBranchId}?table=${table.number}`;
+          return (
+            <div
+              key={table.id}
+              className="page-break flex flex-col items-center justify-center p-8 text-center bg-white text-black"
+              style={{ minHeight: "100vh", pageBreakAfter: "always" }}
+            >
+              <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "#000000" }}>
+                CafeFlow
+              </h1>
+              <p className="text-sm font-medium text-gray-500 mt-1 uppercase tracking-wide">
+                Scan to Order &amp; Pay
+              </p>
+              
+              <div className="my-8 border-2 border-black p-3 bg-white">
+                {qrDataUrls[table.id] && (
+                  <img
+                    src={qrDataUrls[table.id]}
+                    style={{ width: "240px", height: "240px" }}
+                    alt={`Table ${table.number} QR`}
+                  />
+                )}
+              </div>
+
+              <h2 className="text-5xl font-black tracking-tight" style={{ color: "#000000" }}>
+                TABLE {table.number}
+              </h2>
+              
+              <p className="text-[10px] text-gray-400 mt-6 font-mono break-all max-w-xs">
+                {qrUrl}
+              </p>
+
+              <div className="mt-8 border-t border-dashed border-gray-300 pt-4 w-64 text-center">
+                <p className="text-[11px] font-bold text-gray-700">
+                  Please scan the QR code using your smartphone to browse our menu, customize items, and place your order directly.
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <style>{`
+        @media print {
+          body > :not(#cf-print-area) {
+            display: none !important;
+          }
+          #cf-print-area {
+            display: block !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
