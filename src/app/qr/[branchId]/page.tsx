@@ -780,7 +780,13 @@ function QrOrder() {
           setTableNumber={setTableNumber}
           onClose={() => setIsCartOpen(false)}
           onUpdateQty={updateQty}
-          onProceed={() => setIsPaymentOpen(true)}
+          onProceed={() => {
+            if (!tableNumber || !tableNumber.trim()) {
+              alert(lang === "en" ? "Please enter your table number before proceeding." : "እባክዎን ከመቀጠልዎ በፊት የጠረጴዛ ቁጥርዎን ያስገቡ።");
+              return;
+            }
+            setIsPaymentOpen(true);
+          }}
         />
       )}
 
@@ -1223,17 +1229,19 @@ function CartDrawer({
             theme === "dark" ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
           }`}>
             {/* Table Number setup */}
-            <div className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border ${
-              theme === "dark" ? "bg-slate-950/40 border-slate-800" : "bg-slate-50/50 border-slate-200"
-            }`}>
-              <span className="text-xs font-semibold text-slate-400">{lang === "en" ? "Table Number" : "የጠረጴዛ ቁጥር"}</span>
+            <div className="space-y-1 text-left">
+              <label className="text-xs font-bold text-slate-400 block">
+                {lang === "en" ? "Table Number" : "የጠረጴዛ ቁጥር"} <span className="text-red-500">*</span>
+              </label>
               <input 
-                type="number"
+                type="text"
+                pattern="[0-9]*"
+                inputMode="numeric"
                 value={tableNumber}
-                onChange={(e) => setTableNumber(e.target.value)}
-                placeholder="e.g. 5"
-                className={`w-16 border rounded-lg px-2.5 py-1 text-center font-mono text-xs font-bold focus:outline-none focus:border-[#c87a53] ${
-                  theme === "dark" ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
+                onChange={(e) => setTableNumber(e.target.value.replace(/\D/g, ""))}
+                placeholder={lang === "en" ? "Enter your table number (e.g. 5)" : "የጠረጴዛ ቁጥርዎን ያስገቡ (ለምሳሌ 5)"}
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:outline-none focus:border-[#c87a53] focus:ring-1 focus:ring-[#c87a53]/35 transition-all ${
+                  theme === "dark" ? "bg-slate-950/40 border-slate-800 text-white" : "bg-slate-50/50 border-slate-200 text-slate-900"
                 }`}
               />
             </div>
