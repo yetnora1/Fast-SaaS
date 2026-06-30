@@ -7,10 +7,12 @@
  */
 import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import fs from "fs";
+import path from "path";
 
 const prisma = new PrismaClient();
 
-const PW = "Password123!"; // demo password for all seeded accounts
+const PW = "1234"; // demo password for all seeded accounts
 const PIN = "1234"; // demo POS PIN
 
 async function upsertUser(opts: {
@@ -71,7 +73,7 @@ async function main() {
     name: "Platform Admin",
     role: "saas_owner",
     tenantId: null,
-    password: "Yetnora@1",
+    password: "1234",
   });
 
   // ── Demo tenant ────────────────────────────────────────────────────
@@ -135,47 +137,60 @@ async function main() {
   await upsertUser({ email: "store@zadcafe.et", name: "Kebede Worku", role: "store_manager", tenantId: tenant.id, branchId: branch.id });
 
   // ── Menu ───────────────────────────────────────────────────────────
-  const existingCats = await prisma.menuCategory.count({ where: { tenantId: tenant.id } });
-  if (existingCats === 0) {
-    const drinks = await prisma.menuCategory.create({
-      data: { tenantId: tenant.id, name: "Drinks", nameAm: "መጠጦች", sortOrder: 1 },
-    });
-    const food = await prisma.menuCategory.create({
-      data: { tenantId: tenant.id, name: "Food", nameAm: "ምግብ", sortOrder: 2 },
-    });
+  // Clean existing menu to ensure clean and complete seeding of all items
+  await prisma.menuCategory.deleteMany({ where: { tenantId: tenant.id } });
 
-    const macchiato = await prisma.menuItem.create({
-      data: {
-        categoryId: drinks.id, name: "Macchiato", nameAm: "ማኪያቶ", price: "70.00", cost: "20.00",
-        course: "drink", station: "BARISTA", state: "PUBLISHED", available: true, prepTargetSec: 180,
-      },
-    });
-    await prisma.modifier.createMany({
-      data: [
-        { itemId: macchiato.id, groupName: "Size", option: "Small", extraPrice: "0.00" },
-        { itemId: macchiato.id, groupName: "Size", option: "Large", extraPrice: "20.00" },
-        { itemId: macchiato.id, groupName: "Sugar", option: "No sugar", extraPrice: "0.00" },
-        { itemId: macchiato.id, groupName: "Sugar", option: "Extra sugar", extraPrice: "0.00" },
-      ],
-    });
-    await prisma.menuItem.create({
-      data: {
-        categoryId: drinks.id, name: "Ethiopian Coffee", nameAm: "ቡና", price: "50.00", cost: "12.00",
-        course: "drink", station: "BARISTA", state: "PUBLISHED", available: true, prepTargetSec: 240,
-      },
-    });
-    await prisma.menuItem.create({
-      data: {
-        categoryId: food.id, name: "Firfir", nameAm: "ፍርፍር", price: "180.00", cost: "60.00",
-        course: "main", station: "KITCHEN", state: "PUBLISHED", available: true, prepTargetSec: 600,
-      },
-    });
-    await prisma.menuItem.create({
-      data: {
-        categoryId: food.id, name: "Club Sandwich", nameAm: "ክለብ ሳንድዊች", price: "220.00", cost: "80.00",
-        course: "main", station: "KITCHEN", state: "PUBLISHED", available: true, prepTargetSec: 720,
-      },
-    });
+  const menuDataPath = path.resolve("src/local-menu-data.json");
+  if (fs.existsSync(menuDataPath)) {
+    const menuData = JSON.parse(fs.readFileSync(menuDataPath, "utf-8"));
+    for (const cat of menuData) {
+      const category = await prisma.menuCategory.create({
+        data: {
+          tenantId: tenant.id,
+          name: cat.name,
+          nameAm: cat.nameAm,
+          sortOrder: cat.sortOrder,
+          active: cat.active,
+        },
+      });
+
+      for (const item of cat.items) {
+        const menuItem = await prisma.menuItem.create({
+          data: {
+            categoryId: category.id,
+            name: item.name,
+            nameAm: item.nameAm,
+            description: item.description,
+            price: item.price,
+            cost: item.cost,
+            vatApplicable: item.vatApplicable,
+            available: item.available,
+            featured: item.featured,
+            course: item.course,
+            station: item.station,
+            imageUrl: item.imageUrl,
+            prepTargetSec: item.prepTargetSec,
+            state: item.state,
+            availableFrom: item.availableFrom,
+            availableTo: item.availableTo,
+          },
+        });
+
+        if (item.modifiers && item.modifiers.length > 0) {
+          await prisma.modifier.createMany({
+            data: item.modifiers.map((m: any) => ({
+              itemId: menuItem.id,
+              groupName: m.groupName,
+              option: m.option,
+              extraPrice: m.extraPrice,
+            })),
+          });
+        }
+      }
+    }
+    console.log(`Successfully seeded ${menuData.length} menu categories from local-menu-data.json`);
+  } else {
+    console.warn("local-menu-data.json not found, skipping menu seed.");
   }
 
   // ── Suppliers + inventory ──────────────────────────────────────────
