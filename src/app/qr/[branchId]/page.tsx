@@ -1227,7 +1227,7 @@ function CartDrawer({
                   )}
                   {item.notes && (
                     <p className="text-[10px] text-slate-400 italic font-light line-clamp-2">
-                      "{item.notes}"
+                      &ldquo;{item.notes}&rdquo;
                     </p>
                   )}
                   <div className="font-mono text-xs font-bold text-[#c87a53] pt-0.5">
@@ -1848,7 +1848,7 @@ function OrderTracker({
                     </span>
                     {it.notes && (
                       <span className="text-[10px] text-slate-400 italic mt-0.5 leading-snug">
-                        "{it.notes}"
+                        &ldquo;{it.notes}&rdquo;
                       </span>
                     )}
                   </div>
@@ -1886,7 +1886,7 @@ function OrderTracker({
                 </div>
                 {(order.feedbackComment || feedbackComment) && (
                   <p className="text-xxs text-slate-400 italic max-w-md mx-auto line-clamp-2">
-                    "{order.feedbackComment || feedbackComment}"
+                    &ldquo;{order.feedbackComment || feedbackComment}&rdquo;
                   </p>
                 )}
               </div>
