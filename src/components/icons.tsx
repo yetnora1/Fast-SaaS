@@ -174,3 +174,26 @@ export const FileTextIcon = svg(
     <path d="M9 13h6M9 17h6" />
   </>,
 );
+
+export const StarIcon = svg(
+  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />,
+);
+
+export const MessageCircleIcon = svg(
+  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z" />,
+);
+
+export const CoffeeIcon = svg(
+  <>
+    <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+    <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+    <path d="M6 2v2M10 2v2M14 2v2" />
+  </>,
+);
+
+export const ChefHatIcon = svg(
+  <>
+    <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V20H6Z" />
+    <path d="M6 17h12" />
+  </>,
+);

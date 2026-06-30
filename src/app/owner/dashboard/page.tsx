@@ -3,6 +3,7 @@ import { usePoll } from "@/components/fetcher";
 import { Card, KPICard, PageHeader, LiveDot, StatusChip, EmptyState, SkeletonCard, Skeleton } from "@/components/ui";
 import { AlertTriangleIcon, CoinsIcon, TrendUpIcon, ReceiptIcon, CheckCircleIcon, PackageIcon } from "@/components/icons";
 import { ChartTooltip, CHART_COLORS, CHART_GRID, CHART_AXIS } from "@/components/charts";
+import { FeedbackCard } from "@/components/FeedbackCard";
 import { useLang } from "@/lib/i18n";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
@@ -169,6 +170,9 @@ export default function OwnerDashboard() {
           </ol>
         )}
       </Card>
+
+      {/* Customer Feedback — all branches */}
+      <FeedbackCard station="ALL" />
     </div>
   );
 }

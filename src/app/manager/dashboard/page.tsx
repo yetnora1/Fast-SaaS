@@ -3,6 +3,7 @@ import { usePoll } from "@/components/fetcher";
 import { Card, StatusChip, TimerBadge, PageHeader, LiveDot, EmptyState } from "@/components/ui";
 import { AlertTriangleIcon, InboxIcon } from "@/components/icons";
 import { FloorPlan } from "@/components/floorplan";
+import { FeedbackCard } from "@/components/FeedbackCard";
 import { useLang } from "@/lib/i18n";
 
 interface Order { id: string; status: string; submittedAt: string | null; table: { number: number } | null; waiter: { name: string } | null; items: { id: string }[] }
@@ -53,6 +54,9 @@ export default function ManagerDashboard() {
           </div>
         </Card>
       )}
+
+      {/* Customer Feedback — branch-scoped */}
+      <FeedbackCard station="ALL" />
     </div>
   );
 }
