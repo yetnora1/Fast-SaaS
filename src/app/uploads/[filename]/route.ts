@@ -20,6 +20,10 @@ export async function GET(req: Request, { params }: { params: { filename: string
       contentType = "image/jpeg";
     } else if (ext === "png") {
       contentType = "image/png";
+    } else if (ext === "webp") {
+      contentType = "image/webp";
+    } else if (ext === "gif") {
+      contentType = "image/gif";
     } else if (ext === "pdf") {
       contentType = "application/pdf";
     }

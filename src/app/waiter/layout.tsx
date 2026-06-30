@@ -12,6 +12,7 @@ export default async function WaiterLayout({ children }: { children: React.React
         { href: "/waiter", label: "Tables" },
         { href: "/waiter/orders", label: "My Orders" },
         { href: "/waiter/qr-orders", label: "QR Orders" },
+        { href: "/waiter/profile", label: "Profile" },
       ]}
     >
       {children}

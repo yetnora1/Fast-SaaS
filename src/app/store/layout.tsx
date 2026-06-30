@@ -13,6 +13,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         { href: "/store/suppliers", label: "Suppliers" },
         { href: "/store/orders", label: "Purchase Orders" },
         { href: "/store/reports", label: "Reports" },
+        { href: "/store/profile", label: "Profile" },
       ]}
     >
       {children}

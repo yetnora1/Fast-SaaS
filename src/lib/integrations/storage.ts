@@ -42,3 +42,18 @@ export async function storeMenuImage(file: File): Promise<{ url: string }> {
   await fs.writeFile(path.join(dir, name), buf);
   return { url: `/uploads/menu/${name}` };
 }
+
+export async function storeAvatar(file: File): Promise<{ url: string }> {
+  const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  if (!AVATAR_TYPES.includes(file.type)) throw new Error("Invalid image type (JPG/PNG/WEBP/GIF only)");
+  if (file.size > IMAGE_MAX) throw new Error("Image too large (max 4MB)");
+
+  const dir = path.resolve("public/uploads/avatars");
+  await fs.mkdir(dir, { recursive: true });
+  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : file.type === "image/gif" ? "gif" : "jpg";
+  const name = `avatar_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const buf = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(path.join(dir, name), buf);
+  return { url: `/uploads/avatars/${name}` };
+}
+

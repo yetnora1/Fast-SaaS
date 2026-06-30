@@ -255,6 +255,11 @@ model User {
   active       Boolean  @default(true)
   emailVerified DateTime? @map("email_verified")
   mfaSecret    String?  @map("mfa_secret")
+  phone        String?
+  age          Int?
+  bio          String?  @db.Text
+  avatarUrl    String?  @map("avatar_url")
+  emergencyContact String? @map("emergency_contact")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
