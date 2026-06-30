@@ -2,7 +2,7 @@
 import React, { Suspense, useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { api, usePoll } from "@/components/fetcher";
-import { GlobeIcon, CheckCircleIcon, ClockIcon, AlertTriangleIcon, PlusIcon, ClipboardIcon } from "@/components/icons";
+import { GlobeIcon, CheckCircleIcon, ClockIcon, AlertTriangleIcon, PlusIcon, ClipboardIcon, ArrowRightIcon } from "@/components/icons";
 import { useLang } from "@/lib/i18n";
 
 interface Modifier {
@@ -162,12 +162,15 @@ function QrOrder() {
   const tableParam = searchParams.get("table");
   const { lang, toggle, t, tr } = useLang();
 
+  const isKiosk = searchParams.get("kiosk") === "true" || searchParams.get("public") === "true";
+
   // States
   const { data } = usePoll<{ branch: { name: string; tenantId: string }; categories: Category[] }>(`/api/qr/${branchId}/menu`, 0);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [favorites, setFavorites] = useState<string[]>([]);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
+  const [kioskSuccessOrderId, setKioskSuccessOrderId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
@@ -200,15 +203,17 @@ function QrOrder() {
   // Local storage checks
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const orderKey = `cafeflow_active_order_${branchId}_${tableParam ?? "0"}`;
-      const savedOrder = localStorage.getItem(orderKey);
-      if (savedOrder) setActiveOrderId(savedOrder);
+      if (!isKiosk) {
+        const orderKey = `cafeflow_active_order_${branchId}_${tableParam ?? "0"}`;
+        const savedOrder = localStorage.getItem(orderKey);
+        if (savedOrder) setActiveOrderId(savedOrder);
+      }
 
       const favKey = `cafeflow_favorites_${branchId}`;
       const savedFavs = localStorage.getItem(favKey);
       if (savedFavs) setFavorites(JSON.parse(savedFavs));
     }
-  }, [branchId, tableParam]);
+  }, [branchId, tableParam, isKiosk]);
 
   // Load Cart
   useEffect(() => {
@@ -322,15 +327,26 @@ function QrOrder() {
       });
 
       if (res && res.orderId) {
-        if (typeof window !== "undefined") {
-          const orderKey = `cafeflow_active_order_${branchId}_${tableParam ?? "0"}`;
-          localStorage.setItem(orderKey, res.orderId);
-          localStorage.removeItem(`cafeflow_cart_${branchId}_${tableParam ?? "0"}`);
+        if (isKiosk) {
+          setKioskSuccessOrderId(res.orderId);
+          setCart({});
+          if (typeof window !== "undefined") {
+            localStorage.removeItem(`cafeflow_cart_${branchId}_${tableParam ?? "0"}`);
+          }
+          setIsCartOpen(false);
+          setIsPaymentOpen(false);
+          setTxRef("");
+        } else {
+          if (typeof window !== "undefined") {
+            const orderKey = `cafeflow_active_order_${branchId}_${tableParam ?? "0"}`;
+            localStorage.setItem(orderKey, res.orderId);
+            localStorage.removeItem(`cafeflow_cart_${branchId}_${tableParam ?? "0"}`);
+          }
+          setActiveOrderId(res.orderId);
+          setCart({});
+          setIsCartOpen(false);
+          setIsPaymentOpen(false);
         }
-        setActiveOrderId(res.orderId);
-        setCart({});
-        setIsCartOpen(false);
-        setIsPaymentOpen(false);
       }
     } catch (err) {
       console.error("Failed to place order:", err);
@@ -407,6 +423,22 @@ function QrOrder() {
   const cartSubtotal = useMemo(() => cartValues.reduce((sum, item) => sum + (item.price * item.qty), 0), [cartValues]);
   const vat = useMemo(() => cartSubtotal * 0.15, [cartSubtotal]);
   const cartTotal = useMemo(() => cartSubtotal + vat, [cartSubtotal, vat]);
+
+  // Kiosk Success view
+  if (kioskSuccessOrderId) {
+    return (
+      <KioskSuccessScreen
+        orderId={kioskSuccessOrderId}
+        tableNumber={tableNumber}
+        lang={lang}
+        theme={theme}
+        onDone={() => {
+          setKioskSuccessOrderId(null);
+          setTableNumber(tableParam || "");
+        }}
+      />
+    );
+  }
 
   // Active Order view (Order Tracker)
   if (activeOrderId) {
@@ -2052,4 +2084,144 @@ const MenuItemCard = memo(function MenuItemCard({
     </div>
   );
 });
+
+// ── Kiosk Success Screen component ──────────────────────────────
+interface KioskSuccessProps {
+  orderId: string;
+  tableNumber: string | null;
+  lang: "en" | "am";
+  theme: "light" | "dark";
+  onDone: () => void;
+}
+
+function KioskSuccessScreen({ orderId, tableNumber, lang, theme, onDone }: KioskSuccessProps) {
+  const [timeLeft, setTimeLeft] = useState(8);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          onDone();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [onDone]);
+
+  const progressPercent = (timeLeft / 8) * 100;
+
+  return (
+    <main className={`min-h-dvh flex flex-col items-center justify-center p-4 transition-colors duration-500 relative ${
+      theme === "dark" 
+        ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100" 
+        : "bg-gradient-to-br from-[#faf9f6] via-white to-[#faf9f6] text-slate-800"
+    }`}>
+      {/* Decorative Blur Backgrounds */}
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-80 h-80 rounded-full bg-brand-accent/10 blur-[100px] pointer-events-none" />
+
+      <div className="relative w-full max-w-md mx-auto text-center space-y-6 z-10">
+        
+        {/* Animated Green Check Ring */}
+        <div className="flex justify-center">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping opacity-75" />
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 animate-fade">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="h-12 w-12 text-white">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Text Headers */}
+        <div className="space-y-2">
+          <h2 className="font-display text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            {lang === "en" ? "Order Confirmed!" : "ትዕዛዝዎ ተረጋግጧል!"}
+          </h2>
+          <p className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+            {lang === "en" ? "Thank you for ordering with us!" : "ከእኛ ጋር ስላዘዙ እናመሰግናለን!"}
+          </p>
+        </div>
+
+        {/* Modern Receipt Ticket */}
+        <div className={`relative overflow-hidden rounded-2xl border transition-all duration-300 p-6 ${
+          theme === "dark" 
+            ? "bg-slate-900/60 border-slate-800 backdrop-blur-md" 
+            : "bg-white/80 border-slate-200/80 shadow-xl shadow-slate-100/50 backdrop-blur-md"
+        }`}>
+          {/* Ticket jagged edge top/bottom */}
+          <div className="absolute top-0 inset-x-0 h-1 flex justify-between px-4">
+            {Array.from({ length: 15 }).map((_, i) => (
+              <div key={i} className={`w-2 h-2 rounded-full -translate-y-1 ${theme === "dark" ? "bg-slate-950" : "bg-[#faf9f6]"}`} />
+            ))}
+          </div>
+          
+          <div className="space-y-4 py-2">
+            <div>
+              <span className={`text-[10px] uppercase tracking-widest font-semibold ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}>
+                {lang === "en" ? "Your Order Ticket" : "የእርስዎ የትዕዛዝ ትኬት"}
+              </span>
+              <div className="font-mono text-3xl font-bold mt-1 text-[#c87a53]">
+                #{orderId.slice(-8).toUpperCase()}
+              </div>
+            </div>
+
+            {tableNumber && (
+              <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                theme === "dark" ? "bg-white/5 text-slate-300" : "bg-slate-100 text-slate-700"
+              }`}>
+                <span>{lang === "en" ? "Table" : "ጠረጴዛ"}</span>
+                <span className="font-bold text-[#c87a53]">{tableNumber}</span>
+              </div>
+            )}
+
+            <div className={`border-t border-dashed my-3 ${theme === "dark" ? "border-slate-800" : "border-slate-200"}`} />
+
+            <p className={`text-xs leading-relaxed ${theme === "dark" ? "text-slate-400" : "text-slate-600"}`}>
+              {lang === "en"
+                ? "Please note your order number. We will serve your order to your table shortly."
+                : "እባክዎን የትዕዛዝ ቁጥርዎን ይያዙ። ትዕዛዝዎ በቅርቡ ጠረጴዛዎ ላይ ይቀርባል።"}
+            </p>
+          </div>
+
+          <div className="absolute bottom-0 inset-x-0 h-1 flex justify-between px-4">
+            {Array.from({ length: 15 }).map((_, i) => (
+              <div key={i} className={`w-2 h-2 rounded-full translate-y-1 ${theme === "dark" ? "bg-slate-950" : "bg-[#faf9f6]"}`} />
+            ))}
+          </div>
+        </div>
+
+        {/* Countdown Progress Ring/Bar */}
+        <div className="space-y-3 pt-2">
+          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden max-w-[200px] mx-auto">
+            <div 
+              className="h-full bg-gradient-to-r from-[#c87a53] to-[#e09b75] transition-all duration-1000 ease-linear"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <p className={`text-xs ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}>
+            {lang === "en" 
+              ? `Returning to menu in ${timeLeft} seconds...` 
+              : `በ ${timeLeft} ሰከንድ ውስጥ ወደ ምናሌ ይመለሳል...`}
+          </p>
+        </div>
+
+        {/* Action Button */}
+        <button
+          onClick={onDone}
+          className="inline-flex items-center gap-1.5 bg-[#c87a53] text-white hover:bg-[#b3663d] px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-md active:scale-95 group"
+        >
+          {lang === "en" ? "Back to Menu Now" : "አሁን ወደ ምናሌ ይመለሱ"}
+          <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </button>
+
+      </div>
+    </main>
+  );
+}
 
