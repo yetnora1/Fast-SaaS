@@ -80,7 +80,7 @@ async function main() {
   const trialEnd = new Date();
   trialEnd.setDate(trialEnd.getDate() + 7);
 
-  let tenant = await prisma.tenant.findFirst({ where: { name: "ZAD Cafe" } });
+  let tenant = await prisma.tenant.findFirst();
   if (!tenant) {
     tenant = await prisma.tenant.create({
       data: {
