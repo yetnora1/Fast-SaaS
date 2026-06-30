@@ -38,6 +38,8 @@ export const GET = handler(async (_req: Request, { params }: { params: { branchI
     type: order.type,
     createdAt: order.createdAt,
     tableNumber: order.table?.number,
+    feedbackRating: order.feedbackRating,
+    feedbackComment: order.feedbackComment,
     items: order.items.map((item) => ({
       id: item.id,
       name: item.menuItem.name,

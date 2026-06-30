@@ -1561,12 +1561,20 @@ function OrderTracker({
   onClear: () => void;
 }) {
   const { lang, t, tr } = useLang();
-  const { data: order, error, loading } = usePoll<{
+  const [feedbackRating, setFeedbackRating] = useState<number>(0);
+  const [hoveredRating, setHoveredRating] = useState<number>(0);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [localFeedbackSubmitted, setLocalFeedbackSubmitted] = useState(false);
+
+  const { data: order, error, loading, reload } = usePoll<{
     id: string;
     status: string;
     type: string;
     createdAt: string;
     tableNumber?: number;
+    feedbackRating?: number | null;
+    feedbackComment?: string | null;
     items: {
       id: string;
       name: string;
@@ -1576,6 +1584,28 @@ function OrderTracker({
       notes?: string;
     }[];
   }>(`/api/qr/${branchId}/order/${orderId}`, 4000);
+
+  const handleSubmitFeedback = async () => {
+    if (feedbackRating === 0) return;
+    setSubmittingFeedback(true);
+    try {
+      const res = await fetch(`/api/qr/${branchId}/order/${orderId}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: feedbackRating, comment: feedbackComment || null }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error ?? "Failed to save feedback");
+      }
+      setLocalFeedbackSubmitted(true);
+      if (reload) reload();
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   if (loading && !order) {
     return (
@@ -1797,6 +1827,105 @@ function OrderTracker({
             })}
           </ul>
         </div>
+
+        {/* Feedback Section (Smart, modern feedback widget shown only when order is completed/served) */}
+        {currentStep === 4 && (
+          <div className={`mt-8 p-5 rounded-2xl border transition-all ${
+            theme === "dark" ? "bg-slate-950/60 border-slate-800" : "bg-slate-50 border-slate-200"
+          }`}>
+            {(order.feedbackRating || localFeedbackSubmitted) ? (
+              <div className="text-center py-2 space-y-2 animate-fade">
+                <div className="text-2xl">🌟</div>
+                <h4 className="font-display text-sm font-bold text-[#c87a53]">
+                  {lang === "en" ? "Thank You for Your Feedback!" : "ለአስተያየትዎ እናመሰግናለን!"}
+                </h4>
+                <div className="flex justify-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span 
+                      key={star} 
+                      className={`text-base ${
+                        star <= (order.feedbackRating || feedbackRating) ? "text-amber-550" : "text-slate-700"
+                      }`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                {(order.feedbackComment || feedbackComment) && (
+                  <p className="text-xxs text-slate-400 italic max-w-md mx-auto line-clamp-2">
+                    "{order.feedbackComment || feedbackComment}"
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4 animate-in">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-display text-xs font-bold uppercase tracking-wide text-[#c87a53]">
+                    {lang === "en" ? "Rate Your Experience" : "ተሞክሮዎን ይገምግሙ"}
+                  </h4>
+                  <span className="text-[10px] text-slate-500">
+                    {lang === "en" ? "Help us improve!" : "የተሻለ አገልግሎት እንድንሰጥ ያግዙን!"}
+                  </span>
+                </div>
+                
+                {/* Modern Star Selector */}
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setFeedbackRating(star)}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(0)}
+                        className="text-2xl focus:outline-none transition-transform hover:scale-120 duration-150 text-slate-650"
+                      >
+                        <span className={`transition-colors ${
+                          star <= (hoveredRating || feedbackRating) ? "text-amber-500" : "text-slate-700"
+                        }`}>
+                          ★
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-xxs font-semibold text-slate-400 font-mono">
+                    {feedbackRating > 0 && `${feedbackRating} / 5`}
+                  </span>
+                </div>
+
+                {/* Smart feedback text field */}
+                <div className="space-y-2">
+                  <textarea
+                    rows={2}
+                    value={feedbackComment}
+                    onChange={(e) => setFeedbackComment(e.target.value)}
+                    placeholder={lang === "en" ? "Any thoughts on the food or service? (optional)" : "ስለ ምግቡ ወይም አገልግሎቱ አስተያየት ካለዎት እዚህ ይጻፉ... (ከተፈለገ)"}
+                    className={`w-full border rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-[#c87a53] transition-colors resize-none placeholder:text-slate-500 ${
+                      theme === "dark" ? "bg-slate-900 border-slate-800 text-white focus:bg-slate-900" : "bg-white border-slate-200 text-slate-900 focus:bg-white"
+                    }`}
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleSubmitFeedback}
+                      disabled={feedbackRating === 0 || submittingFeedback}
+                      className="bg-[#c87a53] text-white hover:bg-[#b3663d] disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-xl text-xxs font-bold active:scale-95 transition-all flex items-center gap-1 shadow-sm"
+                    >
+                      {submittingFeedback ? (
+                        <>
+                          <div className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                          {lang === "en" ? "Submitting..." : "በመላክ ላይ..."}
+                        </>
+                      ) : (
+                        lang === "en" ? "Submit Feedback" : "አስተያየት ላክ"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-8 pt-4 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-slate-800/40">
           <p className="text-xs text-slate-400 leading-snug font-light max-w-sm">

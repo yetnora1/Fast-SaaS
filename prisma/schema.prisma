@@ -412,6 +412,8 @@ model Order {
   heldForBar    Boolean     @default(false) @map("held_for_bar")
   txRef         String?     @map("tx_ref")
   receiptUrl    String?     @map("receipt_url")
+  feedbackRating Int?       @map("feedback_rating")
+  feedbackComment String?     @db.Text @map("feedback_comment")
   submittedAt   DateTime?   @map("submitted_at")
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
