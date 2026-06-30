@@ -449,37 +449,60 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
           return (
             <div
               key={table.id}
-              className="page-break flex flex-col items-center justify-center p-8 text-center bg-white text-black"
+              className="page-break flex flex-col items-center justify-between p-10 text-center bg-white text-black border border-gray-200"
               style={{ minHeight: "100vh", pageBreakAfter: "always" }}
             >
-              <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "#000000" }}>
-                CafeFlow
-              </h1>
-              <p className="text-sm font-medium text-gray-500 mt-1 uppercase tracking-wide">
-                Scan to Order &amp; Pay
-              </p>
-              
-              <div className="my-8 border-2 border-black p-3 bg-white">
-                {qrDataUrls[table.id] && (
-                  <img
-                    src={qrDataUrls[table.id]}
-                    style={{ width: "240px", height: "240px" }}
-                    alt={`Table ${table.number} QR`}
-                  />
-                )}
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                  <span className="text-xl">☕</span>
+                </div>
+                <h1 className="text-2xl font-black tracking-tight text-slate-900">
+                  ZAD Cafe
+                </h1>
+                <div className="h-[2px] w-16 bg-[#c87a53] my-2" />
+                
+                <h2 className="text-4xl font-extrabold text-slate-800 uppercase tracking-tight mt-1">
+                  TABLE {table.number}
+                </h2>
               </div>
 
-              <h2 className="text-5xl font-black tracking-tight" style={{ color: "#000000" }}>
-                TABLE {table.number}
-              </h2>
-              
-              <p className="text-[10px] text-gray-400 mt-6 font-mono break-all max-w-xs">
-                {qrUrl}
-              </p>
+              {/* QR Container with Scan instruction */}
+              <div className="flex flex-col items-center my-6">
+                <div className="border-4 border-slate-950 p-4 bg-white shadow-md rounded-xl">
+                  {qrDataUrls[table.id] && (
+                    <img
+                      src={qrDataUrls[table.id]}
+                      style={{ width: "240px", height: "240px" }}
+                      alt={`Table ${table.number} QR`}
+                    />
+                  )}
+                </div>
+                <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                  <span>📱 Scan to Order</span>
+                  <span>·</span>
+                  <span>ይቃኙ እና ያዝዙ 📱</span>
+                </div>
+              </div>
 
-              <div className="mt-8 border-t border-dashed border-gray-300 pt-4 w-64 text-center">
-                <p className="text-[11px] font-bold text-gray-700">
-                  Please scan the QR code using your smartphone to browse our menu, customize items, and place your order directly.
+              {/* Instructions */}
+              <div className="border-t border-dashed border-slate-300 pt-6 w-72 text-center flex flex-col gap-3">
+                <div className="text-[12px] font-medium leading-relaxed text-slate-850">
+                  <p className="font-bold text-slate-900">Scan to access the menu items</p>
+                  <p className="text-slate-500 mt-0.5 font-normal">Browse our menu and place your order directly from your phone.</p>
+                </div>
+                <div className="text-[12px] font-medium leading-relaxed text-slate-850">
+                  <p className="font-bold text-slate-900">የምግብ ዝርዝሩን ለመመልከት ይህንን ይቃኙ</p>
+                  <p className="text-slate-500 mt-0.5 font-normal">ከተቀመጡበት ሆነው ምናሌውን በመመልከት ቀጥታ ማዘዝ ይችላሉ።</p>
+                </div>
+              </div>
+
+              {/* Footer URL / Brand */}
+              <div className="mt-4">
+                <p className="text-[9px] text-gray-400 font-mono break-all max-w-xs opacity-75">
+                  {qrUrl}
+                </p>
+                <p className="text-[8px] text-gray-400 mt-1 uppercase tracking-widest">
+                  Powered by CafeFlow
                 </p>
               </div>
             </div>
