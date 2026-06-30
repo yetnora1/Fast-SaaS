@@ -26,9 +26,10 @@ export interface FloorPlanProps {
   /** Hide floating labels (e.g. while a modal is open above the canvas). */
   paused?: boolean;
   height?: number;
+  branchId?: string;
 }
 
-export default function FloorPlan({ onTableSelect, allowEdit = true, paused = false, height = 480 }: FloorPlanProps) {
+export default function FloorPlan({ onTableSelect, allowEdit = true, paused = false, height = 480, branchId }: FloorPlanProps) {
   const { statusLabel } = useLang();
   const [editMode, setEditMode] = useState(false);
   const [tables, setTables] = useState<FloorTable[]>([]);
@@ -38,8 +39,10 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
   const tablesRef = useRef<FloorTable[]>([]);
   tablesRef.current = tables;
 
+  const query = branchId ? `?branchId=${branchId}` : "";
+
   // Pause polling while editing so live updates don't clobber in-progress edits.
-  const poll = usePoll<{ tables: FloorTable[] }>(editMode ? null : "/api/manager/tables", 5000);
+  const poll = usePoll<{ tables: FloorTable[] }>(editMode ? null : `/api/manager/tables${query}`, 5000);
   const me = usePoll<{ role: string; branchId?: string } | null>("/api/auth/me", 0);
   const canEdit = allowEdit && !!me.data && EDIT_ROLES.includes(me.data.role);
 
@@ -109,13 +112,13 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
   const persist = useCallback(async (id: string, patch: Partial<FloorTable>) => {
     setSave("saving");
     try {
-      await api(`/api/manager/tables/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
+      await api(`/api/manager/tables/${id}${query}`, { method: "PATCH", body: JSON.stringify(patch) });
       setSave("saved");
       setTimeout(() => setSave("idle"), 1200);
     } catch {
       setSave("error");
     }
-  }, []);
+  }, [query]);
 
   // Optimistic local edit + persist (shape / seats / status / rotation).
   const edit = useCallback(
@@ -129,7 +132,10 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
   const addTable = useCallback(async () => {
     setSave("saving");
     try {
-      const res = await api<{ table: FloorTable }>("/api/manager/tables", { method: "POST", body: "{}" });
+      const res = await api<{ table: FloorTable }>("/api/manager/tables", {
+        method: "POST",
+        body: JSON.stringify({ branchId }),
+      });
       setTables((ts) => [...ts, res.table]);
       setSelectedId(res.table.id);
       setSave("saved");
@@ -137,13 +143,13 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
     } catch {
       setSave("error");
     }
-  }, []);
+  }, [branchId]);
 
   const removeTable = useCallback(async (id: string) => {
     if (!window.confirm("Remove this table from the floor?")) return;
     setSave("saving");
     try {
-      await api(`/api/manager/tables/${id}`, { method: "DELETE" });
+      await api(`/api/manager/tables/${id}${query}`, { method: "DELETE" });
       setTables((ts) => ts.filter((t) => t.id !== id));
       setSelectedId(null);
       setSave("saved");
@@ -152,7 +158,7 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
       setSave("error");
       alert((e as Error).message);
     }
-  }, []);
+  }, [query]);
 
   const handleSelect = useCallback(
     (id: string) => {

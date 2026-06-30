@@ -16,9 +16,10 @@ export const GET = handler(async (req: Request) => {
 
 // Add a new table to the floor (manager/owner). Number is auto-assigned;
 // position is staggered so it doesn't land exactly on an existing table.
-export const POST = handler(async (_req: Request) => {
+export const POST = handler(async (req: Request) => {
   const me = await requireTenant("cafe_manager", "cafe_owner");
-  const branchId = me.branchId ?? (await prisma.branch.findFirst({ where: { tenantId: me.tenantId }, select: { id: true } }))?.id;
+  const body = await req.json().catch(() => ({}));
+  const branchId = body.branchId ?? me.branchId ?? (await prisma.branch.findFirst({ where: { tenantId: me.tenantId }, select: { id: true } }))?.id;
   if (!branchId) return fail("No branch found for this tenant", 400);
 
   const last = await prisma.cafeTable.aggregate({ where: { branchId }, _max: { number: true } });
