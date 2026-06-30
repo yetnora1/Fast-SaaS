@@ -297,8 +297,8 @@ function QrOrder() {
 
   // Place Order Checkout
   const handlePlaceOrder = async (receiptUrl?: string) => {
-    if (!txRef.trim()) {
-      alert(lang === "en" ? "Please enter payment transaction reference number" : "እባክዎን የክፍያ ማረጋገጫ ቁጥር ያስገቡ");
+    if (!receiptUrl) {
+      alert(lang === "en" ? "Please upload your payment receipt" : "እባክዎን የክፍያ ደረሰኝዎን ይስቀሉ");
       return;
     }
     
@@ -316,7 +316,7 @@ function QrOrder() {
         body: JSON.stringify({
           tableNumber: tableNumber ? Number(tableNumber) : undefined,
           items,
-          txRef,
+          txRef: txRef || undefined,
           receiptUrl
         }),
       });
@@ -1447,31 +1447,10 @@ function PaymentModal({
             </div>
           </div>
 
-          {/* Reference Input */}
-          <div className="space-y-2 pt-2">
-            <label className="text-xs font-bold text-slate-400 block">
-              {lang === "en" ? "Transaction Reference Number *" : "የክፍያ ማረጋገጫ ቁጥር (Reference) *"}
-            </label>
-            <input 
-              type="text"
-              value={txRef}
-              onChange={(e) => setTxRef(e.target.value)}
-              placeholder="e.g. FT26173X29"
-              className={`w-full border rounded-xl px-3 py-2.5 text-xs font-mono focus:outline-none focus:border-[#c87a53] ${
-                theme === "dark" ? "bg-slate-950 border-slate-800 text-white focus:bg-slate-950" : "bg-slate-50 border-slate-200 text-slate-900 focus:bg-white"
-              }`}
-            />
-            <span className="text-[10px] text-slate-400 leading-tight block">
-              {lang === "en" 
-                ? "Enter the exact reference ID/code received from the bank after payment completion."
-                : "ክፍያውን እንደፈጸሙ የደረሰዎትን ትክክለኛ የክፍያ ማረጋገጫ መለያ ቁጥር እዚህ ያስገቡ።"}
-            </span>
-          </div>
-
           {/* Receipt File Upload */}
           <div className="space-y-2 pt-2">
             <label className="text-xs font-bold text-slate-400 block">
-              {lang === "en" ? "Upload Payment Receipt (Optional)" : "የክፍያ ደረሰኝ ይስቀሉ (ከተፈለገ)"}
+              {lang === "en" ? "Upload Payment Receipt *" : "የክፍያ ደረሰኝ ይስቀሉ *"}
             </label>
             <div className="flex items-center gap-3">
               <input 
@@ -1485,31 +1464,59 @@ function PaymentModal({
                 htmlFor="receipt-file-input"
                 className={`flex-grow border border-dashed rounded-xl px-4 py-3 text-center cursor-pointer hover:border-[#c87a53] transition-colors flex flex-col items-center justify-center gap-1.5 ${
                   theme === "dark" 
-                    ? "bg-slate-955 border-slate-800 text-slate-400 hover:text-white" 
+                    ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white" 
                     : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <svg className="h-5 w-5 text-slate-450" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <span className="text-xs font-semibold">
-                  {uploading ? (lang === "en" ? "Uploading..." : "በመጫን ላይ...") : (receiptFile ? receiptFile.name : (lang === "en" ? "Select Image or PDF" : "ምስል ወይም ፒዲኤፍ ይምረጡ"))}
-                </span>
-                <span className="text-[9px] text-slate-500">
-                  {lang === "en" ? "JPG, PNG, WEBP, GIF, or PDF (max 5MB)" : "JPG፣ PNG፣ WEBP፣ GIF ወይም PDF (ከ5MB ያልበለጠ)"}
-                </span>
+                {receiptUrl ? (
+                  <>
+                    <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-xs font-semibold text-green-500">
+                      {receiptFile?.name}
+                    </span>
+                    <span className="text-[9px] text-slate-500">
+                      {lang === "en" ? "Uploaded successfully — tap to change" : "በተሳካ ሁኔታ ተሰቅሏል — ለመቀየር ይንኩ"}
+                    </span>
+                  </>
+                ) : uploading ? (
+                  <>
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#c87a53] border-t-transparent" />
+                    <span className="text-xs font-semibold">
+                      {lang === "en" ? "Uploading..." : "በመጫን ላይ..."}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                    <span className="text-xs font-semibold">
+                      {lang === "en" ? "Upload Receipt Image or PDF" : "የክፍያ ደረሰኝ ምስል ወይም PDF ይስቀሉ"}
+                    </span>
+                    <span className="text-[9px] text-slate-500">
+                      {lang === "en" ? "JPG, PNG, WEBP, GIF, or PDF (max 5MB)" : "JPG፣ PNG፣ WEBP፣ GIF ወይም PDF (ከ5MB ያልበለጠ)"}
+                    </span>
+                  </>
+                )}
               </label>
               {receiptUrl && (
                 <button
                   type="button"
                   onClick={handleClearReceipt}
-                  className="h-9 w-9 rounded-xl bg-status-red/10 text-status-red hover:bg-status-red/20 flex items-center justify-center transition-colors"
+                  className="h-9 w-9 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-colors"
                   title={lang === "en" ? "Remove File" : "ፋይል አስወግድ"}
                 >
                   ✕
                 </button>
               )}
             </div>
+            <span className="text-[10px] text-slate-400 leading-tight block">
+              {lang === "en" 
+                ? "Upload a screenshot or photo of your payment confirmation from the bank app."
+                : "ከባንክ መተግበሪያዎ የክፍያ ማረጋገጫ ስክሪንሾት ወይም ፎቶ ይስቀሉ።"}
+            </span>
           </div>
         </div>
 
@@ -1519,7 +1526,7 @@ function PaymentModal({
         }`}>
           <button
             onClick={() => onSubmit(receiptUrl || undefined)}
-            disabled={isSubmitting || !txRef.trim() || uploading}
+            disabled={isSubmitting || !receiptUrl || uploading}
             className="w-full bg-[#c87a53] text-white hover:bg-[#b3663d] h-11 rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (

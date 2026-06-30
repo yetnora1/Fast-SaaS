@@ -5,7 +5,7 @@ import { createOrder } from "@/lib/services/orders";
 
 const schema = z.object({
   tableNumber: z.number().int().optional(),
-  txRef: z.string().min(1),
+  txRef: z.string().nullable().optional(),
   receiptUrl: z.string().nullable().optional(),
   items: z
     .array(
