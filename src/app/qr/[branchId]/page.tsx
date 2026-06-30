@@ -296,7 +296,7 @@ function QrOrder() {
   }, []);
 
   // Place Order Checkout
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (receiptUrl?: string) => {
     if (!txRef.trim()) {
       alert(lang === "en" ? "Please enter payment transaction reference number" : "እባክዎን የክፍያ ማረጋገጫ ቁጥር ያስገቡ");
       return;
@@ -316,7 +316,8 @@ function QrOrder() {
         body: JSON.stringify({
           tableNumber: tableNumber ? Number(tableNumber) : undefined,
           items,
-          txRef
+          txRef,
+          receiptUrl
         }),
       });
 
@@ -1294,10 +1295,48 @@ function PaymentModal({
   txRef: string;
   setTxRef: (val: string) => void;
   isSubmitting: boolean;
-  onSubmit: () => void;
+  onSubmit: (receiptUrl?: string) => void;
 }) {
+  const { branchId } = useParams<{ branchId: string }>();
   const [activeChannel, setActiveChannel] = useState<"TELEBIRR" | "CBE_BIRR">("TELEBIRR");
   const [copied, setCopied] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setReceiptFile(file);
+
+    const formData = new FormData();
+    formData.append("receipt", file);
+
+    try {
+      const res = await fetch(`/api/qr/${branchId}/receipt`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error ?? "Upload failed");
+      }
+      setReceiptUrl(data.data.url);
+    } catch (err) {
+      alert((err as Error).message);
+      setReceiptFile(null);
+      setReceiptUrl(null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleClearReceipt = () => {
+    setReceiptFile(null);
+    setReceiptUrl(null);
+  };
 
   const paymentDetails = {
     TELEBIRR: {
@@ -1428,6 +1467,50 @@ function PaymentModal({
                 : "ክፍያውን እንደፈጸሙ የደረሰዎትን ትክክለኛ የክፍያ ማረጋገጫ መለያ ቁጥር እዚህ ያስገቡ።"}
             </span>
           </div>
+
+          {/* Receipt File Upload */}
+          <div className="space-y-2 pt-2">
+            <label className="text-xs font-bold text-slate-400 block">
+              {lang === "en" ? "Upload Payment Receipt (Optional)" : "የክፍያ ደረሰኝ ይስቀሉ (ከተፈለገ)"}
+            </label>
+            <div className="flex items-center gap-3">
+              <input 
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={handleFileChange}
+                className="hidden"
+                id="receipt-file-input"
+              />
+              <label 
+                htmlFor="receipt-file-input"
+                className={`flex-grow border border-dashed rounded-xl px-4 py-3 text-center cursor-pointer hover:border-[#c87a53] transition-colors flex flex-col items-center justify-center gap-1.5 ${
+                  theme === "dark" 
+                    ? "bg-slate-955 border-slate-800 text-slate-400 hover:text-white" 
+                    : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <svg className="h-5 w-5 text-slate-450" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span className="text-xs font-semibold">
+                  {uploading ? (lang === "en" ? "Uploading..." : "በመጫን ላይ...") : (receiptFile ? receiptFile.name : (lang === "en" ? "Select Image or PDF" : "ምስል ወይም ፒዲኤፍ ይምረጡ"))}
+                </span>
+                <span className="text-[9px] text-slate-500">
+                  {lang === "en" ? "JPG, PNG, WEBP, GIF, or PDF (max 5MB)" : "JPG፣ PNG፣ WEBP፣ GIF ወይም PDF (ከ5MB ያልበለጠ)"}
+                </span>
+              </label>
+              {receiptUrl && (
+                <button
+                  type="button"
+                  onClick={handleClearReceipt}
+                  className="h-9 w-9 rounded-xl bg-status-red/10 text-status-red hover:bg-status-red/20 flex items-center justify-center transition-colors"
+                  title={lang === "en" ? "Remove File" : "ፋይል አስወግድ"}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Place Order CTA */}
@@ -1435,8 +1518,8 @@ function PaymentModal({
           theme === "dark" ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
         }`}>
           <button
-            onClick={onSubmit}
-            disabled={isSubmitting || !txRef.trim()}
+            onClick={() => onSubmit(receiptUrl || undefined)}
+            disabled={isSubmitting || !txRef.trim() || uploading}
             className="w-full bg-[#c87a53] text-white hover:bg-[#b3663d] h-11 rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (

@@ -5,6 +5,8 @@ import { createOrder } from "@/lib/services/orders";
 
 const schema = z.object({
   tableNumber: z.number().int().optional(),
+  txRef: z.string().min(1),
+  receiptUrl: z.string().nullable().optional(),
   items: z
     .array(
       z.object({
@@ -36,6 +38,8 @@ export const POST = handler(async (req: Request, { params }: { params: { branchI
     type: "QR",
     items: body.items,
     submit: false, // stays DRAFT until waiter confirms
+    txRef: body.txRef,
+    receiptUrl: body.receiptUrl,
   });
   return ok({ orderId: order.id, status: order.status });
 });

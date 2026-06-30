@@ -3,7 +3,7 @@ import path from "path";
 import os from "os";
 import { config } from "@/lib/config";
 
-const ALLOWED = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
 const MAX_BYTES = 5 * 1024 * 1024;
 
 async function saveFile(opts: {

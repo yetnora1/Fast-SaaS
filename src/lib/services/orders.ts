@@ -24,6 +24,8 @@ export async function createOrder(opts: {
   type?: "DINE_IN" | "QR" | "TAKEAWAY";
   items: NewOrderItemInput[];
   submit?: boolean;
+  txRef?: string | null;
+  receiptUrl?: string | null;
 }) {
   const menuIds = opts.items.map((i) => i.menuItemId);
   const menuItems = await prisma.menuItem.findMany({ where: { id: { in: menuIds } } });
@@ -39,6 +41,8 @@ export async function createOrder(opts: {
         type: opts.type ?? "DINE_IN",
         status: opts.submit ? "SUBMITTED" : "DRAFT",
         submittedAt: opts.submit ? new Date() : null,
+        txRef: opts.txRef ?? null,
+        receiptUrl: opts.receiptUrl ?? null,
       },
     });
 
