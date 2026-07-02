@@ -11,7 +11,6 @@ export default async function CashierLayout({ children }: { children: React.Reac
       nav={[
         { href: "/cashier", label: "POS" },
         { href: "/cashier/shift", label: "Shift Totals" },
-        { href: "/cashier/profile", label: "Profile" },
       ]}
     >
       {children}

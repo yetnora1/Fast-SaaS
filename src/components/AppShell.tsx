@@ -73,13 +73,13 @@ export function AppShell({
           {user && (
             <Link
               href={profileHref}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full overflow-hidden border border-brand-border/70 transition-all hover:scale-105 hover:border-brand-accent active:scale-95 shadow-sm"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full overflow-hidden border-2 border-brand-border transition-all hover:scale-105 hover:border-brand-accent active:scale-95 shadow-md"
               title={user.name}
             >
               {user.avatarUrl ? (
                 <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-brand-accent/15 text-brand-accent text-xs font-bold">
+                <div className="flex h-full w-full items-center justify-center bg-brand-accent/15 text-brand-accent text-sm font-bold">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               )}
