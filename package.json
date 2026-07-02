@@ -2,7 +2,7 @@
   "name": "cafeflow",
   "version": "0.1.0",
   "private": true,
-  "description": "CafeFlow SaaS — multi-tenant, multi-branch cafe management platform (MySQL edition)",
+  "description": "CafeFlow SaaS — multi-tenant, multi-branch cafe management platform (PostgreSQL edition)",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -13,6 +13,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "db:procedures": "tsx prisma/apply_stored_procedures.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },

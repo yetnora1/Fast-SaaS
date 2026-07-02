@@ -1,8 +1,8 @@
 /**
- * Realtime / push adapter (MySQL-backed).
+ * Realtime / push adapter (PostgreSQL-backed).
  *
- * Live KDS/order boards are driven entirely by MySQL: notifications and order
- * state are persisted to MySQL tables, and the client (KDS/board pages) polls
+ * Live KDS/order boards are driven entirely by PostgreSQL: notifications and order
+ * state are persisted to PostgreSQL tables, and the client (KDS/board pages) polls
  * its API every few seconds to pick up changes. A lightweight in-memory event
  * bus lets server code fan out events within a single process. No Firebase.
  */
@@ -26,8 +26,8 @@ export function subscribe(channel: string, listener: Listener): () => void {
   return () => channels.get(channel)?.delete(listener);
 }
 
-/** Clients poll MySQL-backed endpoints; this is the single source of truth. */
-export const realtimeMode = "mysql-polling" as const;
+/** Clients poll PostgreSQL-backed endpoints; this is the single source of truth. */
+export const realtimeMode = "postgres-polling" as const;
 
 /** Recommended client poll interval (ms) for KDS/board pages. */
 export const POLL_INTERVAL_MS = 4000;

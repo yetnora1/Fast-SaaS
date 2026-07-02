@@ -1,13 +1,13 @@
 import { prisma } from "./client";
 
 /**
- * App-layer tenant isolation — the MySQL replacement for PostgreSQL RLS.
+ * App-layer tenant isolation.
  *
- * MySQL has no Row-Level Security, so we cannot rely on the database to scope
- * tenant data. Instead, server code must obtain a tenant-scoped client via
- * `tenantDb(tenantId)`, which returns a Prisma extension that AUTO-INJECTS
- * `tenant_id` into every `where`/`create` on tenant-owned models. This guarantees
- * a query for tenant A can never read or write tenant B's rows.
+ * This provides query-level multi-tenant safety by using a Prisma client extension.
+ * Server code obtains a tenant-scoped client via `tenantDb(tenantId)`, which
+ * returns a Prisma extension that AUTO-INJECTS `tenant_id` into every `where`/`create`
+ * on tenant-owned models. This guarantees a query for tenant A can never read or write
+ * tenant B's rows, acting as a robust fallback or replacement for database-level RLS.
  *
  * Models that carry tenant_id directly are listed in TENANT_MODELS. Models that
  * are tenant-owned only transitively (e.g. OrderItem via Order) must be accessed

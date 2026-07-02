@@ -8,7 +8,7 @@ export default function Home() {
           Cafe<span className="text-brand-accent">Flow</span> <span className="text-brand-muted">SaaS</span>
         </h1>
         <p className="mt-3 text-brand-muted">Multi-Role • Multi-Branch • Offline-Ready — for Ethiopian Café Operations</p>
-        <p className="mt-1 text-xs text-brand-muted/70">MySQL edition · 8 roles · 30,000 ETB / 6mo · 7-day trial</p>
+        <p className="mt-1 text-xs text-brand-muted/70">PostgreSQL edition · 8 roles · 30,000 ETB / 6mo · 7-day trial</p>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
         <Link href="/login" className="rounded-xl bg-brand-accent px-6 py-3 font-medium text-brand-accentFg shadow-card transition-colors hover:bg-brand-accentHover">

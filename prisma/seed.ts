@@ -48,7 +48,7 @@ async function upsertUser(opts: {
 }
 
 async function main() {
-  console.log("Seeding CafeFlow (MySQL)…");
+  console.log("Seeding CafeFlow (PostgreSQL)…");
 
   // ── Platform config ────────────────────────────────────────────────
   const cfg: Record<string, string> = {

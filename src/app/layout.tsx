@@ -20,7 +20,7 @@ const sans = Karla({
 
 export const metadata: Metadata = {
   title: "CafeFlow SaaS",
-  description: "Multi-tenant, multi-branch cafe management for Ethiopian cafes (MySQL edition)",
+  description: "Multi-tenant, multi-branch cafe management for Ethiopian cafes (PostgreSQL edition)",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

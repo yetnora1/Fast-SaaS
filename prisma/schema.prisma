@@ -1,9 +1,8 @@
 // CafeFlow SaaS — Prisma schema
-// DATABASE: MySQL 8 (the original spec used PostgreSQL; swapped to MySQL per requirement).
+// DATABASE: PostgreSQL (migrated from MySQL)
 //
-// IMPORTANT consequence of the MySQL swap:
-//   PostgreSQL Row-Level Security (RLS) is NOT available in MySQL. Multi-tenant
-//   isolation is therefore enforced at the APPLICATION layer via a tenant-scoped
+// Isolation Note:
+//   Multi-tenant isolation is enforced at the APPLICATION layer via a tenant-scoped
 //   Prisma client (see src/lib/db/tenant.ts). Every tenant-owned table carries a
 //   tenant_id and is always filtered by it.
 
@@ -12,7 +11,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
