@@ -22,6 +22,10 @@ export function AppShell({
   const pathname = usePathname();
   const { lang, toggle, t, navLabel } = useLang();
   const { data } = usePoll<{ unread: number }>("/api/notifications", 10000);
+  const { data: profileData } = usePoll<{
+    user: { id: string; name: string; role: string; avatarUrl: string | null };
+  }>("/api/profile", 30000);
+  const user = profileData?.user;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Close mobile menu on pathname change
@@ -40,6 +44,21 @@ export function AppShell({
     router.push("/login");
   }
 
+  let profileHref = "/login";
+  if (user?.role) {
+    if (user.role === "saas_owner") {
+      profileHref = "/saas-admin/dashboard";
+    } else if (user.role === "store_manager") {
+      profileHref = "/store/profile";
+    } else if (user.role === "cafe_manager") {
+      profileHref = "/manager/profile";
+    } else if (user.role === "cafe_owner") {
+      profileHref = "/owner/profile";
+    } else {
+      profileHref = `/${user.role}/profile`;
+    }
+  }
+
   const iconBtn =
     "inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-surface2 px-2.5 text-sm text-brand-foreground transition-colors hover:bg-white/10";
 
@@ -50,6 +69,23 @@ export function AppShell({
           <span className="font-display text-lg font-bold tracking-tight">
             Cafe<span className="text-brand-accent">Flow</span>
           </span>
+
+          {user && (
+            <Link
+              href={profileHref}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full overflow-hidden border border-brand-border/70 transition-all hover:scale-105 hover:border-brand-accent active:scale-95 shadow-sm"
+              title={user.name}
+            >
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-brand-accent/15 text-brand-accent text-xs font-bold">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </Link>
+          )}
+
           <span className="hidden text-sm text-brand-muted sm:inline">{navLabel(title)}</span>
 
           {/* Desktop Navigation */}
