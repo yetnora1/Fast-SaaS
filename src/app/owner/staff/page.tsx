@@ -55,6 +55,36 @@ export default function StaffPage() {
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
+  // Direct Add Staff states
+  const [newStaff, setNewStaff] = useState({ name: "", email: "", password: "", role: "waiter", branchId: "unassigned" });
+  const [newStaffMsg, setNewStaffMsg] = useState<string | null>(null);
+  const [newStaffLoading, setNewStaffLoading] = useState(false);
+
+  async function handleAddStaff(e: React.FormEvent) {
+    e.preventDefault();
+    setNewStaffMsg(null);
+    setNewStaffLoading(true);
+    try {
+      await api("/api/owner/staff/create", {
+        method: "POST",
+        body: JSON.stringify({
+          name: newStaff.name,
+          email: newStaff.email,
+          password: newStaff.password,
+          role: newStaff.role,
+          branchId: newStaff.branchId === "unassigned" ? undefined : newStaff.branchId,
+        }),
+      });
+      setNewStaffMsg("Staff member added successfully!");
+      setNewStaff({ name: "", email: "", password: "", role: "waiter", branchId: "unassigned" });
+      reloadStaff();
+    } catch (err) {
+      setNewStaffMsg((err as Error).message);
+    } finally {
+      setNewStaffLoading(false);
+    }
+  }
+
   async function sendInvite() {
     setInviteMsg(null);
     setInviteLoading(true);
@@ -177,6 +207,75 @@ export default function StaffPage() {
             {inviteMsg && (
               <p className="break-all rounded-xl border border-brand-accent/20 bg-brand-accent/5 p-3 text-xs text-brand-accent">
                 {inviteMsg}
+              </p>
+            )}
+          </Card>
+
+          <Card className="space-y-4">
+            <h2 className="font-display text-lg font-bold text-brand-foreground">Add New Staff</h2>
+            <form onSubmit={handleAddStaff} className="space-y-3">
+              <Field label={t("name")} required>
+                <Input
+                  type="text"
+                  placeholder="Full Name"
+                  required
+                  value={newStaff.name}
+                  onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })}
+                />
+              </Field>
+
+              <Field label={t("email")} required>
+                <Input
+                  type="email"
+                  placeholder="name@example.com"
+                  required
+                  value={newStaff.email}
+                  onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                />
+              </Field>
+
+              <Field label="Password" required>
+                <Input
+                  type="password"
+                  placeholder="Min 4 characters"
+                  required
+                  value={newStaff.password}
+                  onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
+                />
+              </Field>
+
+              <Field label={t("role")} required>
+                <Select value={newStaff.role} onChange={(e) => setNewStaff({ ...newStaff, role: e.target.value as any })}>
+                  {ROLES.map((r) => (
+                    <option key={r} value={r}>
+                      {r.replace("_", " ").toUpperCase()}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label="Branch">
+                <Select value={newStaff.branchId} onChange={(e) => setNewStaff({ ...newStaff, branchId: e.target.value })}>
+                  <option value="unassigned">Unassigned / All Branches</option>
+                  {branchData?.branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Button type="submit" loading={newStaffLoading} className="w-full">
+                Create Account
+              </Button>
+            </form>
+            {newStaffMsg && (
+              <p className={`break-all rounded-xl border p-3 text-xs ${
+                newStaffMsg.includes("successfully") 
+                  ? "border-status-green/30 bg-status-green/10 text-status-green"
+                  : "border-status-red/30 bg-status-red/10 text-status-red"
+              }`}>
+                {newStaffMsg}
               </p>
             )}
           </Card>

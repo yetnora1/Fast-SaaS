@@ -133,56 +133,60 @@ export function ProfilePage() {
       <PageHeader title={t("editProfile")} subtitle={profile.email} />
 
       <div className="grid gap-6 md:grid-cols-3">
-        {/* Left Side: Avatar Panel */}
-        <Card className="flex flex-col items-center justify-center p-6 text-center space-y-4">
-          <div className="group relative cursor-pointer" onClick={handleAvatarClick} role="button" tabIndex={0} aria-label={t("changePicture")}>
-            <div className="relative h-28 w-28 overflow-hidden rounded-full ring-4 ring-brand-accent/30 transition-all duration-300 group-hover:ring-brand-accent">
-              {profile.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.avatarUrl}
-                  alt={profile.name}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border text-2xl font-bold tracking-wider text-brand-accent">
-                  {initials}
-                </div>
-              )}
+        {/* Left Side: Avatar Panel & Password Change */}
+        <div className="space-y-6">
+          <Card className="flex flex-col items-center justify-center p-6 text-center space-y-4">
+            <div className="group relative cursor-pointer" onClick={handleAvatarClick} role="button" tabIndex={0} aria-label={t("changePicture")}>
+              <div className="relative h-28 w-28 overflow-hidden rounded-full ring-4 ring-brand-accent/30 transition-all duration-300 group-hover:ring-brand-accent">
+                {profile.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border text-2xl font-bold tracking-wider text-brand-accent">
+                    {initials}
+                  </div>
+                )}
 
-              {/* Upload Overlay */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-                  {uploading ? t("uploading") : t("changePicture")}
+                {/* Upload Overlay */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+                    {uploading ? t("uploading") : t("changePicture")}
+                  </span>
+                </div>
+              </div>
+              {uploading && (
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+                  <Spinner className="h-6 w-6" />
                 </span>
+              )}
+            </div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+
+            <div>
+              <h3 className="font-bold text-lg text-brand-foreground">{profile.name}</h3>
+              <div className="mt-1.5">
+                <RoleBadge role={profile.role as any} />
               </div>
             </div>
-            {uploading && (
-              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
-                <Spinner className="h-6 w-6" />
-              </span>
-            )}
-          </div>
+          </Card>
 
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*"
-            className="hidden"
-          />
-
-          <div>
-            <h3 className="font-bold text-lg text-brand-foreground">{profile.name}</h3>
-            <div className="mt-1.5">
-              <RoleBadge role={profile.role as any} />
-            </div>
-          </div>
-        </Card>
+          <PasswordCard />
+        </div>
 
         {/* Right Side: Form Panel */}
         <Card className="md:col-span-2 p-6">
@@ -258,5 +262,83 @@ export function ProfilePage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function PasswordCard() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg(null);
+    if (newPassword !== confirmPassword) {
+      setMsg({ type: "error", text: "New passwords do not match" });
+      return;
+    }
+    setLoading(true);
+    try {
+      await api("/api/profile/password", {
+        method: "POST",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      setMsg({ type: "success", text: "Password updated successfully!" });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setMsg({ type: "error", text: (err as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card className="p-6">
+      <h3 className="font-bold text-base text-brand-foreground mb-4">Change Password</h3>
+      <form onSubmit={handlePasswordChange} className="space-y-4">
+        {msg && (
+          <div className={`animate-fade rounded-xl border p-3 text-xs font-medium ${
+            msg.type === "success" 
+              ? "border-status-green/30 bg-status-green/10 text-status-green" 
+              : "border-status-red/30 bg-status-red/10 text-status-red"
+          }`}>
+            {msg.text}
+          </div>
+        )}
+        <Field label="Current Password" required>
+          <Input
+            type="password"
+            required
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+          />
+        </Field>
+        <Field label="New Password" required>
+          <Input
+            type="password"
+            required
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+        </Field>
+        <Field label="Confirm New Password" required>
+          <Input
+            type="password"
+            required
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+        </Field>
+        <div className="flex justify-end pt-2">
+          <Button type="submit" loading={loading} className="w-full">
+            Update Password
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }
