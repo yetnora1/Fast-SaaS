@@ -36,4 +36,6 @@ jobs:
       - name: Build App
         run: npm run build
         env:
-          DATABASE_URL: "mysql://mock:mock@localhost:3306/mock"
+          # Mock values — the build never connects to a DB or signs sessions.
+          DATABASE_URL: "postgresql://mock:mock@localhost:5432/mock"
+          AUTH_SECRET: "ci-only-build-secret-not-used-at-runtime-123456"

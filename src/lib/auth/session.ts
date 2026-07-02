@@ -19,19 +19,25 @@ export interface SessionClaims {
   email: string;
 }
 
-const secret = new TextEncoder().encode(config.authSecret);
+// Resolved lazily so importing this module never requires AUTH_SECRET (e.g.
+// during `next build` page-data collection); signing/verifying does.
+let _secret: Uint8Array | null = null;
+function secretKey(): Uint8Array {
+  if (!_secret) _secret = new TextEncoder().encode(config.authSecret);
+  return _secret;
+}
 
 export async function createSessionToken(claims: SessionClaims): Promise<string> {
   return new SignJWT({ ...claims })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${config.sessionTtlHours}h`)
-    .sign(secret);
+    .sign(secretKey());
 }
 
 export async function verifySessionToken(token: string): Promise<SessionClaims | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secretKey());
     return {
       sub: String(payload.sub),
       role: payload.role as Role,

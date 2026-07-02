@@ -8,7 +8,8 @@ function num(v: string | undefined, fallback: number): number {
 function requiredSecret(): string {
   const v = process.env.AUTH_SECRET;
   if (v && v.length >= 32) return v;
-  // Never boot production with a guessable session-signing key.
+  // Never sign/verify production sessions with a guessable key. Checked lazily
+  // (on first use, not import) so `next build` works without runtime secrets.
   if (process.env.NODE_ENV === "production") {
     throw new Error("AUTH_SECRET must be set (>= 32 chars) in production");
   }
@@ -16,7 +17,9 @@ function requiredSecret(): string {
 }
 
 export const config = {
-  authSecret: requiredSecret(),
+  get authSecret() {
+    return requiredSecret();
+  },
   authUrl: process.env.AUTH_URL ?? "http://localhost:3000",
   // Staff log in on shared POS tablets — keep sessions short (12h default).
   sessionTtlHours: num(process.env.SESSION_TTL_HOURS, 12),
