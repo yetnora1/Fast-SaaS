@@ -5,10 +5,21 @@ function num(v: string | undefined, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function requiredSecret(): string {
+  const v = process.env.AUTH_SECRET;
+  if (v && v.length >= 32) return v;
+  // Never boot production with a guessable session-signing key.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET must be set (>= 32 chars) in production");
+  }
+  return "dev-insecure-secret-change-me-please-32";
+}
+
 export const config = {
-  authSecret: process.env.AUTH_SECRET ?? "dev-insecure-secret-change-me-please-32",
+  authSecret: requiredSecret(),
   authUrl: process.env.AUTH_URL ?? "http://localhost:3000",
-  sessionTtlHours: num(process.env.SESSION_TTL_HOURS, 8760),
+  // Staff log in on shared POS tablets — keep sessions short (12h default).
+  sessionTtlHours: num(process.env.SESSION_TTL_HOURS, 12),
 
   subscription: {
     amount: num(process.env.SAAS_SUBSCRIPTION_AMOUNT, 30000),

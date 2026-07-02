@@ -42,7 +42,8 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
   const query = branchId ? `?branchId=${branchId}` : "";
 
   // Pause polling while editing so live updates don't clobber in-progress edits.
-  const poll = usePoll<{ tables: FloorTable[] }>(editMode ? null : `/api/manager/tables${query}`, 5000);
+  const poll = usePoll<{ tables: FloorTable[]; cafeName?: string | null }>(editMode ? null : `/api/manager/tables${query}`, 5000);
+  const cafeName = poll.data?.cafeName || "Our Cafe";
   const me = usePoll<{ role: string; branchId?: string } | null>("/api/auth/me", 0);
   const canEdit = allowEdit && !!me.data && EDIT_ROLES.includes(me.data.role);
 
@@ -457,7 +458,7 @@ export default function FloorPlan({ onTableSelect, allowEdit = true, paused = fa
                   <span className="text-xl">☕</span>
                 </div>
                 <h1 className="text-2xl font-black tracking-tight text-slate-900">
-                  ZAD Cafe
+                  {cafeName}
                 </h1>
                 <div className="h-[2px] w-16 bg-[#c87a53] my-2" />
                 

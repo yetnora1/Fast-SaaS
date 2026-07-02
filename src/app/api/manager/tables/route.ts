@@ -11,7 +11,10 @@ export const GET = handler(async (req: Request) => {
     orderBy: { number: "asc" },
     include: { orders: { where: { status: { notIn: ["COMPLETED", "VOIDED", "REFUNDED"] } }, select: { id: true, status: true, waiterId: true } } },
   });
-  return ok({ tables });
+  const branch = branchId
+    ? await prisma.branch.findUnique({ where: { id: branchId }, select: { name: true, tenant: { select: { name: true } } } })
+    : null;
+  return ok({ tables, cafeName: branch?.tenant.name ?? null, branchName: branch?.name ?? null });
 });
 
 // Add a new table to the floor (manager/owner). Number is auto-assigned;

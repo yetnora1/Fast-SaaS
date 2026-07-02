@@ -1,15 +1,15 @@
 "use client";
-import { useMemo, useRef } from "react";
-import { Canvas, type ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, RoundedBox, Html, Grid, ContactShadows } from "@react-three/drei";
+import { useCallback, useMemo, useRef } from "react";
 import type { FloorTable, TableShape } from "./types";
 
-/* ── Mapping between DB layout coords (≈0..450, from seed) and 3D world ── */
-const SCALE = 55;
-const CX = 230;
-const CY = 110;
-export const toWorld = (x: number, y: number): [number, number] => [(x - CX) / SCALE, (y - CY) / SCALE];
-export const toData = (wx: number, wz: number): [number, number] => [wx * SCALE + CX, wz * SCALE + CY];
+/**
+ * 2D SVG floor plan. Replaces the previous three.js scene — same props, no 3D
+ * dependencies, fast on low-end tablets. DB layout coords are ≈0..450 x 0..220.
+ */
+
+const VIEW_W = 480;
+const VIEW_H = 260;
+const PAD = 15; // data coords start near 0; shift everything inward a little
 
 const STATUS_COLOR: Record<string, string> = {
   available: "#22C55E",
@@ -17,178 +17,45 @@ const STATUS_COLOR: Record<string, string> = {
   attention: "#EF4444",
   dirty: "#64748B",
 };
-const LEG = "#0b1220";
-const CHAIR = "#475569";
+const SEAT = "#475569";
 
-/* Seat ring/row positions (local to the table), each facing inward. */
-function seatPositions(shape: TableShape, capacity: number): { x: number; z: number; rot: number }[] {
+/* Seat positions in data units, local to the table centre. */
+function seatPositions(shape: TableShape, capacity: number): { x: number; y: number }[] {
   const n = Math.max(0, capacity);
-  if (n === 0) return [];
+  if (n === 0 || shape === "booth") return [];
   if (shape === "rectangle") {
     const perSide = Math.ceil(n / 2);
-    const seats: { x: number; z: number; rot: number }[] = [];
+    const seats: { x: number; y: number }[] = [];
     for (let s = 0; s < n; s++) {
       const side = s < perSide ? 1 : -1;
       const idx = side === 1 ? s : s - perSide;
       const count = side === 1 ? perSide : n - perSide;
-      const span = 1.3;
+      const span = 64;
       const x = count === 1 ? 0 : -span / 2 + (idx * span) / (count - 1);
-      const z = 0.82 * side;
-      seats.push({ x, z, rot: Math.atan2(-x, -z) });
+      seats.push({ x, y: 36 * side });
     }
     return seats;
   }
-  // round / square → even ring
-  const r = shape === "square" ? 0.92 : 0.95;
+  const r = shape === "square" ? 42 : 40;
   return Array.from({ length: n }, (_, i) => {
     const a = (i / n) * Math.PI * 2 + Math.PI / 4;
-    const x = Math.cos(a) * r;
-    const z = Math.sin(a) * r;
-    return { x, z, rot: Math.atan2(-x, -z) };
+    return { x: Math.cos(a) * r, y: Math.sin(a) * r };
   });
 }
 
-function Chair({ x, z, rot }: { x: number; z: number; rot: number }) {
+function TableShapeSvg({ shape, color, selected }: { shape: TableShape; color: string; selected: boolean }) {
+  const stroke = selected ? "#22C55E" : "rgba(255,255,255,0.18)";
+  const sw = selected ? 2.5 : 1;
+  if (shape === "round") return <circle r={26} fill={color} stroke={stroke} strokeWidth={sw} />;
+  if (shape === "square") return <rect x={-26} y={-26} width={52} height={52} rx={8} fill={color} stroke={stroke} strokeWidth={sw} />;
+  if (shape === "rectangle") return <rect x={-42} y={-22} width={84} height={44} rx={8} fill={color} stroke={stroke} strokeWidth={sw} />;
+  // booth: table + two benches
   return (
-    <group position={[x, 0, z]} rotation={[0, rot, 0]}>
-      <RoundedBox args={[0.34, 0.07, 0.34]} radius={0.025} position={[0, 0.42, 0]} castShadow>
-        <meshStandardMaterial color={CHAIR} roughness={0.7} />
-      </RoundedBox>
-      <RoundedBox args={[0.34, 0.32, 0.06]} radius={0.025} position={[0, 0.6, 0.15]} castShadow>
-        <meshStandardMaterial color={CHAIR} roughness={0.7} />
-      </RoundedBox>
-    </group>
-  );
-}
-
-function TableMesh({ shape, color }: { shape: TableShape; color: string }) {
-  const top = <meshStandardMaterial color={color} roughness={0.35} metalness={0.1} />;
-  const legMat = <meshStandardMaterial color={LEG} roughness={0.6} />;
-  if (shape === "round") {
-    return (
-      <group>
-        <mesh position={[0, 0.72, 0]} castShadow>
-          <cylinderGeometry args={[0.62, 0.62, 0.08, 40]} />
-          {top}
-        </mesh>
-        <mesh position={[0, 0.36, 0]}>
-          <cylinderGeometry args={[0.08, 0.12, 0.72, 16]} />
-          {legMat}
-        </mesh>
-        <mesh position={[0, 0.02, 0]}>
-          <cylinderGeometry args={[0.3, 0.3, 0.04, 24]} />
-          {legMat}
-        </mesh>
-      </group>
-    );
-  }
-  if (shape === "booth") {
-    return (
-      <group>
-        <RoundedBox args={[1.2, 0.08, 0.62]} radius={0.03} position={[0, 0.72, 0]} castShadow>
-          {top}
-        </RoundedBox>
-        <mesh position={[0, 0.36, 0]}>
-          <boxGeometry args={[0.12, 0.72, 0.12]} />
-          {legMat}
-        </mesh>
-        {[1, -1].map((s) => (
-          <group key={s}>
-            <RoundedBox args={[1.5, 0.34, 0.4]} radius={0.05} position={[0, 0.2, 0.64 * s]} castShadow>
-              <meshStandardMaterial color={CHAIR} roughness={0.75} />
-            </RoundedBox>
-            <RoundedBox args={[1.5, 0.5, 0.12]} radius={0.05} position={[0, 0.5, 0.86 * s]} castShadow>
-              <meshStandardMaterial color={CHAIR} roughness={0.75} />
-            </RoundedBox>
-          </group>
-        ))}
-      </group>
-    );
-  }
-  // square or rectangle
-  const w = shape === "rectangle" ? 1.7 : 1.0;
-  const d = shape === "rectangle" ? 0.9 : 1.0;
-  return (
-    <group>
-      <RoundedBox args={[w, 0.08, d]} radius={0.03} position={[0, 0.72, 0]} castShadow>
-        {top}
-      </RoundedBox>
-      {[
-        [w / 2 - 0.12, d / 2 - 0.12],
-        [-(w / 2 - 0.12), d / 2 - 0.12],
-        [w / 2 - 0.12, -(d / 2 - 0.12)],
-        [-(w / 2 - 0.12), -(d / 2 - 0.12)],
-      ].map(([lx, lz], i) => (
-        <mesh key={i} position={[lx, 0.36, lz]}>
-          <boxGeometry args={[0.08, 0.72, 0.08]} />
-          {legMat}
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function Table3D({
-  table,
-  selected,
-  editMode,
-  hideLabels,
-  onSelect,
-  onDragStart,
-}: {
-  table: FloorTable;
-  selected: boolean;
-  editMode: boolean;
-  hideLabels: boolean;
-  onSelect: () => void;
-  onDragStart: () => void;
-}) {
-  const [wx, wz] = toWorld(table.xPos, table.yPos);
-  const color = STATUS_COLOR[table.status] ?? STATUS_COLOR.available;
-  const seats = useMemo(() => seatPositions(table.shape, table.capacity), [table.shape, table.capacity]);
-  const orders = table.orders?.length ?? 0;
-
-  return (
-    <group
-      position={[wx, 0, wz]}
-      rotation={[0, ((table.rotation ?? 0) * Math.PI) / 180, 0]}
-      onPointerDown={(e: ThreeEvent<PointerEvent>) => {
-        if (!editMode) return;
-        e.stopPropagation();
-        onSelect();
-        onDragStart();
-      }}
-      onClick={(e: ThreeEvent<MouseEvent>) => {
-        e.stopPropagation();
-        if (!editMode) onSelect();
-      }}
-      onPointerOver={() => (document.body.style.cursor = editMode ? "grab" : "pointer")}
-      onPointerOut={() => (document.body.style.cursor = "auto")}
-    >
-      <TableMesh shape={table.shape} color={color} />
-      {table.shape !== "booth" && seats.map((s, i) => <Chair key={i} {...s} />)}
-
-      {selected && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, 0]}>
-          <ringGeometry args={[1.15, 1.32, 48]} />
-          <meshBasicMaterial color="#22C55E" transparent opacity={0.9} />
-        </mesh>
-      )}
-
-      {!hideLabels && (
-        <Html position={[0, 1.15, 0]} center distanceFactor={9} zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
-          <div
-            style={{ pointerEvents: "none" }}
-            className="flex flex-col items-center gap-0.5 whitespace-nowrap rounded-lg bg-black/70 px-2 py-1 text-center font-sans text-white shadow-lg backdrop-blur-sm"
-          >
-            <span className="text-sm font-bold leading-none">T{table.number}</span>
-            <span className="text-[10px] leading-none opacity-80">
-              {table.capacity}🪑{orders > 0 ? ` · ${orders}🧾` : ""}
-            </span>
-          </div>
-        </Html>
-      )}
-    </group>
+    <g>
+      <rect x={-34} y={-34} width={68} height={12} rx={4} fill={SEAT} />
+      <rect x={-34} y={22} width={68} height={12} rx={4} fill={SEAT} />
+      <rect x={-30} y={-16} width={60} height={32} rx={6} fill={color} stroke={stroke} strokeWidth={sw} />
+    </g>
   );
 }
 
@@ -215,80 +82,88 @@ export function FloorScene({
   onDragEnd: () => void;
   onClearSelect: () => void;
 }) {
-  const floorRef = useRef(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  /* Convert a pointer event to data-space coords via the SVG's CTM. */
+  const toData = useCallback((e: React.PointerEvent): [number, number] => {
+    const svg = svgRef.current;
+    if (!svg) return [0, 0];
+    const pt = new DOMPoint(e.clientX, e.clientY);
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return [0, 0];
+    const p = pt.matrixTransform(ctm.inverse());
+    return [p.x - PAD, p.y - PAD];
+  }, []);
+
+  const handleMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragging) return;
+      const [x, y] = toData(e);
+      onDragMove(Math.max(0, Math.min(450, x)), Math.max(0, Math.min(220, y)));
+    },
+    [dragging, toData, onDragMove],
+  );
+
+  const sorted = useMemo(() => [...tables].sort((a, b) => a.yPos - b.yPos), [tables]);
 
   return (
-    <Canvas frameloop="demand" shadows camera={{ position: [0, 8.5, 10], fov: 42 }} dpr={[1, 2]}>
-      <color attach="background" args={["#020617"]} />
-      <fog attach="fog" args={["#020617", 14, 30]} />
-      <ambientLight intensity={0.55} />
-      <hemisphereLight args={["#cbd5e1", "#0b1220", 0.6]} />
-      <directionalLight
-        position={[6, 12, 6]}
-        intensity={1.1}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-12}
-        shadow-camera-right={12}
-        shadow-camera-top={12}
-        shadow-camera-bottom={-12}
-      />
+    <svg
+      ref={svgRef}
+      viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+      className="h-full w-full select-none"
+      style={{ background: "#020617", touchAction: "none" }}
+      onPointerMove={handleMove}
+      onPointerUp={() => dragging && onDragEnd()}
+      onPointerLeave={() => dragging && onDragEnd()}
+    >
+      <defs>
+        <pattern id="fp-grid" width={24} height={24} patternUnits="userSpaceOnUse">
+          <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#1e293b" strokeWidth={0.6} />
+        </pattern>
+      </defs>
+      <rect width={VIEW_W} height={VIEW_H} fill="url(#fp-grid)" onPointerDown={() => onClearSelect()} />
 
-      {/* Drag surface + room floor */}
-      <mesh
-        ref={floorRef}
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0, 0]}
-        receiveShadow
-        onPointerDown={() => onClearSelect()}
-        onPointerMove={(e: ThreeEvent<PointerEvent>) => {
-          if (!dragging) return;
-          const [x, y] = toData(e.point.x, e.point.z);
-          onDragMove(x, y);
-        }}
-        onPointerUp={() => dragging && onDragEnd()}
-      >
-        <planeGeometry args={[60, 60]} />
-        <meshStandardMaterial color="#0b1220" roughness={0.95} />
-      </mesh>
-
-      <Grid
-        position={[0, 0.01, 0]}
-        args={[40, 40]}
-        cellSize={1}
-        cellThickness={0.6}
-        cellColor="#1e293b"
-        sectionSize={4}
-        sectionThickness={1}
-        sectionColor="#22304a"
-        fadeDistance={26}
-        fadeStrength={1}
-        infiniteGrid
-      />
-
-      <ContactShadows position={[0, 0.02, 0]} opacity={0.5} scale={30} blur={2.2} far={6} />
-
-      {tables.map((t) => (
-        <Table3D
-          key={t.id}
-          table={t}
-          selected={selectedId === t.id}
-          editMode={editMode}
-          hideLabels={hideLabels}
-          onSelect={() => onSelect(t.id)}
-          onDragStart={onDragStart}
-        />
-      ))}
-
-      <OrbitControls
-        makeDefault
-        enabled={!dragging}
-        enablePan
-        minDistance={4}
-        maxDistance={22}
-        maxPolarAngle={Math.PI / 2.15}
-        target={[0, 0, 0]}
-      />
-    </Canvas>
+      {sorted.map((t) => {
+        const color = STATUS_COLOR[t.status] ?? STATUS_COLOR.available;
+        const seats = seatPositions(t.shape, t.capacity);
+        const orders = t.orders?.length ?? 0;
+        const selected = selectedId === t.id;
+        return (
+          <g
+            key={t.id}
+            transform={`translate(${t.xPos + PAD}, ${t.yPos + PAD})`}
+            style={{ cursor: editMode ? "grab" : "pointer" }}
+            onPointerDown={(e) => {
+              if (!editMode) return;
+              e.stopPropagation();
+              onSelect(t.id);
+              onDragStart();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!editMode) onSelect(t.id);
+            }}
+          >
+            <g transform={`rotate(${t.rotation ?? 0})`}>
+              {seats.map((s, i) => (
+                <circle key={i} cx={s.x} cy={s.y} r={7} fill={SEAT} stroke="rgba(255,255,255,0.1)" strokeWidth={0.5} />
+              ))}
+              {selected && <circle r={54} fill="none" stroke="#22C55E" strokeWidth={1.5} strokeDasharray="5 4" opacity={0.9} />}
+              <TableShapeSvg shape={t.shape} color={color} selected={selected} />
+            </g>
+            {!hideLabels && (
+              <g pointerEvents="none">
+                <text textAnchor="middle" y={-1} fill="#020617" fontSize={13} fontWeight={800} fontFamily="inherit">
+                  T{t.number}
+                </text>
+                <text textAnchor="middle" y={12} fill="#020617" fontSize={8.5} fontWeight={600} opacity={0.75}>
+                  {t.capacity} seats{orders > 0 ? ` · ${orders} 🧾` : ""}
+                </text>
+              </g>
+            )}
+          </g>
+        );
+      })}
+    </svg>
   );
 }

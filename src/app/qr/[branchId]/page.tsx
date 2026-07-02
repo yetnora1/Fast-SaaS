@@ -48,78 +48,10 @@ interface CartItem {
   }[];
 }
 
-// Map menu item name keywords to local assets inside /images/ for real pictures
-function getLocalItemImage(name: string, imageUrl?: string | null): string {
-  if (imageUrl) return imageUrl;
-  const n = name.toLowerCase();
-  if (n.includes("macchiato")) return "/images/macchiato.jpg";
-  if (n.includes("cappuccino")) return "/images/cappuccino.jpg";
-  if (n.includes("latte")) return "/images/cafe_latte.jpg";
-  if (n.includes("coffee")) return "/images/cafe_coffee.jpg";
-  if (n.includes("tea")) return "/images/tea.jpg";
-  if (n.includes("juice")) {
-    if (n.includes("avocado") && n.includes("strawberry")) return "/images/juice_avo_straw.jpg";
-    if (n.includes("avocado")) return "/images/Avocado Juice.jpg";
-    if (n.includes("mango")) return "/images/Mango Juice.jpg";
-    if (n.includes("papaya")) return "/images/Papaya Juice.jpg";
-    if (n.includes("strawberry")) return "/images/Strawberry Juice.jpg";
-    if (n.includes("watermelon")) return "/images/Watermelon Juice.jpg";
-    return "/images/juice_cup.jpg";
-  }
-  if (n.includes("water")) {
-    if (n.includes("ambo")) return "/images/ambo water.jpg";
-    return "/images/0.5 litre water.jpg";
-  }
-  if (n.includes("egg") && n.includes("avocado")) return "/images/avocado_eggs.jpg";
-  if (n.includes("egg") && n.includes("stew")) return "/images/Egg Stew.jpg";
-  if (n.includes("egg") && n.includes("sandwich")) return "/images/egg sandwich.jpg";
-  if (n.includes("egg")) return "/images/Scrambled Eggs.jpg";
-  if (n.includes("toast")) return "/images/avocado_toast.jpg";
-  if (n.includes("chechebsa")) return "/images/Normal Chechebsa.jpg";
-  if (n.includes("fetira")) return "/images/Normal Fetira.jpg";
-  if (n.includes("ful") && n.includes("avocado")) return "/images/Ful with Avocado.jpg";
-  if (n.includes("ful")) return "/images/Normal Ful.jpg";
-  if (n.includes("burger")) {
-    if (n.includes("cheese")) return "/images/burger_cheese.jpg";
-    if (n.includes("double")) return "/images/burger_double.jpg";
-    return "/images/burger_normal.jpg";
-  }
-  if (n.includes("pizza")) {
-    if (n.includes("chicken")) return "/images/pizza_chicken.jpg";
-    if (n.includes("margherita")) return "/images/pizza_margherita.jpg";
-    return "/images/pizza_normal.jpg";
-  }
-  if (n.includes("pasta")) {
-    if (n.includes("chicken")) return "/images/pasta_chicken.jpg";
-    if (n.includes("tuna")) return "/images/tuna-pasta.jpg";
-    return "/images/pasta_sauce.jpg";
-  }
-  if (n.includes("rice")) {
-    if (n.includes("chicken")) return "/images/rice with chicken.jpg";
-    return "/images/rice_veg.jpg";
-  }
-  if (n.includes("milkshake")) return "/images/milkshake.jpg";
-  if (n.includes("milk")) return "/images/milk.jpg";
-  if (n.includes("bread")) return "/images/bread.jpg";
-  if (n.includes("chips")) return "/images/chips.jpg";
-  if (n.includes("sandwich")) return "/images/club sandwich.jpg";
-  return "/images/cafe_food.jpg";
-}
-
-// Generate a deterministic calorie amount for high visual richness
-function getItemCalories(itemId: string, name: string): number {
-  let hash = 0;
-  for (let i = 0; i < itemId.length; i++) {
-    hash = itemId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const base = Math.abs(hash % 250) + 180; // 180 - 430
-  if (name.toLowerCase().includes("salad") || name.toLowerCase().includes("water") || name.toLowerCase().includes("tea")) {
-    return Math.floor(base * 0.4);
-  }
-  if (name.toLowerCase().includes("burger") || name.toLowerCase().includes("pizza") || name.toLowerCase().includes("chechebsa")) {
-    return Math.floor(base * 1.8);
-  }
-  return base;
+// Owner-uploaded item image, or a neutral placeholder. Item photos are set per
+// item by the tenant (Menu Manager); no name-based guessing across tenants.
+function getLocalItemImage(_name: string, imageUrl?: string | null): string {
+  return imageUrl || "/images/cafe_food.jpg";
 }
 
 // Translate dynamic category emojis
@@ -147,7 +79,7 @@ export default function QrOrderPage() {
       <main className="flex min-h-dvh items-center justify-center bg-slate-950 text-white">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#c87a53] border-t-transparent" />
-          <span className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Loading ZAD Menu...</span>
+          <span className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Loading Menu...</span>
         </div>
       </main>
     }>
@@ -167,7 +99,8 @@ function QrOrder() {
 
   // States
   const { data } = usePoll<{ branch: { name: string; tenantId: string }; categories: Category[] }>(`/api/qr/${branchId}/menu`, 0);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  // Customers scan in bright cafes — default light; staff dashboards stay dark.
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [favorites, setFavorites] = useState<string[]>([]);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
@@ -992,9 +925,6 @@ function ItemDetailModal({
           <div className="flex items-baseline justify-between gap-3">
             <div className="font-mono text-[#c87a53] text-base font-bold">
               {finalUnitPrice.toLocaleString()} ETB
-            </div>
-            <div className="text-xs text-slate-400 font-semibold font-mono">
-              🔥 {getItemCalories(item.id, item.name)} calories
             </div>
           </div>
           
@@ -2043,10 +1973,6 @@ const MenuItemCard = memo(function MenuItemCard({
             <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
           </svg>
         </button>
-        {/* Calorie Indicator badge */}
-        <div className="absolute top-2 right-2 bg-slate-950/75 text-[9px] font-semibold text-white/95 px-2 py-0.5 rounded-full border border-white/5 font-mono">
-          🔥 {getItemCalories(item.id, item.name)} cal
-        </div>
       </div>
 
       {/* Card details */}

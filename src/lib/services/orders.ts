@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db/client";
 import { lineTotal } from "@/lib/money";
-import { publish } from "@/lib/integrations/realtime";
 import { notifyRoleInBranch } from "./notifications";
 import type { OrderItemStatus } from "@prisma/client";
 
@@ -81,10 +80,7 @@ async function onOrderSubmitted(orderId: string, branchId: string) {
   if (!order) return;
   const hasDrinks = order.items.some((i) => i.station === "BARISTA");
   const hasFood = order.items.some((i) => i.station === "KITCHEN");
-  if (hasDrinks) publish(`kds:barista:${branchId}`, { orderId });
-  if (hasFood) publish(`kds:kitchen:${branchId}`, { orderId });
   // Allergy-flagged items must surface immediately to kitchen.
-  if (order.items.some((i) => i.allergyNote)) publish(`kds:allergy:${branchId}`, { orderId });
 }
 
 export async function addItemsToOrder(orderId: string, items: NewOrderItemInput[]) {
@@ -124,7 +120,6 @@ export async function setItemStatus(itemId: string, status: OrderItemStatus) {
 
   await prisma.orderItem.update({ where: { id: itemId }, data: patch });
   await recomputeOrderStatus(item.orderId);
-  publish(`order:${item.orderId}`, { itemId, status });
   return item.orderId;
 }
 
@@ -168,7 +163,6 @@ export async function requestBill(orderId: string) {
   await prisma.order.update({ where: { id: orderId }, data: { status: "BILL_REQUESTED" } });
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (order) {
-    publish(`cashier:${order.branchId}`, { orderId });
     await notifyRoleInBranch(order.branchId, "cashier", "bill_requested", "Bill requested", "A table has requested the bill.");
   }
 }

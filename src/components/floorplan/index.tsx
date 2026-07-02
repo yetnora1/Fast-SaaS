@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import type { FloorPlanProps } from "./FloorPlan";
 
-// three.js / r3f can't render on the server — load the whole floor plan client-only.
+// The floor plan uses window/print APIs — load client-only.
 const Inner = dynamic(() => import("./FloorPlan"), {
   ssr: false,
   loading: () => (

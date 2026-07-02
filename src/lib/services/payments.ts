@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db/client";
 import { vatFromInclusive, round2 } from "@/lib/money";
 import { notifyRoleInBranch } from "./notifications";
-import { publish } from "@/lib/integrations/realtime";
 import type { PaymentMethod } from "@prisma/client";
 
 /**
@@ -65,7 +64,6 @@ export async function confirmPaymentByReference(reference: string) {
   });
 
   await notifyRoleInBranch(result.order.branchId, "waiter", "payment_complete", "Payment received", "Table is now free.");
-  publish(`order:${payment.orderId}`, { paid: true });
   return result;
 }
 

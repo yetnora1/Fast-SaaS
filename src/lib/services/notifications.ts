@@ -1,11 +1,9 @@
 import { prisma } from "@/lib/db/client";
-import { publish } from "@/lib/integrations/realtime";
 import { sendEmail } from "@/lib/integrations/email";
 import type { Role } from "@prisma/client";
 
 export async function notifyUser(userId: string, type: string, title: string, body: string) {
   const n = await prisma.notification.create({ data: { userId, type, title, body } });
-  publish(`user:${userId}`, n);
   return n;
 }
 

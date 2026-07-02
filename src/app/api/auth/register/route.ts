@@ -5,6 +5,8 @@ import { hashPassword } from "@/lib/auth/server";
 import { config } from "@/lib/config";
 import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/integrations/email";
+import { limitPublic } from "@/lib/rate-limit";
+import { seedStarterMenu } from "@/lib/services/starter-menu";
 
 const schema = z.object({
   businessName: z.string().min(2),
@@ -17,6 +19,8 @@ const schema = z.object({
 
 /** Cafe Owner self-registration → creates tenant + owner + 7-day trial. */
 export const POST = handler(async (req: Request) => {
+  const limited = limitPublic(req, "register", 5, 60_000);
+  if (limited) return limited;
   const body = schema.parse(await req.json());
   const email = body.email.toLowerCase().trim();
 
@@ -45,6 +49,13 @@ export const POST = handler(async (req: Request) => {
     await tx.user.update({ where: { id: owner.id }, data: { branchId: branch.id } });
     return { tenant, owner };
   });
+
+  // Starter menu so the tenant's QR page is never empty on day one (non-fatal).
+  try {
+    await seedStarterMenu(result.tenant.id);
+  } catch (e) {
+    console.error("[register] starter menu seed failed", e);
+  }
 
   await audit({ tenantId: result.tenant.id, userId: result.owner.id, action: "tenant.register", entity: "tenant", entityId: result.tenant.id, ip: clientIp(req) });
   await sendEmail({ to: email, subject: "Welcome to CafeFlow", html: `<p>Your ${config.subscription.trialDays}-day free trial has started.</p>` });

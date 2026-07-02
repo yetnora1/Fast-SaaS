@@ -2,6 +2,7 @@ import { z } from "zod";
 import { handler, ok, fail } from "@/lib/api";
 import { prisma } from "@/lib/db/client";
 import { createOrder } from "@/lib/services/orders";
+import { limitPublic } from "@/lib/rate-limit";
 
 const schema = z.object({
   tableNumber: z.number().int().optional(),
@@ -21,6 +22,9 @@ const schema = z.object({
 
 // Public QR self-order — creates a DRAFT order that a waiter must confirm (spec §4.4).
 export const POST = handler(async (req: Request, { params }: { params: { branchId: string } }) => {
+  // Public endpoint — cap fake-order floods: 5 orders per IP per 5 minutes.
+  const limited = limitPublic(req, "qr-order", 5, 5 * 60_000);
+  if (limited) return limited;
   const branch = await prisma.branch.findUnique({ where: { id: params.branchId } });
   if (!branch) return fail("Branch not found", 404);
   const body = schema.parse(await req.json());

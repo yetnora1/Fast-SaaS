@@ -1,11 +1,13 @@
+import { createHmac, timingSafeEqual } from "crypto";
+
 /**
  * Payment adapters — DEMO MODE.
  *
  * All payment methods (Cash, Telebirr, CBE Birr) are simulated. There is NO real
  * provider integration: `init*` returns a synthetic reference, and the payment is
  * confirmed via the webhook endpoints, which can be called directly to simulate
- * the customer paying. Everything is persisted to MySQL. This is intentional for
- * the current build — swap in real provider SDKs later if/when going live.
+ * the customer paying. Swap in real provider SDKs (e.g. Chapa) when going live —
+ * webhook signatures ARE enforced whenever the provider secret env is set.
  */
 
 export interface PaymentInit {
@@ -27,10 +29,18 @@ export async function initCbeBirr(opts: { amount: number; orderId: string }): Pr
 }
 
 /**
- * Webhook signature verification.
- * In demo mode there is no shared secret, so this always accepts — the webhook
- * endpoints are the simulation hook used to mark a demo payment as paid.
+ * Webhook signature verification (HMAC-SHA256 over the raw body).
+ *
+ * - Secret set (env named by `secretEnv`): the signature header must match.
+ * - No secret + production: reject — never accept unsigned payment webhooks live.
+ * - No secret + dev/preview: accept, so demo payments can be simulated locally.
  */
-export function verifyWebhookSignature(_rawBody: string, _signature: string | null, _secretEnv: string): boolean {
-  return true;
+export function verifyWebhookSignature(rawBody: string, signature: string | null, secretEnv: string): boolean {
+  const secret = process.env[secretEnv];
+  if (!secret) return process.env.NODE_ENV !== "production";
+  if (!signature) return false;
+  const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
+  const a = Buffer.from(expected);
+  const b = Buffer.from(signature.trim().toLowerCase());
+  return a.length === b.length && timingSafeEqual(a, b);
 }

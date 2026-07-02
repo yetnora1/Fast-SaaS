@@ -1,30 +1,12 @@
 /**
- * Realtime / push adapter (PostgreSQL-backed).
+ * Realtime strategy (PostgreSQL-backed polling).
  *
- * Live KDS/order boards are driven entirely by PostgreSQL: notifications and order
- * state are persisted to PostgreSQL tables, and the client (KDS/board pages) polls
- * its API every few seconds to pick up changes. A lightweight in-memory event
- * bus lets server code fan out events within a single process. No Firebase.
+ * Live KDS/order boards are driven entirely by PostgreSQL: notifications and
+ * order state are persisted, and client pages poll their API every few seconds.
+ * There is intentionally NO in-process event bus — on serverless each request
+ * may run in a different instance, so in-memory fan-out never reaches anyone.
+ * If sub-second push is ever needed, add SSE or a hosted pub/sub (Pusher, etc).
  */
-
-type Listener = (payload: unknown) => void;
-const channels = new Map<string, Set<Listener>>();
-
-export function publish(channel: string, payload: unknown) {
-  channels.get(channel)?.forEach((l) => {
-    try {
-      l(payload);
-    } catch {
-      /* ignore */
-    }
-  });
-}
-
-export function subscribe(channel: string, listener: Listener): () => void {
-  if (!channels.has(channel)) channels.set(channel, new Set());
-  channels.get(channel)!.add(listener);
-  return () => channels.get(channel)?.delete(listener);
-}
 
 /** Clients poll PostgreSQL-backed endpoints; this is the single source of truth. */
 export const realtimeMode = "postgres-polling" as const;
