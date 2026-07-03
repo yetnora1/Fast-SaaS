@@ -98,7 +98,28 @@ function QrOrder() {
   const isKiosk = false; // searchParams.get("kiosk") === "true" || searchParams.get("public") === "true";
 
   // States
-  const { data } = usePoll<{ branch: { name: string; tenantId: string }; categories: Category[] }>(`/api/qr/${branchId}/menu`, 0);
+  const { data: liveMenu } = usePoll<{ branch: { name: string; tenantId: string }; categories: Category[] }>(`/api/qr/${branchId}/menu`, 0);
+  // Last menu seen on this device — paints instantly on revisit and keeps the
+  // page usable while the live fetch is still crawling over a weak connection.
+  const [cachedMenu, setCachedMenu] = useState<typeof liveMenu>(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`cafeflow_menu_v1_${branchId}`);
+      if (raw) setCachedMenu(JSON.parse(raw));
+    } catch {
+      // Corrupted cache — the live fetch still renders the menu.
+    }
+  }, [branchId]);
+  useEffect(() => {
+    if (liveMenu) {
+      try {
+        localStorage.setItem(`cafeflow_menu_v1_${branchId}`, JSON.stringify(liveMenu));
+      } catch {
+        // Storage full/blocked — caching is best-effort.
+      }
+    }
+  }, [liveMenu, branchId]);
+  const data = liveMenu ?? cachedMenu;
   // Customers scan in bright cafes — default light; staff dashboards stay dark.
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [cart, setCart] = useState<Record<string, CartItem>>({});
@@ -551,10 +572,12 @@ function QrOrder() {
                         }`}
                       >
                         <div className="flex items-center gap-3 text-left min-w-0">
-                          <img 
-                            src={getLocalItemImage(it.name, it.imageUrl)} 
-                            alt={it.name} 
-                            className="h-10 w-10 rounded-lg object-cover bg-slate-800" 
+                          <img
+                            src={getLocalItemImage(it.name, it.imageUrl)}
+                            alt={it.name}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-10 w-10 rounded-lg object-cover bg-slate-800"
                           />
                           <div className="min-w-0">
                             <div className={`text-xs font-semibold truncate ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
@@ -896,9 +919,10 @@ function ItemDetailModal({
       >
         {/* Cover image panel */}
         <div className="relative h-48 sm:h-56 bg-slate-950 flex-shrink-0">
-          <img 
-            src={getLocalItemImage(item.name, item.imageUrl)} 
-            alt={item.name} 
+          <img
+            src={getLocalItemImage(item.name, item.imageUrl)}
+            alt={item.name}
+            decoding="async"
             className="w-full h-full object-cover opacity-90"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -1016,10 +1040,12 @@ function ItemDetailModal({
                       theme === "dark" ? "bg-slate-950 border-slate-800/60" : "bg-slate-50 border-slate-200/80"
                     }`}
                   >
-                    <img 
-                      src={getLocalItemImage(comp.name, comp.imageUrl)} 
-                      alt={comp.name} 
-                      className="h-10 w-10 rounded-lg object-cover bg-slate-900" 
+                    <img
+                      src={getLocalItemImage(comp.name, comp.imageUrl)}
+                      alt={comp.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-10 w-10 rounded-lg object-cover bg-slate-900"
                     />
                     <div className="flex-grow min-w-0">
                       <div className={`text-[10px] font-semibold truncate ${theme === "dark" ? "text-white" : "text-slate-900"}`}>{tr(comp.name, comp.nameAm)}</div>
