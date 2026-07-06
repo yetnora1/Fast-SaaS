@@ -56,6 +56,17 @@ const DICT: Record<string, { en: string; am: string }> = {
   confirmDemo: { en: "✓ Confirm payment (demo)", am: "✓ ክፍያ አረጋግጥ (ሙከራ)" },
   amountTendered: { en: "Amount tendered", am: "የተከፈለ መጠን" },
   customerPhone: { en: "Customer phone", am: "የደንበኛ ስልክ" },
+  // Cashier — customer receipt review
+  pendingPayments: { en: "Pending Payments", am: "በመጠባበቅ ላይ ያሉ ክፍያዎች" },
+  verifyReceiptHint: { en: "Verify each receipt before approving", am: "ከማጽደቅ በፊት እያንዳንዱን ደረሰኝ ያረጋግጡ" },
+  decline: { en: "Decline", am: "ውድቅ አድርግ" },
+  paymentReceipt: { en: "Payment Receipt", am: "የክፍያ ደረሰኝ" },
+  openOriginal: { en: "Open original", am: "ዋናውን ክፈት" },
+  refLabel: { en: "Ref", am: "ማጣቀሻ" },
+  declinePayment: { en: "Decline payment?", am: "ክፍያ ውድቅ ይደረግ?" },
+  declineWarning: { en: "This will cancel the customer's order.", am: "ይህ የደንበኛውን ትዕዛዝ ይሰርዛል።" },
+  reasonOptional: { en: "Reason (optional)", am: "ምክንያት (አማራጭ)" },
+  confirmDecline: { en: "Decline & cancel order", am: "ውድቅ አድርግ እና ትዕዛዝ ሰርዝ" },
   // Common
   name: { en: "Name", am: "ስም" },
   email: { en: "Email", am: "ኢሜይል" },

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import { vatFromInclusive, round2 } from "@/lib/money";
 import { notifyRoleInBranch } from "./notifications";
+import { getBill } from "./orders";
 import type { PaymentMethod } from "@prisma/client";
 
 /**
@@ -69,4 +70,48 @@ export async function confirmPaymentByReference(reference: string) {
 
 export async function vatBreakdownForOrder(total: number) {
   return vatFromInclusive(total);
+}
+
+/**
+ * Cashier approves a customer-submitted payment receipt (QR self-order prepaid
+ * by bank transfer). Records a CONFIRMED payment for the bill total and releases
+ * the order into the kitchen flow if it was still awaiting confirmation. The
+ * order later auto-completes on full delivery (see recomputeOrderStatus), so the
+ * prepaid sale is counted as revenue. Idempotent: a second approval is rejected.
+ */
+export async function approveReceiptPayment(opts: {
+  orderId: string;
+  cashierId: string;
+  shiftId?: string | null;
+}) {
+  const { order, total } = await getBill(opts.orderId);
+  if (["COMPLETED", "VOIDED", "REFUNDED"].includes(order.status)) {
+    throw new Error("Order is already settled or cancelled");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const already = await tx.payment.findFirst({ where: { orderId: opts.orderId, status: "CONFIRMED" } });
+    if (already) throw new Error("Payment already confirmed for this order");
+
+    const payment = await tx.payment.create({
+      data: {
+        orderId: opts.orderId,
+        method: "CBE_BIRR", // customer bank/wallet transfer verified from receipt
+        amount: total,
+        reference: order.txRef ?? undefined,
+        status: "CONFIRMED",
+        verifiedAt: new Date(),
+        cashierId: opts.cashierId,
+        shiftId: opts.shiftId ?? null,
+      },
+    });
+
+    // A not-yet-confirmed order (customer paid up-front) is released to the KDS.
+    if (order.status === "DRAFT") {
+      await tx.order.update({ where: { id: opts.orderId }, data: { status: "SUBMITTED", submittedAt: new Date() } });
+      if (order.tableId) await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "occupied" } });
+    }
+
+    return { payment, order };
+  });
 }

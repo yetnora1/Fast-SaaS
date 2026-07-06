@@ -2,11 +2,21 @@
 import { useState } from "react";
 import { api, usePoll } from "@/components/fetcher";
 import { Button, Card, EmptyState, Input } from "@/components/ui";
-import { ReceiptIcon, ArrowRightIcon } from "@/components/icons";
+import { ReceiptIcon, ArrowRightIcon, CheckCircleIcon, AlertTriangleIcon, ClockIcon } from "@/components/icons";
 import { useLang } from "@/lib/i18n";
 
 interface QueueOrder { id: string; status: string; table: { number: number } | null }
 interface Bill { orderId: string; table: number | null; lines: { name: string; qty: number; lineTotal: number }[]; subtotal: number; vat: number; total: number; vatRate: number }
+interface PendingPayment {
+  orderId: string;
+  table: number | null;
+  status: string;
+  txRef: string | null;
+  receiptUrl: string;
+  createdAt: string;
+  items: { name: string; qty: number; lineTotal: number }[];
+  total: number;
+}
 
 export default function CashierPOS() {
   const { t } = useLang();
@@ -76,7 +86,9 @@ export default function CashierPOS() {
   }
 
   return (
-    <div className="grid md:grid-cols-3 gap-4">
+    <div className="space-y-4">
+      <PendingPayments />
+      <div className="grid md:grid-cols-3 gap-4">
       <Card>
         <div className="mb-2 font-medium">{t("billQueue")}</div>
         <div className="space-y-1">
@@ -128,6 +140,128 @@ export default function CashierPOS() {
           </>
         )}
       </Card>
+      </div>
     </div>
+  );
+}
+
+// ── Pending customer-receipt payments (QR prepaid orders awaiting review) ──
+function PendingPayments() {
+  const { t } = useLang();
+  const { data, reload } = usePoll<{ orders: PendingPayment[] }>("/api/cashier/payments/pending", 5000);
+  const [viewUrl, setViewUrl] = useState<string | null>(null);
+  const [declineFor, setDeclineFor] = useState<PendingPayment | null>(null);
+  const [reason, setReason] = useState("");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const orders = data?.orders ?? [];
+  if (orders.length === 0) return null;
+
+  async function review(orderId: string, decision: "approve" | "decline", declineReason?: string) {
+    setBusyId(orderId);
+    setErr(null);
+    try {
+      await api("/api/cashier/payments/review", {
+        method: "POST",
+        body: JSON.stringify({ orderId, decision, reason: declineReason }),
+      });
+      setDeclineFor(null);
+      setReason("");
+      reload();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <Card className="border-status-yellow/40 bg-status-yellow/[0.06]">
+      <div className="mb-3 flex items-center gap-2">
+        <ReceiptIcon className="h-5 w-5 text-status-yellow" />
+        <span className="font-display font-bold">{t("pendingPayments")}</span>
+        <span className="tabular rounded-full bg-status-yellow/20 px-2 py-0.5 text-xs font-bold text-status-yellow">{orders.length}</span>
+        <span className="ml-auto flex items-center gap-1 text-xs text-brand-muted"><ClockIcon className="h-3.5 w-3.5" />{t("verifyReceiptHint")}</span>
+      </div>
+
+      {err && <p className="mb-2 text-sm text-status-red">{err}</p>}
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {orders.map((o) => {
+          const isPdf = o.receiptUrl.toLowerCase().includes(".pdf");
+          const busy = busyId === o.orderId;
+          return (
+            <div key={o.orderId} className="flex flex-col gap-3 rounded-xl border border-brand-border bg-brand-surface2 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="font-medium">{t("table")} {o.table ?? "—"}</div>
+                  <div className="tabular text-lg font-bold text-brand-accent">{o.total.toLocaleString()} ETB</div>
+                </div>
+                <button
+                  onClick={() => setViewUrl(o.receiptUrl)}
+                  className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-brand-border bg-brand-bg"
+                  title={t("viewReceipt")}
+                >
+                  {isPdf ? (
+                    <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-brand-muted">PDF</span>
+                  ) : (
+                    <img src={o.receiptUrl} alt="receipt" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                  )}
+                </button>
+              </div>
+
+              <div className="text-xs text-brand-muted line-clamp-2">
+                {o.items.map((i) => `${i.qty}× ${i.name}`).join(", ")}
+              </div>
+              {o.txRef && <div className="tabular truncate text-xs text-brand-muted">{t("refLabel")}: {o.txRef}</div>}
+
+              <div className="mt-auto flex gap-2">
+                <Button size="sm" className="flex-1" loading={busy} onClick={() => review(o.orderId, "approve")}>
+                  <CheckCircleIcon className="h-4 w-4" />{t("approve")}
+                </Button>
+                <Button size="sm" variant="danger" className="flex-1" disabled={busy} onClick={() => { setDeclineFor(o); setReason(""); }}>
+                  <AlertTriangleIcon className="h-4 w-4" />{t("decline")}
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Receipt lightbox */}
+      {viewUrl && (
+        <div className="animate-fade fixed inset-0 z-modal flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={() => setViewUrl(null)}>
+          <div className="animate-in flex max-h-[90vh] w-full max-w-2xl flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-medium text-white">{t("paymentReceipt")}</span>
+              <a href={viewUrl} target="_blank" rel="noreferrer" className="text-sm text-brand-accent underline">{t("openOriginal")}</a>
+            </div>
+            {viewUrl.toLowerCase().includes(".pdf") ? (
+              <iframe src={viewUrl} className="h-[80vh] w-full rounded-xl border border-brand-border bg-white" title="receipt" />
+            ) : (
+              <img src={viewUrl} alt="receipt" className="max-h-[85vh] w-full rounded-xl object-contain" />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Decline confirm */}
+      {declineFor && (
+        <div className="animate-fade fixed inset-0 z-modal flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setDeclineFor(null)}>
+          <div className="animate-in w-full max-w-sm rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-pop" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-1 font-display text-lg font-bold">{t("declinePayment")}</div>
+            <p className="mb-3 text-sm text-brand-muted">{t("declineWarning")}</p>
+            <Input placeholder={t("reasonOptional")} value={reason} onChange={(e) => setReason(e.target.value)} />
+            <div className="mt-3 flex gap-2">
+              <Button variant="ghost" className="flex-1" onClick={() => setDeclineFor(null)}>{t("cancel")}</Button>
+              <Button variant="danger" className="flex-1" loading={busyId === declineFor.orderId} onClick={() => review(declineFor.orderId, "decline", reason)}>
+                {t("confirmDecline")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }

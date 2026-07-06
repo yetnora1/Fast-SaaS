@@ -125,7 +125,7 @@ export async function setItemStatus(itemId: string, status: OrderItemStatus) {
 
 /** Derive order status from its items (PARTIALLY_READY / READY / DELIVERED). */
 export async function recomputeOrderStatus(orderId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true, branch: true } });
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true, branch: true, payments: true } });
   if (!order) return;
   const active = order.items.filter((i) => i.status !== "VOIDED");
   if (active.length === 0) return;
@@ -135,14 +135,24 @@ export async function recomputeOrderStatus(orderId: string) {
   const anyReady = active.some((i) => i.status === "READY" || i.status === "DELIVERED");
   const anyPrep = active.some((i) => ["ACCEPTED", "PREPARING", "PLATING"].includes(i.status));
 
+  // Prepaid orders (customer paid up-front, cashier-approved receipt) have no
+  // end-of-meal payment step, so they close out automatically once fully served.
+  const prepaid = order.payments.some((p) => p.status === "CONFIRMED");
+
   let next = order.status;
-  if (allDelivered) next = "DELIVERED";
+  if (allDelivered && prepaid) next = "COMPLETED";
+  else if (allDelivered) next = "DELIVERED";
   else if (allReady) next = "READY";
   else if (anyReady) next = "PARTIALLY_READY";
   else if (anyPrep) next = "IN_PREPARATION";
 
   if (next !== order.status && !["COMPLETED", "VOIDED", "REFUNDED", "BILL_REQUESTED", "PAYMENT_PENDING"].includes(order.status)) {
     await prisma.order.update({ where: { id: orderId }, data: { status: next } });
+
+    // Prepaid order fully delivered → free the table, mirroring the POS payment path.
+    if (next === "COMPLETED" && order.tableId) {
+      await prisma.cafeTable.update({ where: { id: order.tableId }, data: { status: "available" } });
+    }
 
     // Notify waiter when the whole order becomes READY.
     if (next === "READY" && order.waiterId) {
