@@ -32,6 +32,13 @@ interface Category {
   items: MenuItem[];
 }
 
+interface PaymentInfo {
+  businessName: string;
+  cbeAccountName: string | null;
+  cbeAccountNumber: string | null;
+  telebirrNumber: string | null;
+}
+
 interface CartItem {
   id: string; // unique hash: menuItemId + selected modifiers
   menuItemId: string;
@@ -98,7 +105,7 @@ function QrOrder() {
   const isKiosk = false; // searchParams.get("kiosk") === "true" || searchParams.get("public") === "true";
 
   // States
-  const { data: liveMenu } = usePoll<{ branch: { name: string; tenantId: string }; categories: Category[] }>(`/api/qr/${branchId}/menu`, 0);
+  const { data: liveMenu } = usePoll<{ branch: { name: string; tenantId: string }; payment?: PaymentInfo; categories: Category[] }>(`/api/qr/${branchId}/menu`, 0);
   // Last menu seen on this device — paints instantly on revisit and keeps the
   // page usable while the live fetch is still crawling over a weak connection.
   const [cachedMenu, setCachedMenu] = useState<typeof liveMenu>(null);
@@ -782,11 +789,12 @@ function QrOrder() {
 
       {/* Payment Checkout Modal */}
       {isPaymentOpen && (
-        <PaymentModal 
+        <PaymentModal
           lang={lang}
           tr={tr}
           theme={theme}
           total={cartTotal}
+          payment={data?.payment}
           onClose={() => setIsPaymentOpen(false)}
           txRef={txRef}
           setTxRef={setTxRef}
@@ -1270,6 +1278,7 @@ function PaymentModal({
   tr,
   theme,
   total,
+  payment,
   onClose,
   txRef,
   setTxRef,
@@ -1280,6 +1289,7 @@ function PaymentModal({
   tr: any;
   theme: string;
   total: number;
+  payment?: PaymentInfo;
   onClose: () => void;
   txRef: string;
   setTxRef: (val: string) => void;
@@ -1327,24 +1337,27 @@ function PaymentModal({
     setReceiptUrl(null);
   };
 
+  // Real accounts the café owner configured (Owner → Payments). No hardcoded values.
+  const businessName = payment?.businessName || "";
   const paymentDetails = {
     TELEBIRR: {
-      label: "Telebirr Merchant",
-      account: "100012345",
-      name: "CafeFlow Technologies",
-      instructionsEn: "Open your Telebirr app, choose 'Pay Merchant', scan/enter the code below, and pay the exact total.",
-      instructionsAm: "የቴሌብር መተግበሪያዎን ይክፈቱ፣ 'ለንግድ ድርጅት ክፈል' የሚለውን ይምረጡ፣ ከታች ያለውን ኮድ ያስገቡ እና ይክፈሉ"
+      label: lang === "en" ? "Telebirr Number" : "የቴሌብር ስልክ ቁጥር",
+      account: payment?.telebirrNumber || "",
+      name: businessName,
+      instructionsEn: "Open your Telebirr app, choose 'Send Money', enter the number below, and pay the exact total.",
+      instructionsAm: "የቴሌብር መተግበሪያዎን ይክፈቱ፣ 'ገንዘብ ላክ' የሚለውን ይምረጡ፣ ከታች ያለውን ቁጥር ያስገቡ እና ትክክለኛውን መጠን ይክፈሉ።"
     },
     CBE_BIRR: {
-      label: "CBE Account Number",
-      account: "1000987654321",
-      name: "CafeFlow Technologies",
+      label: lang === "en" ? "CBE Account Number" : "የCBE ሂሳብ ቁጥር",
+      account: payment?.cbeAccountNumber || "",
+      name: payment?.cbeAccountName || businessName,
       instructionsEn: "Transfer the exact total amount to the Commercial Bank of Ethiopia (CBE) account number below.",
       instructionsAm: "እባክዎን ከታች የተጠቀሰውን የኢትዮጵያ ንግድ ባንክ (CBE) የሂሳብ ቁጥር በመጠቀም ትክክለኛውን ክፍያ ይላኩ።"
     }
   };
 
   const current = paymentDetails[activeChannel];
+  const configured = Boolean(current.account);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(current.account);
@@ -1413,23 +1426,35 @@ function PaymentModal({
             
             <div className="border-t pt-3 space-y-2 border-slate-800/40">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{current.label}:</div>
-              <div className={`flex items-center justify-between p-2.5 rounded-xl border ${
-                theme === "dark" ? "bg-slate-950 border-slate-800" : "bg-white border-slate-200"
-              }`}>
-                <span className="font-mono text-sm font-bold tracking-wider">{current.account}</span>
-                <button 
-                  onClick={handleCopy}
-                  className={`h-7 px-3.5 rounded-lg text-xxs font-bold flex items-center gap-1 transition-all ${
-                    copied ? "bg-green-600 text-white" : "bg-[#c87a53] hover:bg-[#b3663d] text-white"
-                  }`}
-                >
-                  <ClipboardIcon className="h-3 w-3" />
-                  {copied ? (lang === "en" ? "Copied!" : "ተቀድቷል!") : (lang === "en" ? "Copy" : "ቅዳ")}
-                </button>
-              </div>
-              <div className="text-[10px] text-slate-400">
-                {lang === "en" ? "Account Name" : "የባንክ ሒሳብ ስም"}: <span className="font-bold text-slate-200">{current.name}</span>
-              </div>
+              {configured ? (
+                <>
+                  <div className={`flex items-center justify-between p-2.5 rounded-xl border ${
+                    theme === "dark" ? "bg-slate-950 border-slate-800" : "bg-white border-slate-200"
+                  }`}>
+                    <span className="font-mono text-sm font-bold tracking-wider">{current.account}</span>
+                    <button
+                      onClick={handleCopy}
+                      className={`h-7 px-3.5 rounded-lg text-xxs font-bold flex items-center gap-1 transition-all ${
+                        copied ? "bg-green-600 text-white" : "bg-[#c87a53] hover:bg-[#b3663d] text-white"
+                      }`}
+                    >
+                      <ClipboardIcon className="h-3 w-3" />
+                      {copied ? (lang === "en" ? "Copied!" : "ተቀድቷል!") : (lang === "en" ? "Copy" : "ቅዳ")}
+                    </button>
+                  </div>
+                  {current.name && (
+                    <div className="text-[10px] text-slate-400">
+                      {lang === "en" ? "Account Name" : "የባንክ ሒሳብ ስም"}: <span className="font-bold text-slate-200">{current.name}</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-2.5 text-[11px] text-amber-500">
+                  {lang === "en"
+                    ? "This café hasn't added this payment option yet. Please use another method or ask the staff."
+                    : "ይህ ካፌ ይህን የክፍያ አማራጭ እስካሁን አላከለም። እባክዎ ሌላ ዘዴ ይጠቀሙ ወይም ሰራተኞችን ይጠይቁ።"}
+                </div>
+              )}
               <div className="text-[10px] text-slate-400">
                 {lang === "en" ? "Amount to Transfer" : "የሚተላለፈው የገንዘብ መጠን"}: <span className="text-[#c87a53] font-bold font-mono text-xs">{total.toLocaleString()} ETB</span>
               </div>

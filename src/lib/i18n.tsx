@@ -180,6 +180,16 @@ const DICT: Record<string, { en: string; am: string }> = {
   last30: { en: "Last 30 days", am: "ያለፉት 30 ቀናት" },
   thisMonth: { en: "This month", am: "በዚህ ወር" },
   showing: { en: "Showing", am: "በማሳየት ላይ" },
+  // Owner payment accounts (customer-facing)
+  paymentAccounts: { en: "Your Payment Accounts", am: "የክፍያ አካውንቶችዎ" },
+  paymentAccountsHint: { en: "Shown to customers on the QR payment screen so they can pay your café.", am: "ደንበኞች ካፌዎን እንዲከፍሉ በQR የክፍያ ማያ ላይ ይታያሉ።" },
+  cbeAccount: { en: "CBE Bank", am: "የCBE ባንክ" },
+  telebirrLabel: { en: "Telebirr", am: "ቴሌብር" },
+  accountName: { en: "Account name", am: "የሂሳብ ስም" },
+  accountNumber: { en: "Account number", am: "የሂሳብ ቁጥር" },
+  telebirrPhone: { en: "Telebirr phone number", am: "የቴሌብር ስልክ ቁጥር" },
+  savePaymentAccounts: { en: "Save payment accounts", am: "የክፍያ አካውንቶች አስቀምጥ" },
+  notConfiguredYet: { en: "Not set up yet", am: "እስካሁን አልተዋቀረም" },
   // Manager
   operationsDashboard: { en: "Operations Dashboard", am: "የሥራ ዳሽቦርድ" },
   liveOrderFeed: { en: "Live Order Feed", am: "ቀጥታ የትዕዛዝ ዝርዝር" },

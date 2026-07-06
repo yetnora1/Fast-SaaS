@@ -17,9 +17,21 @@ export const dynamic = "force-dynamic";
 export const GET = handler(async (_req: Request, { params }: { params: { branchId: string } }) => {
   const branch = await prisma.branch.findUnique({
     where: { id: params.branchId },
-    select: { id: true, name: true, tenantId: true },
+    select: {
+      id: true,
+      name: true,
+      tenantId: true,
+      tenant: { select: { name: true, cbeAccountName: true, cbeAccountNumber: true, telebirrNumber: true } },
+    },
   });
   if (!branch) return ok({ categories: [] }, { headers: CACHE_HEADERS });
+  // Café's own payment accounts, surfaced so the QR payment screen shows where to pay.
+  const payment = {
+    businessName: branch.tenant.name,
+    cbeAccountName: branch.tenant.cbeAccountName,
+    cbeAccountNumber: branch.tenant.cbeAccountNumber,
+    telebirrNumber: branch.tenant.telebirrNumber,
+  };
   const categories = await prisma.menuCategory.findMany({
     where: { tenantId: branch.tenantId, active: true },
     orderBy: { sortOrder: "asc" },

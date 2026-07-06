@@ -1,8 +1,8 @@
 "use client";
-import { useMemo, useState } from "react";
-import { usePoll } from "@/components/fetcher";
-import { Card, KPICard, PageHeader, EmptyState, Input, Select, Button, Spinner } from "@/components/ui";
-import { CoinsIcon, ReceiptIcon, FileTextIcon } from "@/components/icons";
+import { useEffect, useMemo, useState } from "react";
+import { api, usePoll } from "@/components/fetcher";
+import { Card, KPICard, PageHeader, EmptyState, Input, Select, Button, Spinner, Field } from "@/components/ui";
+import { CoinsIcon, ReceiptIcon, FileTextIcon, CheckCircleIcon } from "@/components/icons";
 import { useLang } from "@/lib/i18n";
 
 const etb = (n: number) => `${n.toLocaleString()} ETB`;
@@ -99,6 +99,8 @@ export default function OwnerPaymentsPage() {
           {t("exportCsv")}
         </Button>
       </PageHeader>
+
+      <PaymentAccountsCard />
 
       {/* Filters */}
       <Card className="space-y-3">
@@ -215,5 +217,90 @@ export default function OwnerPaymentsPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+interface PaymentAccounts {
+  cbeAccountName: string | null;
+  cbeAccountNumber: string | null;
+  telebirrNumber: string | null;
+}
+
+// Owner-editable customer-facing payment accounts (CBE + Telebirr). These flow
+// to the QR payment screen so customers pay the café's real accounts.
+function PaymentAccountsCard() {
+  const { t } = useLang();
+  const [form, setForm] = useState<PaymentAccounts>({ cbeAccountName: "", cbeAccountNumber: "", telebirrNumber: "" });
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    api<PaymentAccounts>("/api/owner/payment-details")
+      .then((d) => setForm({ cbeAccountName: d.cbeAccountName ?? "", cbeAccountNumber: d.cbeAccountNumber ?? "", telebirrNumber: d.telebirrNumber ?? "" }))
+      .catch((e) => setErr((e as Error).message))
+      .finally(() => setLoaded(true));
+  }, []);
+
+  const set = (k: keyof PaymentAccounts) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+    setSavedAt(false);
+  };
+
+  async function save() {
+    setSaving(true);
+    setErr(null);
+    try {
+      await api("/api/owner/payment-details", { method: "PUT", body: JSON.stringify(form) });
+      setSavedAt(true);
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card className="space-y-4">
+      <div>
+        <div className="font-medium">{t("paymentAccounts")}</div>
+        <p className="mt-0.5 text-sm text-brand-muted">{t("paymentAccountsHint")}</p>
+      </div>
+
+      {!loaded ? (
+        <div className="flex justify-center py-6"><Spinner /></div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-3 rounded-xl border border-brand-border bg-brand-surface2/50 p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold"><span>🏦</span>{t("cbeAccount")}</div>
+            <Field label={t("accountName")}>
+              <Input value={form.cbeAccountName ?? ""} onChange={set("cbeAccountName")} placeholder="Abebe Bikila" />
+            </Field>
+            <Field label={t("accountNumber")}>
+              <Input value={form.cbeAccountNumber ?? ""} onChange={set("cbeAccountNumber")} placeholder="1000123456789" inputMode="numeric" />
+            </Field>
+          </div>
+
+          <div className="space-y-3 rounded-xl border border-brand-border bg-brand-surface2/50 p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold"><span>📱</span>{t("telebirrLabel")}</div>
+            <Field label={t("telebirrPhone")}>
+              <Input value={form.telebirrNumber ?? ""} onChange={set("telebirrNumber")} placeholder="0912 345 678" inputMode="tel" />
+            </Field>
+          </div>
+        </div>
+      )}
+
+      {err && <p className="text-sm text-status-red">{err}</p>}
+
+      <div className="flex items-center gap-3">
+        <Button onClick={save} loading={saving} disabled={!loaded}>{t("savePaymentAccounts")}</Button>
+        {savedAt && (
+          <span className="inline-flex items-center gap-1.5 text-sm text-status-green">
+            <CheckCircleIcon className="h-4 w-4" />{t("saved")}
+          </span>
+        )}
+      </div>
+    </Card>
   );
 }
