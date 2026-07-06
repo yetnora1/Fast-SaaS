@@ -44,6 +44,7 @@ export const POST = handler(async (req: Request, { params }: { params: { branchI
     submit: false, // stays DRAFT until waiter confirms
     txRef: body.txRef,
     receiptUrl: body.receiptUrl,
+    guestTableNumber: body.tableNumber ?? null, // keep the number even if no CafeTable matches
   });
   return ok({ orderId: order.id, status: order.status });
 });

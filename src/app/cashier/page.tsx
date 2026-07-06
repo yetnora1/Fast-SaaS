@@ -13,6 +13,7 @@ interface PendingPayment {
   status: string;
   txRef: string | null;
   receiptUrl: string;
+  receiptIsPdf: boolean;
   createdAt: string;
   items: { name: string; qty: number; lineTotal: number }[];
   total: number;
@@ -189,7 +190,6 @@ function PendingPayments() {
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {orders.map((o) => {
-          const isPdf = o.receiptUrl.toLowerCase().includes(".pdf");
           const busy = busyId === o.orderId;
           return (
             <div key={o.orderId} className="flex flex-col gap-3 rounded-xl border border-brand-border bg-brand-surface2 p-3">
@@ -203,10 +203,21 @@ function PendingPayments() {
                   className="group relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-brand-border bg-brand-bg"
                   title={t("viewReceipt")}
                 >
-                  {isPdf ? (
-                    <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-brand-muted">PDF</span>
+                  {o.receiptIsPdf ? (
+                    <span className="flex h-full w-full flex-col items-center justify-center gap-0.5 text-brand-muted">
+                      <ReceiptIcon className="h-5 w-5" />
+                      <span className="text-[9px] font-bold">PDF</span>
+                    </span>
                   ) : (
-                    <img src={o.receiptUrl} alt="receipt" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                    <>
+                      <img
+                        src={o.receiptUrl}
+                        alt="receipt"
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        onError={(e) => { (e.currentTarget.style.display = "none"); }}
+                      />
+                      <span className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center text-[9px] font-bold text-brand-muted">{t("viewReceipt")}</span>
+                    </>
                   )}
                 </button>
               </div>
@@ -237,7 +248,7 @@ function PendingPayments() {
               <span className="font-medium text-white">{t("paymentReceipt")}</span>
               <a href={viewUrl} target="_blank" rel="noreferrer" className="text-sm text-brand-accent underline">{t("openOriginal")}</a>
             </div>
-            {viewUrl.toLowerCase().includes(".pdf") ? (
+            {orders.find((o) => o.receiptUrl === viewUrl)?.receiptIsPdf ? (
               <iframe src={viewUrl} className="h-[80vh] w-full rounded-xl border border-brand-border bg-white" title="receipt" />
             ) : (
               <img src={viewUrl} alt="receipt" className="max-h-[85vh] w-full rounded-xl object-contain" />

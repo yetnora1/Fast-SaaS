@@ -1,8 +1,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
-import { config } from "@/lib/config";
 import { put } from "@vercel/blob";
+import { prisma } from "@/lib/db/client";
 
 // Durable storage: when BLOB_READ_WRITE_TOKEN is set (Vercel Blob), files are
 // stored there and survive redeploys. Local disk is dev-only — on serverless
@@ -62,16 +62,23 @@ async function saveFile(opts: {
   return `/uploads/${name}`;
 }
 
+/**
+ * Store a payment receipt (customer transfer proof or subscription receipt).
+ *
+ * Receipts are persisted as bytes in the database so they survive on serverless
+ * hosts that have no durable filesystem and no blob store configured. They are
+ * served back on demand — with the original bytes/type — from /api/receipts/[id].
+ */
 export async function storeReceipt(file: File): Promise<{ url: string }> {
-  const url = await saveFile({
-    file,
-    primaryDir: config.receiptStorageDir,
-    fallbackDir: "receipts",
-    namePrefix: "receipt",
-    allowedTypes: ALLOWED,
-    maxSize: MAX_BYTES,
-  });
-  return { url };
+  if (!ALLOWED.includes(file.type)) {
+    throw new Error(`Invalid file type (${ALLOWED.map((t) => t.split("/")[1].toUpperCase()).join("/")} only)`);
+  }
+  if (file.size > MAX_BYTES) {
+    throw new Error(`File too large (max ${Math.round(MAX_BYTES / (1024 * 1024))}MB)`);
+  }
+  const data = Buffer.from(await file.arrayBuffer());
+  const receipt = await prisma.receipt.create({ data: { mime: file.type, data } });
+  return { url: `/api/receipts/${receipt.id}` };
 }
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];

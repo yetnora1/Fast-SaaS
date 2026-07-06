@@ -411,6 +411,7 @@ model Order {
   heldForBar    Boolean     @default(false) @map("held_for_bar")
   txRef         String?     @map("tx_ref")
   receiptUrl    String?     @map("receipt_url")
+  guestTableNumber Int?     @map("guest_table_number") // table # typed by a QR customer, even if no CafeTable row matches
   feedbackRating Int?       @map("feedback_rating")
   feedbackComment String?     @db.Text @map("feedback_comment")
   submittedAt   DateTime?   @map("submitted_at")
@@ -493,6 +494,18 @@ model Refund {
 
   @@index([orderId])
   @@map("refunds")
+}
+
+// Durable storage for customer/tenant-uploaded receipts (payment proofs).
+// Kept in the DB so images survive on serverless hosts without a blob store,
+// and are served on demand via /api/receipts/[id].
+model Receipt {
+  id        String   @id @default(cuid())
+  mime      String
+  data      Bytes
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("receipts")
 }
 
 // ──────────────────────────── Subscriptions ────────────────────────────

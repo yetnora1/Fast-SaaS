@@ -25,6 +25,7 @@ export async function createOrder(opts: {
   submit?: boolean;
   txRef?: string | null;
   receiptUrl?: string | null;
+  guestTableNumber?: number | null;
 }) {
   const menuIds = opts.items.map((i) => i.menuItemId);
   const menuItems = await prisma.menuItem.findMany({ where: { id: { in: menuIds } } });
@@ -42,6 +43,7 @@ export async function createOrder(opts: {
         submittedAt: opts.submit ? new Date() : null,
         txRef: opts.txRef ?? null,
         receiptUrl: opts.receiptUrl ?? null,
+        guestTableNumber: opts.guestTableNumber ?? null,
       },
     });
 
