@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import { toNum, round2 } from "@/lib/money";
 import { notifyRoleInBranch } from "./notifications";
-import type { StockMovementType } from "@prisma/client";
+import type { StockMovementType, GoodsDestination } from "@prisma/client";
 
 export type StockStatus = "OK" | "LOW" | "CRITICAL";
 
@@ -77,6 +77,80 @@ export async function stockForecast(tenantId: string) {
     });
   }
   return results;
+}
+
+/**
+ * Store → station goods issue (double-entry leg 1).
+ * Atomically: validates stock, decrements the store quantity, writes a TRANSFER
+ * stock movement, and creates a permanent GoodsIssue ledger row (item name and
+ * unit snapshotted). The destination station is then notified to receive it.
+ */
+export async function issueGoods(opts: {
+  tenantId: string;
+  itemId: string;
+  quantity: number;
+  destination: GoodsDestination;
+  note?: string;
+  userId: string;
+}) {
+  const issue = await prisma.$transaction(async (tx) => {
+    const item = await tx.inventoryItem.findFirst({ where: { id: opts.itemId, tenantId: opts.tenantId } });
+    if (!item) throw new Error("Inventory item not found");
+    const onHand = toNum(item.quantity);
+    if (opts.quantity > onHand) {
+      throw new Error(`Only ${onHand} ${item.unit} of ${item.name} in stock`);
+    }
+
+    await tx.inventoryItem.update({
+      where: { id: item.id },
+      data: { quantity: round2(onHand - opts.quantity) },
+    });
+    await tx.stockMovement.create({
+      data: {
+        itemId: item.id,
+        type: "TRANSFER",
+        quantity: opts.quantity,
+        reason: `Issued to ${opts.destination.toLowerCase()}${opts.note ? ` — ${opts.note}` : ""}`,
+        userId: opts.userId,
+      },
+    });
+    return tx.goodsIssue.create({
+      data: {
+        tenantId: opts.tenantId,
+        branchId: item.branchId,
+        itemId: item.id,
+        itemName: item.name,
+        unit: item.unit,
+        quantity: opts.quantity,
+        destination: opts.destination,
+        note: opts.note,
+        issuedById: opts.userId,
+      },
+      include: { issuedBy: { select: { name: true } } },
+    });
+  });
+
+  const role = opts.destination === "KITCHEN" ? "kitchen" : "barista";
+  await notifyRoleInBranch(issue.branchId, role, "goods_issued", "Goods from store", `${toNum(issue.quantity)} ${issue.unit} ${issue.itemName} sent — confirm receipt.`);
+  return issue;
+}
+
+/**
+ * Station receipt confirmation (double-entry leg 2). Marks the issue RECEIVED
+ * with who/when — the ledger row is permanent and idempotent-guarded.
+ */
+export async function receiveGoods(opts: { issueId: string; tenantId: string; userId: string }) {
+  const issue = await prisma.goodsIssue.findFirst({ where: { id: opts.issueId, tenantId: opts.tenantId } });
+  if (!issue) throw new Error("Goods issue not found");
+  if (issue.status === "RECEIVED") throw new Error("Already received");
+
+  const updated = await prisma.goodsIssue.update({
+    where: { id: issue.id },
+    data: { status: "RECEIVED", receivedById: opts.userId, receivedAt: new Date() },
+    include: { receivedBy: { select: { name: true } } },
+  });
+  await notifyRoleInBranch(issue.branchId, "store_manager", "goods_received", "Goods received", `${toNum(issue.quantity)} ${issue.unit} ${issue.itemName} confirmed by ${updated.receivedBy?.name ?? "station"}.`);
+  return updated;
 }
 
 export async function lowStockAlerts(tenantId: string, branchId?: string) {

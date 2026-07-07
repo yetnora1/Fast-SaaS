@@ -10,6 +10,7 @@ export default async function BaristaLayout({ children }: { children: React.Reac
       banner={<SubscriptionBanner status={status} />}
       nav={[
         { href: "/barista/kds", label: "Drinks KDS" },
+        { href: "/barista/receiving", label: "Receiving" },
       ]}
     >
       {children}

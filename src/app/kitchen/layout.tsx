@@ -10,6 +10,7 @@ export default async function KitchenLayout({ children }: { children: React.Reac
       banner={<SubscriptionBanner status={status} />}
       nav={[
         { href: "/kitchen/kds", label: "Food KDS" },
+        { href: "/kitchen/receiving", label: "Receiving" },
       ]}
     >
       {children}

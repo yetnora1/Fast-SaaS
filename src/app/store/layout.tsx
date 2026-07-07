@@ -10,6 +10,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       banner={<SubscriptionBanner status={status} />}
       nav={[
         { href: "/store/dashboard", label: "Inventory" },
+        { href: "/store/issues", label: "Issue Goods" },
         { href: "/store/suppliers", label: "Suppliers" },
         { href: "/store/orders", label: "Purchase Orders" },
         { href: "/store/reports", label: "Reports" },

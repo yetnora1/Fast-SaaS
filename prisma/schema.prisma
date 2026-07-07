@@ -125,6 +125,17 @@ enum StockMovementType {
   CONSUME
   ADJUST
   WASTE
+  TRANSFER
+}
+
+enum GoodsIssueStatus {
+  ISSUED
+  RECEIVED
+}
+
+enum GoodsDestination {
+  KITCHEN
+  BARISTA
 }
 
 enum PurchaseOrderStatus {
@@ -271,6 +282,8 @@ model User {
   ordersAsWaiter  Order[]          @relation("WaiterOrders")
   paymentsTaken   Payment[]
   shiftsOpened    Shift[]          @relation("ShiftOpenedBy")
+  goodsIssued     GoodsIssue[]     @relation("GoodsIssuedBy")
+  goodsReceived   GoodsIssue[]     @relation("GoodsReceivedBy")
   schedules       StaffSchedule[]
   attendance      StaffAttendance[]
   notifications   Notification[]
@@ -619,9 +632,10 @@ model InventoryItem {
   tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch    Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
   supplier  Supplier?       @relation(fields: [supplierId], references: [id])
-  movements StockMovement[]
-  poItems   PurchaseOrderItem[]
-  wasteLogs WasteLog[]
+  movements   StockMovement[]
+  poItems     PurchaseOrderItem[]
+  wasteLogs   WasteLog[]
+  goodsIssues GoodsIssue[]
 
   @@index([tenantId])
   @@index([branchId])
@@ -641,6 +655,35 @@ model StockMovement {
 
   @@index([itemId])
   @@map("stock_movements")
+}
+
+// Store → station goods transfer, double-entry: the store manager ISSUES goods
+// (stock decremented, TRANSFER movement logged) and the kitchen/barista marks
+// them RECEIVED. Item name + unit are snapshotted so the record stays a
+// permanent, self-contained ledger entry even if the inventory item changes.
+model GoodsIssue {
+  id           String           @id @default(cuid())
+  tenantId     String           @map("tenant_id")
+  branchId     String           @map("branch_id")
+  itemId       String?          @map("item_id")
+  itemName     String           @map("item_name") // snapshot
+  unit         String // snapshot: kg (solids), L (liquids), pcs
+  quantity     Decimal          @db.Decimal(14, 3)
+  destination  GoodsDestination
+  status       GoodsIssueStatus @default(ISSUED)
+  note         String?
+  issuedById   String           @map("issued_by_id")
+  receivedById String?          @map("received_by_id")
+  issuedAt     DateTime         @default(now()) @map("issued_at")
+  receivedAt   DateTime?        @map("received_at")
+
+  item       InventoryItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  issuedBy   User           @relation("GoodsIssuedBy", fields: [issuedById], references: [id])
+  receivedBy User?          @relation("GoodsReceivedBy", fields: [receivedById], references: [id])
+
+  @@index([tenantId])
+  @@index([branchId, status])
+  @@map("goods_issues")
 }
 
 model Supplier {

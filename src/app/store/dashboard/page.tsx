@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { api, usePoll } from "@/components/fetcher";
-import { Button, Card, Input, Modal, StatusChip, PageHeader } from "@/components/ui";
+import { Button, Card, Input, Modal, Select, StatusChip, PageHeader } from "@/components/ui";
 import { useLang } from "@/lib/i18n";
 
 interface Item { id: string; name: string; unit: string; quantity: number; minThreshold: number; costPerUnit: number; status: string; branchId: string; supplier: { name: string } | null }
@@ -65,7 +65,12 @@ export default function StoreDashboard() {
         <div className="grid gap-2 md:grid-cols-5">
           <Input placeholder={t("branchIdPlaceholder")} value={item.branchId} onChange={(e) => setItem({ ...item, branchId: e.target.value })} />
           <Input placeholder={t("name")} value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} />
-          <Input placeholder={t("unit")} value={item.unit} onChange={(e) => setItem({ ...item, unit: e.target.value })} />
+          {/* Standardized units: solids in kg, liquids in L, countables in pcs. */}
+          <Select value={item.unit} onChange={(e) => setItem({ ...item, unit: e.target.value })}>
+            <option value="kg">kg — solids</option>
+            <option value="L">L — liquids</option>
+            <option value="pcs">pcs — countable</option>
+          </Select>
           <Input placeholder={t("qty")} type="number" value={item.quantity} onChange={(e) => setItem({ ...item, quantity: e.target.value })} />
           <Input placeholder={t("minThreshold")} type="number" value={item.minThreshold} onChange={(e) => setItem({ ...item, minThreshold: e.target.value })} />
         </div>
