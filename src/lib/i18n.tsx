@@ -234,7 +234,7 @@ const DICT: Record<string, { en: string; am: string }> = {
   operationsDashboard: { en: "Operations Dashboard", am: "የሥራ ዳሽቦርድ" },
   liveOrderFeed: { en: "Live Order Feed", am: "ቀጥታ የትዕዛዝ ዝርዝር" },
   noLiveOrders: { en: "No live orders.", am: "ቀጥታ ትዕዛዝ የለም።" },
-  tableStatusMap: { en: "Table Status Map", am: "የጠረጴዛ ሁኔታ ካርታ" },
+  tableQrCodes: { en: "Table QR Codes", am: "የጠረጴዛ QR ኮዶች" },
   inventoryAlerts: { en: "Inventory Alerts", am: "የቆጠራ ማንቂያዎች" },
   liveOrderBoard: { en: "Live Order Board", am: "ቀጥታ የትዕዛዝ ሰሌዳ" },
   voidPin: { en: "Void (PIN)", am: "ሰርዝ (PIN)" },

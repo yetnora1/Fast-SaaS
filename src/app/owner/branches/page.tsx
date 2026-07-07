@@ -3,7 +3,7 @@ import { useState } from "react";
 import { api, usePoll } from "@/components/fetcher";
 import { Button, Card, Input, Field, PageHeader } from "@/components/ui";
 import { useLang } from "@/lib/i18n";
-import { FloorPlan } from "@/components/floorplan";
+import { TableQRCodes } from "@/components/TableQR";
 
 interface Branch { id: string; name: string; address: string | null; _count: { tables: number; users: number } }
 
@@ -49,8 +49,8 @@ export default function BranchesPage() {
           <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-brand-border bg-brand-surface text-brand-foreground shadow-pop">
             <div className="flex items-center justify-between border-b border-brand-border/70 px-6 py-4">
               <div>
-                <h3 className="font-display text-lg font-bold text-[#c87a53]">{viewingBranch.name} — Floor layout &amp; QR Codes</h3>
-                <p className="text-xs text-brand-muted">Configure table arrangement and generate QR self-ordering codes.</p>
+                <h3 className="font-display text-lg font-bold text-[#c87a53]">{viewingBranch.name} — Table QR Codes</h3>
+                <p className="text-xs text-brand-muted">Manage tables and generate QR self-ordering codes.</p>
               </div>
               <button
                 onClick={() => setViewingBranch(null)}
@@ -61,7 +61,7 @@ export default function BranchesPage() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto">
-              <FloorPlan branchId={viewingBranch.id} height={460} />
+              <TableQRCodes branchId={viewingBranch.id} />
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PageHeader } from "@/components/ui";
-import { FloorPlan } from "@/components/floorplan";
+import { TableGrid } from "@/components/TableQR";
 import { useLang } from "@/lib/i18n";
 import { NewOrderModal, type OrderTable } from "./NewOrderModal";
 
@@ -11,7 +11,7 @@ export default function WaiterTables() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("myTables")} subtitle={t("tapTableHint")} />
-      <FloorPlan height={540} paused={!!active} onTableSelect={(tbl) => setActive({ id: tbl.id, number: tbl.number })} />
+      <TableGrid onTableSelect={(tbl) => setActive({ id: tbl.id, number: tbl.number })} />
       <NewOrderModal table={active} onClose={() => setActive(null)} />
     </div>
   );

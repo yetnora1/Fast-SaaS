@@ -2,7 +2,7 @@
 import { usePoll } from "@/components/fetcher";
 import { Card, StatusChip, TimerBadge, PageHeader, LiveDot, EmptyState } from "@/components/ui";
 import { AlertTriangleIcon, InboxIcon } from "@/components/icons";
-import { FloorPlan } from "@/components/floorplan";
+import { TableQRCodes } from "@/components/TableQR";
 import { FeedbackCard } from "@/components/FeedbackCard";
 import { useLang } from "@/lib/i18n";
 
@@ -34,8 +34,8 @@ export default function ManagerDashboard() {
         </Card>
 
         <Card>
-          <div className="mb-2 font-medium">{t("tableStatusMap")}</div>
-          <FloorPlan height={420} />
+          <div className="mb-2 font-medium">{t("tableQrCodes")}</div>
+          <TableQRCodes />
         </Card>
       </div>
 
