@@ -384,6 +384,46 @@ const DICT: Record<string, { en: string; am: string }> = {
   noStaff: { en: "No staff", am: "ሠራተኛ የለም" },
   noBranches: { en: "No branches", am: "ቅርንጫፍ የለም" },
   noSubRecords: { en: "No subscription records", am: "የምዝገባ መዝገብ የለም" },
+  // Equipment registry
+  equipmentTitle: { en: "Equipment Registry", am: "የዕቃ ምዝገባ" },
+  equipmentSubtitle: { en: "Manage café equipment and supplies", am: "የካፌ ዕቃዎችን እና አቅርቦቶችን ያስተዳድሩ" },
+  addEquipment: { en: "Add Equipment", am: "ዕቃ ጨምር" },
+  editEquipment: { en: "Edit Equipment", am: "ዕቃ አርትዕ" },
+  deleteEquipment: { en: "Delete Equipment", am: "ዕቃ ሰርዝ" },
+  deleteEquipmentMsg: { en: "Are you sure? This item will be archived.", am: "እርግጠኛ ነዎት? ይህ ዕቃ ይቀመጣል።" },
+  department: { en: "Department", am: "ክፍል" },
+  category: { en: "Category", am: "ምድብ" },
+  conditionLabel: { en: "Condition", am: "ሁኔታ" },
+  quantityLabel: { en: "Quantity", am: "ብዛት" },
+  storageArea: { en: "Storage Area", am: "ማከማቻ ቦታ" },
+  purchaseDate: { en: "Purchase Date", am: "የግዢ ቀን" },
+  lastMaintenance: { en: "Last Maintenance", am: "የመጨረሻ ጥገና" },
+  searchEquipment: { en: "Search equipment…", am: "ዕቃ ፈልግ…" },
+  allDepartments: { en: "All departments", am: "ሁሉም ክፍሎች" },
+  allCategories: { en: "All categories", am: "ሁሉም ምድቦች" },
+  allConditions: { en: "All conditions", am: "ሁሉም ሁኔታዎች" },
+  exportPdf: { en: "Export PDF", am: "PDF አውርድ" },
+  noEquipment: { en: "No equipment items found.", am: "ምንም ዕቃ አልተገኘም።" },
+  deptBarista: { en: "Barista", am: "ባሪስታ" },
+  deptKitchen: { en: "Kitchen", am: "ማብሰያ" },
+  deptShared: { en: "Shared", am: "የጋራ" },
+  catCupsMugs: { en: "Cups & Mugs", am: "ስኒዎች እና ማግ" },
+  catGlassware: { en: "Glassware", am: "የመስታወት ዕቃ" },
+  catUtensils: { en: "Utensils", am: "ዕቃዎች" },
+  catBrewingTools: { en: "Brewing Tools", am: "የቡና ማዘጋጃ ዕቃዎች" },
+  catKitchenAppliances: { en: "Kitchen Appliances", am: "የማብሰያ መሣሪያዎች" },
+  catCleaningSupplies: { en: "Cleaning Supplies", am: "የጽዳት ዕቃዎች" },
+  catOther: { en: "Other", am: "ሌላ" },
+  condNew: { en: "New", am: "አዲስ" },
+  condGood: { en: "Good", am: "ጥሩ" },
+  condWorn: { en: "Worn", am: "ያረጀ" },
+  condNeedsRepair: { en: "Needs Repair", am: "ጥገና ያስፈልገዋል" },
+  condRetired: { en: "Retired", am: "ጡረታ" },
+  lastUpdated: { en: "Last Updated", am: "የመጨረሻ ዝማኔ" },
+  equipmentExport: { en: "Export", am: "ላክ" },
+  saving: { en: "Saving…", am: "በማስቀመጥ ላይ…" },
+  deleting: { en: "Deleting…", am: "በመሰረዝ ላይ…" },
+  itemsCount: { en: "items", am: "ዕቃዎች" },
 };
 
 /**
@@ -423,6 +463,7 @@ const LABELS: Record<string, string> = {
   Approvals: "ማጽደቆች",
   Config: "ውቅር",
   "Audit Log": "የማረጋገጫ መዝገብ",
+  Equipment: "ዕቃዎች",
 };
 
 /**
@@ -486,6 +527,11 @@ const STATUS: Record<string, { en: string; am: string }> = {
   // Shift status
   OPEN: { en: "Open", am: "ክፍት" },
   CLOSED: { en: "Closed", am: "ተዘግቷል" },
+  // Equipment condition
+  GOOD: { en: "Good", am: "ጥሩ" },
+  WORN: { en: "Worn", am: "ያረጀ" },
+  NEEDS_REPAIR: { en: "Needs Repair", am: "ጥገና ያስፈልገዋል" },
+  RETIRED: { en: "Retired", am: "ጡረታ" },
 };
 
 interface LangCtx {

@@ -176,6 +176,20 @@ enum MenuItemState {
   PUBLISHED
 }
 
+enum EquipmentDepartment {
+  BARISTA
+  KITCHEN
+  SHARED
+}
+
+enum EquipmentCondition {
+  NEW
+  GOOD
+  WORN
+  NEEDS_REPAIR
+  RETIRED
+}
+
 // ──────────────────────────── Platform-level (no tenant) ────────────────────────────
 
 model PlatformConfig {
@@ -239,6 +253,7 @@ model Tenant {
   auditLogs      AuditLog[]
   features       TenantFeature[]
   invitations    Invitation[]
+  equipmentItems EquipmentItem[]
 
   @@map("tenants")
 }
@@ -287,7 +302,8 @@ model User {
   schedules       StaffSchedule[]
   attendance      StaffAttendance[]
   notifications   Notification[]
-  ratings         StaffRating[]    @relation("RatedStaff")
+  ratings          StaffRating[]    @relation("RatedStaff")
+  equipmentCreated EquipmentItem[]  @relation("EquipmentCreatedBy")
 
   @@unique([email])
   @@index([tenantId])
@@ -827,4 +843,31 @@ model AuditLog {
   @@index([tenantId])
   @@index([action])
   @@map("audit_logs")
+}
+
+// ──────────────────────────── Equipment Registry ────────────────────────────
+
+model EquipmentItem {
+  id              String              @id @default(cuid())
+  tenantId        String              @map("tenant_id")
+  name            String
+  category        String              // free text; UI suggests defaults
+  department      EquipmentDepartment
+  quantity        Int                 @default(0)
+  condition       EquipmentCondition  @default(NEW)
+  storageArea     String?             @map("storage_area")
+  purchaseDate    DateTime?           @map("purchase_date")
+  lastMaintenance DateTime?           @map("last_maintenance")
+  notes           String?             @db.Text
+  createdBy       String              @map("created_by")
+  isActive        Boolean             @default(true) @map("is_active")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  tenant  Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  creator User   @relation("EquipmentCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@map("equipment_items")
 }
