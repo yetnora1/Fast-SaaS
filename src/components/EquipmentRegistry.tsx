@@ -97,6 +97,7 @@ export function EquipmentRegistry() {
   const [deptFilter, setDeptFilter] = useState("");
   const [catFilter, setCatFilter] = useState("");
   const [condFilter, setCondFilter] = useState("");
+  const [qtyFilter, setQtyFilter] = useState("");
   const [search, setSearch] = useState("");
 
   /* Sort */
@@ -120,9 +121,10 @@ export function EquipmentRegistry() {
     if (deptFilter) p.set("department", deptFilter);
     if (catFilter) p.set("category", catFilter);
     if (condFilter) p.set("condition", condFilter);
+    if (qtyFilter) p.set("quantity", qtyFilter);
     if (search.trim()) p.set("search", search.trim());
     return p.toString();
-  }, [deptFilter, catFilter, condFilter, search]);
+  }, [deptFilter, catFilter, condFilter, qtyFilter, search]);
 
   const { data, loading, reload } = usePoll<{ items: EquipmentItem[] }>(
     `/api/equipment${queryParams ? `?${queryParams}` : ""}`,
@@ -240,6 +242,7 @@ export function EquipmentRegistry() {
     if (deptFilter) p.set("department", deptFilter);
     if (catFilter) p.set("category", catFilter);
     if (condFilter) p.set("condition", condFilter);
+    if (qtyFilter) p.set("quantity", qtyFilter);
     if (search.trim()) p.set("search", search.trim());
     window.open(`/api/equipment/export?${p.toString()}`, "_blank");
   }
@@ -339,6 +342,15 @@ export function EquipmentRegistry() {
               {condLabel(c)}
             </option>
           ))}
+        </Select>
+        <Select
+          className="w-auto min-w-[150px]"
+          value={qtyFilter}
+          onChange={(e) => setQtyFilter(e.target.value)}
+        >
+          <option value="">{t("allQuantities")}</option>
+          <option value="in_stock">{t("inStock")}</option>
+          <option value="out_of_stock">{t("outOfStock")}</option>
         </Select>
       </Card>
 

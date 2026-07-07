@@ -18,12 +18,18 @@ export const GET = handler(async (req: Request) => {
   const department = url.searchParams.get("department") || undefined;
   const category = url.searchParams.get("category") || undefined;
   const condition = url.searchParams.get("condition") || undefined;
+  const quantity = url.searchParams.get("quantity") || undefined;
   const search = url.searchParams.get("search") || undefined;
 
   const where: any = { tenantId: me.tenantId, isActive: true };
   if (department) where.department = department;
   if (category) where.category = category;
   if (condition) where.condition = condition;
+  if (quantity === "in_stock") {
+    where.quantity = { gt: 0 };
+  } else if (quantity === "out_of_stock") {
+    where.quantity = 0;
+  }
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
@@ -41,6 +47,7 @@ export const GET = handler(async (req: Request) => {
   if (department) filters.push(`Department: ${department}`);
   if (category) filters.push(`Category: ${category}`);
   if (condition) filters.push(`Condition: ${condition}`);
+  if (quantity) filters.push(`Quantity: ${quantity === "in_stock" ? "In Stock" : "Out of Stock"}`);
   if (search) filters.push(`Search: "${search}"`);
 
   const fmtDate = (d: Date | null) => (d ? d.toISOString().split("T")[0] : "");

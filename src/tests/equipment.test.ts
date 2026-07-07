@@ -66,22 +66,23 @@ interface MockItem {
   category: string;
   department: string;
   condition: string;
+  quantity: number;
   notes: string | null;
   isActive: boolean;
 }
 
 const MOCK_DATA: MockItem[] = [
-  { name: "Espresso Machine", category: "Kitchen Appliances", department: "BARISTA", condition: "GOOD", notes: "Main machine, needs descaling monthly", isActive: true },
-  { name: "Chef Knife Set", category: "Utensils", department: "KITCHEN", condition: "NEW", notes: null, isActive: true },
-  { name: "Glass Cups (12pk)", category: "Glassware", department: "SHARED", condition: "WORN", notes: "Some chipped, re-order soon", isActive: true },
-  { name: "Coffee Grinder", category: "Brewing Tools", department: "BARISTA", condition: "NEEDS_REPAIR", notes: "Grinder motor failing", isActive: true },
-  { name: "Mop and Bucket", category: "Cleaning Supplies", department: "SHARED", condition: "GOOD", notes: null, isActive: true },
-  { name: "Old Blender", category: "Kitchen Appliances", department: "KITCHEN", condition: "RETIRED", notes: "Replaced in March", isActive: false },
+  { name: "Espresso Machine", category: "Kitchen Appliances", department: "BARISTA", condition: "GOOD", quantity: 2, notes: "Main machine, needs descaling monthly", isActive: true },
+  { name: "Chef Knife Set", category: "Utensils", department: "KITCHEN", condition: "NEW", quantity: 5, notes: null, isActive: true },
+  { name: "Glass Cups (12pk)", category: "Glassware", department: "SHARED", condition: "WORN", quantity: 0, notes: "Some chipped, re-order soon", isActive: true },
+  { name: "Coffee Grinder", category: "Brewing Tools", department: "BARISTA", condition: "NEEDS_REPAIR", quantity: 1, notes: "Grinder motor failing", isActive: true },
+  { name: "Mop and Bucket", category: "Cleaning Supplies", department: "SHARED", condition: "GOOD", quantity: 0, notes: null, isActive: true },
+  { name: "Old Blender", category: "Kitchen Appliances", department: "KITCHEN", condition: "RETIRED", quantity: 0, notes: "Replaced in March", isActive: false },
 ];
 
 /**
  * Simulates the Prisma where-clause filter logic client-side.
- * AND combination: department + category + condition + search.
+ * AND combination: department + category + condition + quantity + search.
  * Search does OR on name and notes (case-insensitive).
  * Only isActive: true items are returned.
  */
@@ -91,6 +92,7 @@ function filterItems(
     department?: string;
     category?: string;
     condition?: string;
+    quantity?: string;
     search?: string;
   },
 ): MockItem[] {
@@ -99,6 +101,8 @@ function filterItems(
     if (filters.department && item.department !== filters.department) return false;
     if (filters.category && item.category !== filters.category) return false;
     if (filters.condition && item.condition !== filters.condition) return false;
+    if (filters.quantity === "in_stock" && item.quantity <= 0) return false;
+    if (filters.quantity === "out_of_stock" && item.quantity !== 0) return false;
     if (filters.search) {
       const s = filters.search.toLowerCase();
       const nameMatch = item.name.toLowerCase().includes(s);
@@ -161,6 +165,22 @@ describe("Filter Logic — soft-delete exclusion", () => {
 
   const kitchen = filterItems(MOCK_DATA, { department: "KITCHEN" });
   assert(kitchen.length === 1, "Kitchen dept → only 1 active item (Old Blender excluded)");
+});
+
+describe("Filter Logic — quantity filters", () => {
+  const inStock = filterItems(MOCK_DATA, { quantity: "in_stock" });
+  assert(inStock.length === 3, "quantity=in_stock → 3 items (> 0)");
+  assert(inStock.every(i => i.quantity > 0), "All results have quantity > 0");
+
+  const outOfStock = filterItems(MOCK_DATA, { quantity: "out_of_stock" });
+  assert(outOfStock.length === 2, "quantity=out_of_stock → 2 items (= 0)");
+  assert(outOfStock.every(i => i.quantity === 0), "All results have quantity = 0");
+
+  const sharedOutOfStock = filterItems(MOCK_DATA, { department: "SHARED", quantity: "out_of_stock" });
+  assert(sharedOutOfStock.length === 2, "SHARED + out_of_stock → 2 items");
+
+  const baristaInStock = filterItems(MOCK_DATA, { department: "BARISTA", quantity: "in_stock" });
+  assert(baristaInStock.length === 2, "BARISTA + in_stock → 2 items");
 });
 
 /* ── Summary ──────────────────────────────────────────────────────── */

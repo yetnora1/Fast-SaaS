@@ -29,6 +29,7 @@ export const GET = handler(async (req: Request) => {
   const department = url.searchParams.get("department") || undefined;
   const category = url.searchParams.get("category") || undefined;
   const condition = url.searchParams.get("condition") || undefined;
+  const quantity = url.searchParams.get("quantity") || undefined;
   const search = url.searchParams.get("search") || undefined;
 
   const where: any = {
@@ -39,6 +40,12 @@ export const GET = handler(async (req: Request) => {
   if (department) where.department = department;
   if (category) where.category = category;
   if (condition) where.condition = condition;
+
+  if (quantity === "in_stock") {
+    where.quantity = { gt: 0 };
+  } else if (quantity === "out_of_stock") {
+    where.quantity = 0;
+  }
 
   // Fuzzy search: case-insensitive contains on name AND notes (OR between fields).
   if (search) {
