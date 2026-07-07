@@ -48,7 +48,7 @@ export function AppShell({
   let profileHref = "/login";
   if (user?.role) {
     if (user.role === "saas_owner") {
-      profileHref = "/saas-admin/dashboard";
+      profileHref = "/saas-admin/profile";
     } else if (user.role === "store_manager") {
       profileHref = "/store/profile";
     } else if (user.role === "cafe_manager") {
