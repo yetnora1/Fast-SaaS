@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, usePoll } from "@/components/fetcher";
 import {
   Card,
@@ -53,7 +53,12 @@ const CATEGORIES = [
 
 const fmtDate = (s: string | null) => {
   if (!s) return "—";
-  return new Date(s).toLocaleDateString();
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return "—";
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 const DEPT_DICT_KEY: Record<string, string> = {
@@ -92,6 +97,11 @@ const COND_COLOR: Record<string, string> = {
 
 export function EquipmentRegistry() {
   const { t, lang } = useLang();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   /* Filters */
   const [deptFilter, setDeptFilter] = useState("");
@@ -262,6 +272,14 @@ export function EquipmentRegistry() {
       <span className="ml-1 opacity-30">↕</span>
     );
 
+  if (!mounted) {
+    return (
+      <div className="flex justify-center py-16">
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -397,7 +415,7 @@ export function EquipmentRegistry() {
                       {condLabel(item.condition)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 tabular text-brand-muted">{fmtDate(item.updatedAt)}</td>
+                  <td className="px-4 py-3 tabular text-brand-muted" suppressHydrationWarning>{fmtDate(item.updatedAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
                       <button
