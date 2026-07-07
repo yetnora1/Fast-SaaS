@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { AuthError } from "@/lib/auth/server";
+import { prisma } from "@/lib/db/client";
 
 export function ok<T>(data: T, init?: ResponseInit) {
   return NextResponse.json({ ok: true, data }, init);
@@ -26,6 +27,10 @@ export function handler<T extends (...args: any[]) => Promise<Response>>(fn: T):
       }
       console.error("[api] unhandled", e);
       return fail("Internal server error", 500);
+    } finally {
+      if (process.env.NODE_ENV === "production") {
+        await prisma.$disconnect().catch((err) => console.error("Prisma disconnect failed", err));
+      }
     }
   }) as T;
 }
