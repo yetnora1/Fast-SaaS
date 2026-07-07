@@ -1,7 +1,7 @@
 import { handler, ok } from "@/lib/api";
 import { prisma } from "@/lib/db/client";
 import { requireRole } from "@/lib/auth/server";
-import { config } from "@/lib/config";
+import { getDynamicPaymentConfig } from "@/lib/subscription";
 import { toNum, round2 } from "@/lib/money";
 
 // Platform KPIs: MRR, ARR, active tenants, pending approvals (spec §1.2/§14.2).
@@ -25,5 +25,7 @@ export const GET = handler(async () => {
   const mrr = round2(monthly);
   const arr = round2(monthly * 12);
 
-  return ok({ totalTenants: total, activeTenants: active, trialingTenants: trialing, expiringSoon, pendingApprovals, mrr, arr, subscriptionAmount: config.subscription.amount });
+  const paymentConfig = await getDynamicPaymentConfig();
+
+  return ok({ totalTenants: total, activeTenants: active, trialingTenants: trialing, expiringSoon, pendingApprovals, mrr, arr, subscriptionAmount: paymentConfig.amount });
 });

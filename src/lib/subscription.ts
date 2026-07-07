@@ -87,3 +87,45 @@ export async function checkSubscriptionStatus(tenantId: string): Promise<Subscri
   // Trial elapsed, nothing paid → locked behind gate.
   return { state: "EXPIRED", trialDaysLeft: 0, subDaysLeft: null, graceDaysLeft: null, fullAccess: false, locked: true };
 }
+
+export interface DynamicPaymentConfig {
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  amount: number;
+}
+
+export async function getDynamicPaymentConfig(): Promise<DynamicPaymentConfig> {
+  try {
+    const rows = await prisma.platformConfig.findMany({
+      where: {
+        key: { in: ["bank_name", "account_number", "account_name", "subscription_amount"] }
+      }
+    });
+
+    const configMap = new Map(rows.map(r => [r.key, r.value]));
+
+    const dbAmountStr = configMap.get("subscription_amount");
+    let amount = config.subscription.amount;
+    if (dbAmountStr) {
+      const cleaned = dbAmountStr.replace(/[^0-9.]/g, "");
+      const parsed = parseFloat(cleaned);
+      if (!isNaN(parsed)) amount = parsed;
+    }
+
+    return {
+      bankName: configMap.get("bank_name") || config.subscription.bankName,
+      accountNumber: configMap.get("account_number") || config.subscription.accountNumber,
+      accountName: configMap.get("account_name") || config.subscription.accountName,
+      amount,
+    };
+  } catch (error) {
+    console.error("Failed to load platform configuration from DB, using defaults", error);
+    return {
+      bankName: config.subscription.bankName,
+      accountNumber: config.subscription.accountNumber,
+      accountName: config.subscription.accountName,
+      amount: config.subscription.amount,
+    };
+  }
+}
