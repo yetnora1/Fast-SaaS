@@ -48,6 +48,20 @@ async function saveFile(opts: {
     return blob.url; // absolute, durable URL
   }
 
+  if (!useBlob) {
+    try {
+      await prisma.storedFile.create({
+        data: {
+          filename: name,
+          mime: opts.file.type,
+          data: buf,
+        },
+      });
+    } catch (dbErr) {
+      console.error("Failed to save to database storage", dbErr);
+    }
+  }
+
   try {
     const dir = path.resolve(opts.primaryDir);
     await fs.mkdir(dir, { recursive: true });

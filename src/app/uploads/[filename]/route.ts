@@ -3,9 +3,26 @@ import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 import { config } from "@/lib/config";
+import { prisma } from "@/lib/db/client";
 
 export async function GET(req: Request, { params }: { params: { filename: string } }) {
   const { filename } = params;
+
+  try {
+    const dbFile = await prisma.storedFile.findUnique({
+      where: { filename },
+    });
+    if (dbFile) {
+      return new NextResponse(new Uint8Array(dbFile.data), {
+        headers: {
+          "Content-Type": dbFile.mime,
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Failed to read file from database storage fallback", error);
+  }
   
   // We will search for the file in the following directories in order:
   const searchDirs = [

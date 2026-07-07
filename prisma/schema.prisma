@@ -541,6 +541,16 @@ model Receipt {
   @@map("receipts")
 }
 
+model StoredFile {
+  id        String   @id @default(cuid())
+  filename  String   @unique
+  mime      String
+  data      Bytes
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("stored_files")
+}
+
 // ──────────────────────────── Subscriptions ────────────────────────────
 
 model Subscription {
