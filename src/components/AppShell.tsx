@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { api, usePoll } from "@/components/fetcher";
+import { ClockInOut } from "@/components/ClockInOut";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { BellIcon, GlobeIcon, LogOutIcon } from "@/components/icons";
@@ -62,6 +63,9 @@ export function AppShell({
   const iconBtn =
     "inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-surface2 px-2.5 text-sm text-brand-foreground transition-colors hover:bg-white/10";
 
+  // Attendance: every staff role clocks in/out; owners and platform admin don't.
+  const showClock = Boolean(user?.role && user.role !== "cafe_owner" && user.role !== "saas_owner");
+
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-nav border-b border-brand-border/70 bg-brand-surface/80 backdrop-blur-md relative">
@@ -109,6 +113,7 @@ export function AppShell({
 
           {/* Desktop Actions */}
           <div className="hidden md:flex ml-auto items-center gap-2">
+            {showClock && <ClockInOut />}
             <button onClick={toggle} className={iconBtn} title="Language / ቋንቋ" aria-label="Toggle language">
               <GlobeIcon className="h-4 w-4" />
               <span className="font-medium">{lang === "en" ? "አማ" : "EN"}</span>
@@ -174,6 +179,7 @@ export function AppShell({
               ))}
             </nav>
             <div className="mt-4 flex flex-col gap-2 border-t border-brand-border/60 pt-4">
+              {showClock && <ClockInOut compact />}
               <button
                 onClick={toggle}
                 className="touch-target flex w-full items-center gap-3 rounded-xl bg-brand-surface2 px-4 py-3 text-sm font-medium text-brand-foreground transition-colors hover:bg-white/10"
