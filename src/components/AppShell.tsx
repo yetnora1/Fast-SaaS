@@ -219,7 +219,9 @@ export function AppShell({
             </Link>
           )}
 
-          <span className="hidden text-sm text-white/70 sm:inline">{navLabel(title)}</span>
+          <span className="hidden text-sm font-semibold tracking-wide text-white/90 sm:inline animate-fade">
+            {lang === "am" ? `እንኳን ደህና መጡ፣ ${navLabel(title)}!` : `Welcome back, ${navLabel(title)}!`}
+          </span>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex ml-2 items-center gap-1 text-sm">
@@ -305,6 +307,14 @@ export function AppShell({
         {/* Mobile Drawer Overlay */}
         {isMenuOpen && (
           <div className="absolute top-full left-0 right-0 z-modal max-h-[calc(100vh-100%)] overflow-y-auto border-b border-brand-border bg-brand-surface/95 backdrop-blur-lg p-4 shadow-pop md:hidden animate-fade">
+            <div className="mb-4 px-4 py-2 border-b border-brand-border/60">
+              <p className="text-[11px] font-bold text-brand-muted uppercase tracking-wider">
+                {lang === "am" ? "የካፌው መተግበሪያ" : "CafeFlow App"}
+              </p>
+              <p className="text-base font-bold text-brand-foreground mt-0.5">
+                {lang === "am" ? `እንኳን ደህና መጡ፣ ${navLabel(title)}!` : `Welcome back, ${navLabel(title)}!`}
+              </p>
+            </div>
             <nav className="flex flex-col gap-1">
               {nav.map((n) => (
                 <Link
