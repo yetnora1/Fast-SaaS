@@ -226,7 +226,8 @@ export function AppShell({
           </div>
 
           {/* Center Brand Title: Absolutely centered in the middle of Row 1 */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-0">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-2.5 z-0">
+            <img src="/LOGO.jpg" alt="Logo" className="h-8 w-8 rounded-xl object-cover border border-white/20 shadow-sm" />
             <span className="font-display text-2xl font-black tracking-wider text-white drop-shadow-sm select-none">
               CafeFlow
             </span>
