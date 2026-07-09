@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
@@ -98,9 +98,9 @@ body {
   @apply outline-none ring-2 ring-brand-accent ring-offset-2 ring-offset-brand-bg;
 }
 
-/* ── Themed selection + scrollbar to match the dark palette ── */
+/* ── Themed selection + scrollbar ── */
 ::selection {
-  @apply bg-brand-surface2 text-white;
+  @apply bg-brand-surface2 text-brand-foreground;
 }
 
 * {

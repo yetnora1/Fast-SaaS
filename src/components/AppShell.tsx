@@ -67,73 +67,73 @@ export function AppShell({
   const showClock = Boolean(user?.role && user.role !== "cafe_owner" && user.role !== "saas_owner");
 
   // Dynamically determine the module theme based on the path
-  let bg = "#0b0f19";
-  let surface = "#161f30";
-  let surface2 = "#222d41";
-  let border = "#2a384e";
-  let muted = "#ACBCBF";
-  let foreground = "#F4FCFB";
+  let bg = "#FFFFFF";
+  let surface = "#f8fafc";
+  let surface2 = "#f1f5f9";
+  let border = "#cbd5e1";
+  let muted = "#64748b";
+  let foreground = "#0f172a";
   let accent = "#05AD98";
   let accentHover = "#048e7d";
 
   if (pathname.includes("/dashboard")) {
-    // Sapphire nightfall whisper (Deep sapphire blue)
-    bg = "#070a13";
-    surface = "#0e1524";
-    surface2 = "#182235";
-    border = "#1a263c";
-    muted = "#5379AE";
-    foreground = "#A8C4EC";
+    // Sapphire nightfall whisper (Blue/Sapphire dynamic light theme)
+    bg = "#FFFFFF";
+    surface = "#f0f4f8";
+    surface2 = "#e1e9f0";
+    border = "#d0dfee";
+    muted = "#475569";
+    foreground = "#0f172a";
     accent = "#0474c4";
     accentHover = "#035fa3";
   } else if (pathname.includes("/menu")) {
-    // Vichy (Signature Vichy teal/green)
-    bg = "#0d1117";
-    surface = "#161b22";
-    surface2 = "#21262d";
-    border = "#30363d";
-    muted = "#878787";
-    foreground = "#FFFFFF";
+    // Vichy (Mint/Teal dynamic light theme)
+    bg = "#FFFFFF";
+    surface = "#f2f9f8";
+    surface2 = "#e3efef";
+    border = "#c7e2df";
+    muted = "#4b5563";
+    foreground = "#0d1117";
     accent = "#05AD98";
     accentHover = "#048e7d";
   } else if (pathname.includes("/staff") || pathname.includes("/attendance")) {
-    // Arctic reflection (Frosty slate/arctic blue)
-    bg = "#0b131a";
-    surface = "#121e29";
-    surface2 = "#1d2f3f";
-    border = "#243c4c";
-    muted = "#acbcbf";
-    foreground = "#f4fcfb";
+    // Arctic reflection (Frosty light grey-blue dynamic light theme)
+    bg = "#FFFFFF";
+    surface = "#f1f5f9";
+    surface2 = "#e2e8f0";
+    border = "#cbd5e1";
+    muted = "#64748b";
+    foreground = "#0f172a";
     accent = "#5289ad";
     accentHover = "#3d6b8a";
   } else if (pathname.includes("/payments") || pathname.includes("/reports") || pathname.includes("/branches")) {
-    // Neptune (Vibrant sea green/blue)
-    bg = "#0c1017";
-    surface = "#141a24";
-    surface2 = "#1f2937";
-    border = "#2e3d52";
-    muted = "#6d8bc0";
-    foreground = "#8fd9fb";
+    // Neptune (Vibrant cyan/aqua dynamic light theme)
+    bg = "#FFFFFF";
+    surface = "#edf7fd";
+    surface2 = "#d8eefb";
+    border = "#b5dffa";
+    muted = "#334155";
+    foreground = "#0c1017";
     accent = "#4ab5b5";
     accentHover = "#369494";
   } else if (pathname.includes("/payroll")) {
-    // Green (Rich emerald forest theme)
-    bg = "#060b07";
-    surface = "#0c140e";
-    surface2 = "#142217";
-    border = "#1b2e20";
-    muted = "#86a38b";
-    foreground = "#e8f5e9";
+    // Green (Vibrant emerald green dynamic light theme)
+    bg = "#FFFFFF";
+    surface = "#f0fdf4";
+    surface2 = "#dcfce7";
+    border = "#bbf7d0";
+    muted = "#166534";
+    foreground = "#060b07";
     accent = "#22C55E";
     accentHover = "#16A34A";
   } else if (pathname.includes("/equipment")) {
-    // Slate (Olive/forest green)
-    bg = "#0c0e0b";
-    surface = "#141712";
-    surface2 = "#1f241d";
-    border = "#2c3329";
-    muted = "#71776d";
-    foreground = "#79ed91";
+    // Slate (Olive/forest green dynamic light theme)
+    bg = "#FFFFFF";
+    surface = "#f4f6f0";
+    surface2 = "#e7eae0";
+    border = "#d1d7c4";
+    muted = "#374151";
+    foreground = "#0c0e0b";
     accent = "#4DBE55";
     accentHover = "#3c9a43";
   }
