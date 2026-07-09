@@ -8,7 +8,7 @@ import { HeaderClock } from "@/components/HeaderClock";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { BellIcon, GlobeIcon, LogOutIcon, SunIcon, MoonIcon } from "@/components/icons";
-
+import { CafeStatusFAB } from "@/components/CafeStatusFAB";
 export function AppShell({
   title,
   nav,
@@ -403,6 +403,7 @@ export function AppShell({
       </header>
       {banner}
       <main className="mx-auto w-full max-w-7xl p-4 sm:p-6">{children}</main>
+      {user?.role === "cafe_owner" && <CafeStatusFAB />}
     </div>
   );
 }
