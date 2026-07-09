@@ -76,6 +76,7 @@ export const POST = handler(async (req: Request) => {
 
   const config = await db.salaryConfig.create({
     data: {
+      tenantId: me.tenantId,
       userId,
       grossSalary,
       effectiveFrom: new Date(),
