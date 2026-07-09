@@ -98,6 +98,7 @@ export const POST = handler(async (req: Request) => {
           },
         },
         create: {
+          tenantId: me.tenantId,
           userId: emp.id,
           month,
           year,
