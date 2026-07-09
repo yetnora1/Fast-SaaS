@@ -741,14 +741,17 @@ model Supplier {
 }
 
 model PurchaseOrder {
-  id         String              @id @default(cuid())
-  tenantId   String              @map("tenant_id")
-  supplierId String?             @map("supplier_id")
-  status     PurchaseOrderStatus @default(DRAFT)
-  total      Decimal             @default(0) @db.Decimal(12, 2)
-  notes      String?             @db.Text
-  approvedBy String?             @map("approved_by")
-  createdAt  DateTime            @default(now()) @map("created_at")
+  id           String              @id @default(cuid())
+  tenantId     String              @map("tenant_id")
+  supplierId   String?             @map("supplier_id")
+  status       PurchaseOrderStatus @default(DRAFT)
+  total        Decimal             @default(0) @db.Decimal(12, 2)
+  paidAmount   Decimal             @default(0) @db.Decimal(12, 2) @map("paid_amount")
+  creditAmount Decimal             @default(0) @db.Decimal(12, 2) @map("credit_amount")
+  isCredit     Boolean             @default(false) @map("is_credit")
+  notes        String?             @db.Text
+  approvedBy   String?             @map("approved_by")
+  createdAt    DateTime            @default(now()) @map("created_at")
 
   tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   supplier Supplier?           @relation(fields: [supplierId], references: [id])

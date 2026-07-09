@@ -17,15 +17,30 @@ export const GET = handler(async () => {
 const schema = z.object({
   supplierId: z.string().optional(),
   notes: z.string().optional(),
-  items: z.array(z.object({ inventoryItemId: z.string().min(1), quantity: z.number().positive(), unitCost: z.number().nonnegative() })).min(1),
+  isCredit: z.boolean().optional(),
+  paidAmount: z.number().nonnegative().optional(),
+  creditAmount: z.number().nonnegative().optional(),
+  items: z.array(z.object({ 
+    inventoryItemId: z.string().min(1), 
+    quantity: z.number().positive(), 
+    unitCost: z.number().nonnegative() 
+  })).min(1),
 });
 
-// PO above approval threshold needs Owner approval (spec §8.2).
+// PO above approval threshold needs Owner approval. Auto-approved if created by Owner.
 export const POST = handler(async (req: Request) => {
   const me = await requireTenant("store_manager", "cafe_manager", "cafe_owner");
   const body = schema.parse(await req.json());
   const total = body.items.reduce((s, i) => s + i.quantity * i.unitCost, 0);
-  const status = total > config.poApprovalThreshold ? "PENDING_APPROVAL" : "APPROVED";
+  
+  let status: "APPROVED" | "PENDING_APPROVAL" = "APPROVED";
+  if (total > config.poApprovalThreshold && me.role !== "cafe_owner") {
+    status = "PENDING_APPROVAL";
+  }
+
+  const isCredit = body.isCredit ?? false;
+  const paidAmount = body.paidAmount !== undefined ? body.paidAmount : (isCredit ? total / 2 : total);
+  const creditAmount = body.creditAmount !== undefined ? body.creditAmount : (isCredit ? total - paidAmount : 0);
 
   const po = await prisma.purchaseOrder.create({
     data: {
@@ -33,6 +48,9 @@ export const POST = handler(async (req: Request) => {
       supplierId: body.supplierId,
       notes: body.notes,
       total,
+      paidAmount,
+      creditAmount,
+      isCredit,
       status,
       items: { create: body.items },
     },
