@@ -67,29 +67,14 @@ export function ClockInOut({ compact = false }: { compact?: boolean }) {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   }
 
-  if (completed && !open) {
-    const sessionStr = getSessionString(completed.clockIn, completed.clockOut);
-    return (
-      <div
-        className={cn(
-          "inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-bold border select-none shadow-sm",
-          compact
-            ? "w-full py-3 bg-brand-surface2 text-brand-muted border-brand-border/60"
-            : "bg-white/10 text-white/70 border-white/5"
-        )}
-      >
-        <ClockIcon className="h-4 w-4" />
-        <span>{lang === "am" ? "ተጠናቋል" : "Completed"} {sessionStr}</span>
-      </div>
-    );
-  }
+  const alreadyDone = !open && !!completed;
 
   return (
     <button
       onClick={toggle}
-      disabled={busy}
+      disabled={busy || alreadyDone}
       className={cn(
-        "inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-all active:scale-95 disabled:opacity-60",
+        "inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100",
         compact
           ? "w-full justify-center py-3 bg-status-green/15 text-status-green hover:bg-status-green/25"
           : open
