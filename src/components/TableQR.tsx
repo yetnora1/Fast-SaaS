@@ -296,11 +296,23 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
                 <button
                   onClick={() => handleDownload(table)}
                   disabled={!hasQR}
-                  className="rounded-xl bg-brand-surface2 p-2 text-xxs transition-all hover:bg-white/10 active:scale-[0.97] disabled:opacity-50"
+                  className="rounded-xl bg-brand-surface2 p-2 text-xxs transition-all hover:bg-white/10 active:scale-[0.97] disabled:opacity-50 flex items-center justify-center"
                   title="Download QR"
                   aria-label="Download QR"
                 >
-                  💾
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-3.5 w-3.5 text-brand-foreground"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
                 </button>
               </div>
             </div>
