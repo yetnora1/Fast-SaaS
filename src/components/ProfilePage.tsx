@@ -14,6 +14,7 @@ interface UserProfile {
   bio: string | null;
   avatarUrl: string | null;
   emergencyContact: string | null;
+  grossSalary?: number | null;
 }
 
 export function ProfilePage() {
@@ -243,6 +244,19 @@ export function ProfilePage() {
                 />
               </Field>
             </div>
+
+            {profile.role !== "cafe_owner" && profile.role !== "saas_owner" && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Monthly Salary (ETB)">
+                  <Input
+                    type="text"
+                    disabled
+                    value={profile.grossSalary != null ? profile.grossSalary.toLocaleString("en-ET", { minimumFractionDigits: 2 }) : "Not set"}
+                    className="bg-brand-surface2/50 opacity-80 cursor-not-allowed"
+                  />
+                </Field>
+              </div>
+            )}
 
             <Field label={t("bio")}>
               <textarea

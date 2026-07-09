@@ -24,8 +24,24 @@ export const GET = handler(async () => {
           name: true,
         },
       },
+      salaryConfigs: {
+        orderBy: { effectiveFrom: "desc" },
+        take: 1,
+        select: {
+          grossSalary: true,
+        },
+      },
     },
     orderBy: { name: "asc" },
   });
-  return ok({ staff });
+
+  const formatted = staff.map((s) => {
+    const { salaryConfigs, ...rest } = s;
+    return {
+      ...rest,
+      grossSalary: salaryConfigs[0] ? Number(salaryConfigs[0].grossSalary) : null,
+    };
+  });
+
+  return ok({ staff: formatted });
 });

@@ -17,6 +17,7 @@ interface Staff {
   avatarUrl: string | null;
   emergencyContact: string | null;
   branch: { id: string; name: string } | null;
+  grossSalary: number | null;
 }
 
 interface Branch {
@@ -52,6 +53,7 @@ export default function StaffPage() {
   const [editRole, setEditRole] = useState<Role>("waiter");
   const [editBranchId, setEditBranchId] = useState<string>("unassigned");
   const [editActive, setEditActive] = useState<boolean>(true);
+  const [editSalary, setEditSalary] = useState<string>("");
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -108,6 +110,7 @@ export default function StaffPage() {
     setEditRole(staff.role);
     setEditBranchId(staff.branch?.id ?? "unassigned");
     setEditActive(staff.active);
+    setEditSalary(staff.grossSalary != null ? staff.grossSalary.toString() : "");
     setEditError(null);
     setIsEditModalOpen(true);
   }
@@ -130,6 +133,7 @@ export default function StaffPage() {
           role: editRole,
           branchId: editBranchId === "unassigned" ? null : editBranchId,
           active: editActive,
+          grossSalary: editSalary !== "" ? parseFloat(editSalary) : undefined,
         }),
       });
       setIsEditModalOpen(false);
@@ -428,6 +432,17 @@ export default function StaffPage() {
             </Select>
           </Field>
 
+          <Field label="Monthly Salary (ETB)">
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="e.g. 15000"
+              value={editSalary}
+              onChange={(e) => setEditSalary(e.target.value)}
+            />
+          </Field>
+
           <div className="flex items-center justify-between py-2 border-t border-brand-border/60">
             <span className="text-sm font-medium text-brand-foreground">Account Status</span>
             <label className="relative inline-flex cursor-pointer items-center">
@@ -487,6 +502,12 @@ export default function StaffPage() {
               <div className="py-2 flex justify-between">
                 <span className="text-brand-muted">{t("emergencyContact")}</span>
                 <span className="text-brand-foreground font-medium">{selectedStaff.emergencyContact || "—"}</span>
+              </div>
+              <div className="py-2 flex justify-between">
+                <span className="text-brand-muted">Monthly Salary (ETB)</span>
+                <span className="text-brand-foreground font-medium font-semibold text-brand-accent">
+                  {selectedStaff.grossSalary != null ? selectedStaff.grossSalary.toLocaleString("en-ET", { minimumFractionDigits: 2 }) : "—"}
+                </span>
               </div>
               <div className="py-2.5">
                 <div className="text-brand-muted mb-1">{t("bio")}</div>

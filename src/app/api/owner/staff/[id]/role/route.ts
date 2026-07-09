@@ -8,6 +8,7 @@ const schema = z.object({
   role: z.enum(["cafe_manager", "waiter", "cashier", "barista", "kitchen", "store_manager"]).optional(),
   branchId: z.string().nullable().optional(),
   active: z.boolean().optional(),
+  grossSalary: z.number().nonnegative().optional(),
 });
 
 export const PATCH = handler(async (req: Request, { params }: { params: { id: string } }) => {
@@ -22,10 +23,24 @@ export const PATCH = handler(async (req: Request, { params }: { params: { id: st
   if (body.branchId !== undefined) updateData.branchId = body.branchId;
   if (body.active !== undefined) updateData.active = body.active;
 
-  const updated = await db.user.update({
-    where: { id: params.id },
-    data: updateData,
-  });
+  if (Object.keys(updateData).length > 0) {
+    await db.user.update({
+      where: { id: params.id },
+      data: updateData,
+    });
+  }
+
+  if (body.grossSalary !== undefined) {
+    await db.salaryConfig.create({
+      data: {
+        tenantId: me.tenantId,
+        userId: params.id,
+        grossSalary: body.grossSalary,
+        effectiveFrom: new Date(),
+        createdBy: me.sub,
+      },
+    });
+  }
 
   await audit({
     userId: me.sub,
@@ -33,10 +48,10 @@ export const PATCH = handler(async (req: Request, { params }: { params: { id: st
     action: "owner.staff.update",
     entity: "user",
     entityId: params.id,
-    meta: updateData,
+    meta: { ...updateData, grossSalary: body.grossSalary },
   });
 
-  return ok({ id: updated.id, role: updated.role, active: updated.active, branchId: updated.branchId });
+  return ok({ id: params.id, role: body.role ?? target.role, active: body.active ?? target.active, branchId: body.branchId ?? target.branchId });
 });
 
 export const DELETE = handler(async (_req: Request, { params }: { params: { id: string } }) => {

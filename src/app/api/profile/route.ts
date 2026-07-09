@@ -28,11 +28,23 @@ export const GET = handler(async () => {
       bio: true,
       avatarUrl: true,
       emergencyContact: true,
+      salaryConfigs: {
+        orderBy: { effectiveFrom: "desc" },
+        take: 1,
+        select: {
+          grossSalary: true,
+        },
+      },
     },
   });
 
   if (!user) return fail("User not found", 404);
-  return ok({ user });
+  const { salaryConfigs, ...rest } = user;
+  const formatted = {
+    ...rest,
+    grossSalary: salaryConfigs[0] ? Number(salaryConfigs[0].grossSalary) : null,
+  };
+  return ok({ user: formatted });
 });
 
 export const PATCH = handler(async (req: Request) => {
