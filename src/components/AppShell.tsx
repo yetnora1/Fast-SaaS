@@ -198,42 +198,113 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh" style={themeStyles}>
-      <header className="sticky top-0 z-nav border-b border-[#2875d1] bg-[#3289F4] relative">
-        <div className="flex items-center gap-4 px-4 py-3.5">
-          <span className="font-display text-lg font-bold tracking-tight text-white">
-            CafeFlow
-          </span>
+      <header className="sticky top-0 z-nav border-b border-[#2875d1] bg-[#3289F4] relative w-full">
+        {/* Row 1: Identity & Brand & Actions */}
+        <div className="flex items-center justify-between px-6 py-3.5 relative">
+          {/* Left Side: Profile & Welcome */}
+          <div className="flex items-center gap-3.5 z-10">
+            {user && (
+              <Link
+                href={profileHref}
+                className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full overflow-hidden border-[3px] border-white/30 ring-2 ring-white/10 transition-all hover:scale-105 hover:border-white/50 active:scale-95 shadow-lg"
+                title={user.name}
+              >
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-white/20 text-white text-base font-bold">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-[#3289F4] shadow-sm" />
+              </Link>
+            )}
 
-          {user && (
-            <Link
-              href={profileHref}
-              className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full overflow-hidden border-[3px] border-white/30 ring-2 ring-white/10 transition-all hover:scale-105 hover:border-white/50 active:scale-95 shadow-lg"
-              title={user.name}
+            <span className="hidden text-sm font-semibold tracking-wide text-white/95 sm:inline animate-fade leading-tight">
+              {lang === "am" ? `እንኳን ደህና መጡ፣ ${displayName}!` : `Welcome back, ${displayName}!`}
+            </span>
+          </div>
+
+          {/* Center Brand Title: Absolutely centered in the middle of Row 1 */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-0">
+            <span className="font-display text-2xl font-black tracking-wider text-white drop-shadow-sm select-none">
+              CafeFlow
+            </span>
+          </div>
+
+          {/* Right Side: Global actions or mobile toggle */}
+          <div className="flex items-center gap-2 z-10">
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-2">
+              <button
+                onClick={toggleTheme}
+                className={iconBtn}
+                title={themeMode === "light" ? "Dark Mode" : "Light Mode"}
+                aria-label="Toggle dark/light mode"
+              >
+                {themeMode === "light" ? (
+                  <MoonIcon className="h-4 w-4" />
+                ) : (
+                  <SunIcon className="h-4 w-4 text-amber-300" />
+                )}
+                <span className="font-medium">{themeMode === "light" ? "Dark" : "Light"}</span>
+              </button>
+
+              <button onClick={toggle} className={iconBtn} title="Language / ቋንቋ" aria-label="Toggle language">
+                <GlobeIcon className="h-4 w-4" />
+                <span className="font-medium">{lang === "en" ? "አማ" : "EN"}</span>
+              </button>
+
+              <Link
+                href="/notifications"
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20"
+                title={t("notifications")}
+                aria-label={t("notifications")}
+              >
+                <BellIcon className="h-5 w-5" />
+                {data?.unread ? (
+                  <span className="tabular absolute -right-1 -top-1 min-w-[18px] rounded-full bg-white px-1 text-center text-[11px] font-bold leading-[18px] text-[#3289F4]">
+                    {data.unread > 99 ? "99+" : data.unread}
+                  </span>
+                ) : null}
+              </Link>
+
+              <button onClick={logout} className={iconBtn} title={t("logout")} aria-label={t("logout")}>
+                <LogOutIcon className="h-4 w-4" />
+                <span className="hidden font-medium sm:inline">{t("logout")}</span>
+              </button>
+            </div>
+
+            {/* Mobile Hamburger toggle button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20 md:hidden"
+              aria-expanded={isMenuOpen}
+              aria-label="Toggle menu"
             >
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+              {isMenuOpen ? (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-white/20 text-white text-base font-bold">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
               )}
-              <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-[#3289F4] shadow-sm" />
-            </Link>
-          )}
+            </button>
+          </div>
+        </div>
 
-          <span className="hidden text-sm font-semibold tracking-wide text-white/90 sm:inline animate-fade">
-            {lang === "am" ? `እንኳን ደህና መጡ፣ ${displayName}!` : `Welcome back, ${displayName}!`}
-          </span>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex ml-2 items-center gap-1 text-sm">
+        {/* Row 2: Bottom Navigation Bar (Desktop Only) */}
+        <div className="hidden md:flex items-center justify-between px-6 py-2.5 bg-black/10 border-t border-white/5 w-full">
+          <nav className="flex items-center gap-1.5 text-sm overflow-x-auto scrollbar-none py-1 max-w-[70%]">
             {nav.map((n) => (
               <Link
                 key={n.href}
                 href={n.href}
                 aria-current={isActive(n.href) ? "page" : undefined}
                 className={cn(
-                  "rounded-xl px-3.5 py-1.5 font-bold transition-all active:scale-95",
+                  "rounded-xl px-3.5 py-1.5 font-bold transition-all active:scale-95 whitespace-nowrap text-xs uppercase tracking-wider",
                   isActive(n.href)
                     ? "bg-white text-[#3289F4] shadow-sm"
                     : "text-white/80 hover:bg-white/15 hover:text-white",
@@ -243,67 +314,10 @@ export function AppShell({
               </Link>
             ))}
           </nav>
-
-          {/* Desktop Actions */}
-          <div className="hidden md:flex ml-auto items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <HeaderClock />
             {showClock && <ClockInOut />}
-            <button
-              onClick={toggleTheme}
-              className={iconBtn}
-              title={themeMode === "light" ? "Dark Mode" : "Light Mode"}
-              aria-label="Toggle dark/light mode"
-            >
-              {themeMode === "light" ? (
-                <MoonIcon className="h-4 w-4" />
-              ) : (
-                <SunIcon className="h-4 w-4 text-amber-300" />
-              )}
-              <span className="font-medium">{themeMode === "light" ? "Dark" : "Light"}</span>
-            </button>
-
-            <button onClick={toggle} className={iconBtn} title="Language / ቋንቋ" aria-label="Toggle language">
-              <GlobeIcon className="h-4 w-4" />
-              <span className="font-medium">{lang === "en" ? "አማ" : "EN"}</span>
-            </button>
-
-            <Link
-              href="/notifications"
-              className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20"
-              title={t("notifications")}
-              aria-label={t("notifications")}
-            >
-              <BellIcon className="h-5 w-5" />
-              {data?.unread ? (
-                <span className="tabular absolute -right-1 -top-1 min-w-[18px] rounded-full bg-white px-1 text-center text-[11px] font-bold leading-[18px] text-[#3289F4]">
-                  {data.unread > 99 ? "99+" : data.unread}
-                </span>
-              ) : null}
-            </Link>
-
-            <button onClick={logout} className={iconBtn} title={t("logout")} aria-label={t("logout")}>
-              <LogOutIcon className="h-4 w-4" />
-              <span className="hidden font-medium sm:inline">{t("logout")}</span>
-            </button>
           </div>
-
-          {/* Mobile Hamburger toggle button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20 md:hidden"
-            aria-expanded={isMenuOpen}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
         </div>
 
         {/* Mobile Drawer Overlay */}
