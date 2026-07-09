@@ -46,7 +46,7 @@ export default function Home() {
       <img
         src="/LOGO.jpg"
         alt=""
-        className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-[600px] w-[600px] -translate-x-1/2 rounded-full object-cover opacity-20 blur-[60px]"
+        className="pointer-events-none absolute -top-20 left-1/2 -z-10 h-[480px] w-[480px] -translate-x-1/2 rounded-full object-cover opacity-[0.12]"
       />
 
       {/* Nav */}
