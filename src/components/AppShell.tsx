@@ -199,7 +199,7 @@ export function AppShell({
   return (
     <div className="min-h-dvh" style={themeStyles}>
       <header className="sticky top-0 z-nav border-b border-[#2875d1] bg-[#3289F4] relative">
-        <div className="flex items-center gap-4 px-4 py-2.5">
+        <div className="flex items-center gap-4 px-4 py-3.5">
           <span className="font-display text-lg font-bold tracking-tight text-white">
             CafeFlow
           </span>
@@ -207,16 +207,17 @@ export function AppShell({
           {user && (
             <Link
               href={profileHref}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full overflow-hidden border-2 border-white/20 transition-all hover:scale-105 hover:border-white active:scale-95 shadow-md"
+              className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full overflow-hidden border-[3px] border-white/30 ring-2 ring-white/10 transition-all hover:scale-105 hover:border-white/50 active:scale-95 shadow-lg"
               title={user.name}
             >
               {user.avatarUrl ? (
                 <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-white/20 text-white text-sm font-bold">
+                <div className="flex h-full w-full items-center justify-center bg-white/20 text-white text-base font-bold">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               )}
+              <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-[#3289F4] shadow-sm" />
             </Link>
           )}
 
