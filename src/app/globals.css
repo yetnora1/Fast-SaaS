@@ -123,3 +123,21 @@ body {
   @apply bg-white/20;
   background-clip: content-box;
 }
+
+/* ── Premium Modern Button Hover & Active States ── */
+button,
+[role="button"] {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+button:hover:not(:disabled),
+[role="button"]:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  filter: brightness(1.06);
+}
+
+button:active:not(:disabled),
+[role="button"]:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  filter: brightness(0.94);
+}
