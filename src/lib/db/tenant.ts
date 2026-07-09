@@ -30,6 +30,8 @@ const TENANT_MODELS = new Set([
   "restockRequest",
   "wasteLog",
   "auditLog",
+  "salaryConfig",
+  "payrollRecord",
 ]);
 
 export type TenantClient = ReturnType<typeof tenantDb>;
