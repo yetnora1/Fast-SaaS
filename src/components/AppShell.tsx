@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { api, usePoll } from "@/components/fetcher";
 import { ClockInOut } from "@/components/ClockInOut";
+import { HeaderClock } from "@/components/HeaderClock";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { BellIcon, GlobeIcon, LogOutIcon, SunIcon, MoonIcon } from "@/components/icons";
@@ -241,6 +242,7 @@ export function AppShell({
 
           {/* Desktop Actions */}
           <div className="hidden md:flex ml-auto items-center gap-2">
+            <HeaderClock />
             {showClock && <ClockInOut />}
             <button
               onClick={toggleTheme}
