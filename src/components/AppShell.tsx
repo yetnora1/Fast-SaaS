@@ -117,15 +117,15 @@ export function AppShell({
     accent = "#4ab5b5";
     accentHover = "#369494";
   } else if (pathname.includes("/payroll")) {
-    // Amethyst / Velvet Evening (Violet)
-    bg = "#0a0915";
-    surface = "#131124";
-    surface2 = "#1d1b33";
-    border = "#252244";
-    muted = "#a5b4fc";
-    foreground = "#e0e7ff";
-    accent = "#818cf8";
-    accentHover = "#6366f1";
+    // Green (Rich emerald forest theme)
+    bg = "#060b07";
+    surface = "#0c140e";
+    surface2 = "#142217";
+    border = "#1b2e20";
+    muted = "#86a38b";
+    foreground = "#e8f5e9";
+    accent = "#22C55E";
+    accentHover = "#16A34A";
   } else if (pathname.includes("/equipment")) {
     // Slate (Olive/forest green)
     bg = "#0c0e0b";
