@@ -11,25 +11,24 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          bg: "#020617", // app background — deep slate
-          surface: "#0F172A", // cards / panels
-          surface2: "#1E293B", // inputs / raised surfaces
-          accent: "#22C55E", // primary action / brand green
-          accentHover: "#16A34A", // accent hover/pressed
-          accentFg: "#03130A", // text/icon on accent (high contrast)
-          border: "#22304A", // hairline borders
-          muted: "#64748B", // muted / secondary text
-          foreground: "#F8FAFC", // primary text
+          bg: "#0b0f19", // app background — Sapphire nightfall whisper dark
+          surface: "#161f30", // cards / panels — Sapphire nightfall whisper medium
+          surface2: "#222d41", // inputs / raised surfaces — Sapphire nightfall whisper light
+          accent: "#05AD98", // primary action / brand minty green — Vichy teal
+          accentHover: "#048e7d", // dark Vichy hover
+          accentFg: "#ffffff", // white text on accent
+          border: "#2a384e", // hairline borders — mix of Slate and Nightfall
+          muted: "#ACBCBF", // muted / secondary text — Arctic reflection soft grey
+          foreground: "#F4FCFB", // primary text — Arctic reflection ice white
         },
         status: {
-          // Operational status — green/amber/red, distinct in dark mode.
-          available: "#22C55E",
-          occupied: "#F59E0B",
+          available: "#05AD98", // Vichy teal
+          occupied: "#4AB5B5", // Neptune soft teal
           attention: "#EF4444",
-          green: "#22C55E",
+          green: "#05AD98",
           yellow: "#F59E0B",
           red: "#EF4444",
-          blue: "#3B82F6",
+          blue: "#0474C4", // Sapphire deep blue
         },
       },
       fontFamily: {
