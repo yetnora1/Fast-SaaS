@@ -228,10 +228,10 @@ export function AppShell({
                 href={n.href}
                 aria-current={isActive(n.href) ? "page" : undefined}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 font-medium transition-colors",
+                  "rounded-xl px-3.5 py-1.5 font-bold transition-all active:scale-95",
                   isActive(n.href)
-                    ? "bg-white/20 text-white"
-                    : "text-white/80 hover:bg-white/10 hover:text-white",
+                    ? "bg-white text-[#3289F4] shadow-sm"
+                    : "text-white/80 hover:bg-white/15 hover:text-white",
                 )}
               >
                 {navLabel(n.label)}
