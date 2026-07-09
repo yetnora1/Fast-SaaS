@@ -28,6 +28,7 @@ export function AppShell({
     user: { id: string; name: string; role: string; avatarUrl: string | null };
   }>("/api/profile", 30000);
   const user = profileData?.user;
+  const displayName = user?.name || navLabel(title);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
 
@@ -220,7 +221,7 @@ export function AppShell({
           )}
 
           <span className="hidden text-sm font-semibold tracking-wide text-white/90 sm:inline animate-fade">
-            {lang === "am" ? `እንኳን ደህና መጡ፣ ${navLabel(title)}!` : `Welcome back, ${navLabel(title)}!`}
+            {lang === "am" ? `እንኳን ደህና መጡ፣ ${displayName}!` : `Welcome back, ${displayName}!`}
           </span>
 
           {/* Desktop Navigation */}
@@ -312,7 +313,7 @@ export function AppShell({
                 {lang === "am" ? "የካፌው መተግበሪያ" : "CafeFlow App"}
               </p>
               <p className="text-base font-bold text-brand-foreground mt-0.5">
-                {lang === "am" ? `እንኳን ደህና መጡ፣ ${navLabel(title)}!` : `Welcome back, ${navLabel(title)}!`}
+                {lang === "am" ? `እንኳን ደህና መጡ፣ ${displayName}!` : `Welcome back, ${displayName}!`}
               </p>
             </div>
             <nav className="flex flex-col gap-1">
