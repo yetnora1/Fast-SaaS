@@ -5,34 +5,58 @@ import { ClockIcon } from "@/components/icons";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-/**
- * Header clock in/out control — staff tap it when they start and finish work.
- * Every tap writes a permanent StaffAttendance row. Rendered for all roles
- * except the café owner (gated by the caller).
- */
+function formatEthiopianTimeShort(date: Date): string {
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  let ethHours = (hours - 6) % 12;
+  if (ethHours === 0) ethHours = 12;
+  if (ethHours < 0) ethHours += 12;
+  return `${ethHours}:${minutes}`;
+}
+
 export function ClockInOut({ compact = false }: { compact?: boolean }) {
-  const { t } = useLang();
-  const { data, reload } = usePoll<{ open: { id: string; clockIn: string } | null }>("/api/attendance/clock", 30000);
+  const { lang, t } = useLang();
+  const { data, reload } = usePoll<{ 
+    open: { id: string; clockIn: string } | null;
+    completed: { id: string; clockIn: string; clockOut: string } | null;
+  }>("/api/attendance/clock", 30000);
   const [busy, setBusy] = useState(false);
-  // Re-render each minute so the elapsed badge stays current.
   const [, setTick] = useState(0);
+
   useEffect(() => {
     const id = setInterval(() => setTick((v) => v + 1), 60_000);
     return () => clearInterval(id);
   }, []);
 
-  const open = data?.open ?? null;
+  if (!data) return null;
+
+  const open = data.open ?? null;
+  const completed = data.completed ?? null;
 
   async function toggle() {
     setBusy(true);
     try {
       await api("/api/attendance/clock", { method: "POST" });
       reload();
-    } catch {
-      // Status poll will resync; keep the header quiet on transient errors.
+    } catch (e: any) {
+      alert(e.message);
     } finally {
       setBusy(false);
     }
+  }
+
+  function getWorkedHoursText(inTime: string, outTime: string): string {
+    const mins = Math.max(0, Math.floor((new Date(outTime).getTime() - new Date(inTime).getTime()) / 60_000));
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}:${m.toString().padStart(2, "0")} hours`;
+  }
+
+  function getSessionString(inTime: string, outTime: string): string {
+    const inStr = formatEthiopianTimeShort(new Date(inTime));
+    const outStr = formatEthiopianTimeShort(new Date(outTime));
+    const diff = getWorkedHoursText(inTime, outTime);
+    return `(${inStr} in-${outStr} out (${diff}))`;
   }
 
   function elapsed(): string {
@@ -43,7 +67,22 @@ export function ClockInOut({ compact = false }: { compact?: boolean }) {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   }
 
-  if (!data) return null; // avoid flashing the wrong state before first load
+  if (completed && !open) {
+    const sessionStr = getSessionString(completed.clockIn, completed.clockOut);
+    return (
+      <div
+        className={cn(
+          "inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-bold border select-none shadow-sm",
+          compact
+            ? "w-full py-3 bg-brand-surface2 text-brand-muted border-brand-border/60"
+            : "bg-white/10 text-white/70 border-white/5"
+        )}
+      >
+        <ClockIcon className="h-4 w-4" />
+        <span>{lang === "am" ? "ተጠናቋል" : "Completed"} {sessionStr}</span>
+      </div>
+    );
+  }
 
   return (
     <button

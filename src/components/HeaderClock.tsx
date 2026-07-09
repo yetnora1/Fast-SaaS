@@ -4,19 +4,27 @@ import { useLang } from "@/lib/i18n";
 import { usePoll } from "@/components/fetcher";
 import { cn } from "@/lib/utils";
 
-/**
- * Helper to get Ethiopian time period labels based on standard hour.
- */
-function getPeriodLabel(hours: number, lang: string): string {
-  if (hours >= 6 && hours < 12) {
-    return lang === "am" ? "ጠዋት" : "Morning";
-  } else if (hours >= 12 && hours < 18) {
-    return lang === "am" ? "ከሰዓት" : "Afternoon";
-  } else if (hours >= 18 && hours < 23) {
-    return lang === "am" ? "ማታ" : "Evening";
-  } else {
-    return lang === "am" ? "ሌሊት" : "Night";
-  }
+function formatEthiopianTimeShort(date: Date): string {
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  let ethHours = (hours - 6) % 12;
+  if (ethHours === 0) ethHours = 12;
+  if (ethHours < 0) ethHours += 12;
+  return `${ethHours}:${minutes}`;
+}
+
+function getElapsedText(inTime: string): string {
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(inTime).getTime()) / 60_000));
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}:${m.toString().padStart(2, "0")} hours`;
+}
+
+function getCompletedElapsedText(inTime: string, outTime: string): string {
+  const mins = Math.max(0, Math.floor((new Date(outTime).getTime() - new Date(inTime).getTime()) / 60_000));
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}:${m.toString().padStart(2, "0")} hours`;
 }
 
 /**
@@ -30,9 +38,13 @@ export function HeaderClock({ compact = false }: { compact?: boolean }) {
   const [time, setTime] = useState<Date | null>(null);
   const { lang } = useLang();
   
-  // Fetch clock-in status to show "In at ..." dynamically
-  const { data } = usePoll<{ open: { id: string; clockIn: string } | null }>("/api/attendance/clock", 30000);
+  // Fetch clock status (both open and completed today)
+  const { data } = usePoll<{ 
+    open: { id: string; clockIn: string } | null;
+    completed: { id: string; clockIn: string; clockOut: string } | null;
+  }>("/api/attendance/clock", 30000);
   const open = data?.open ?? null;
+  const completed = data?.completed ?? null;
 
   useEffect(() => {
     setTime(new Date());
@@ -52,7 +64,6 @@ export function HeaderClock({ compact = false }: { compact?: boolean }) {
   let ethHours = (hours - 6) % 12;
   if (ethHours === 0) ethHours = 12;
   if (ethHours < 0) ethHours += 12;
-  const ethPeriod = getPeriodLabel(hours, lang);
   
   // Format live Ethiopian time: e.g. 8:05:09
   const ethClockStr = `${ethHours}:${minutes}:${seconds}`;
@@ -62,21 +73,21 @@ export function HeaderClock({ compact = false }: { compact?: boolean }) {
   const standardPeriod = hours >= 12 ? "PM" : "AM";
   const standardStr = `${standardHours}:${minutes}:${seconds} ${standardPeriod}`;
 
-  // Format Clock-In status if user is currently clocked in
+  // Determine status text
   let statusText = standardStr;
   if (open) {
-    const ciDate = new Date(open.clockIn);
-    const ciHours = ciDate.getHours();
-    const ciMins = ciDate.getMinutes().toString().padStart(2, "0");
-    
-    let ciEthHours = (ciHours - 6) % 12;
-    if (ciEthHours === 0) ciEthHours = 12;
-    if (ciEthHours < 0) ciEthHours += 12;
-    const ciPeriod = getPeriodLabel(ciHours, lang);
-
+    const inStr = formatEthiopianTimeShort(new Date(open.clockIn));
+    const liveDiff = getElapsedText(open.clockIn);
     statusText = lang === "am"
-      ? `በ ${ciEthHours}:${ciMins} ${ciPeriod} ገብተዋል`
-      : `In at ${ciEthHours}:${ciMins} ${ciPeriod}`;
+      ? `(${inStr} ገብቷል - ቀጥታ (${liveDiff}))`
+      : `(${inStr} in - Live (${liveDiff}))`;
+  } else if (completed) {
+    const inStr = formatEthiopianTimeShort(new Date(completed.clockIn));
+    const outStr = formatEthiopianTimeShort(new Date(completed.clockOut));
+    const finalDiff = getCompletedElapsedText(completed.clockIn, completed.clockOut);
+    statusText = lang === "am"
+      ? `(${inStr} ገብቷል-${outStr} ወጥቷል (${finalDiff}))`
+      : `(${inStr} in-${outStr} out (${finalDiff}))`;
   }
 
   return (
@@ -85,7 +96,7 @@ export function HeaderClock({ compact = false }: { compact?: boolean }) {
         "flex flex-col items-center justify-center select-none h-[48px] transition-all",
         compact
           ? "w-full bg-brand-surface2 text-brand-foreground border border-brand-border/60 rounded-xl px-4 py-1.5 shadow-sm"
-          : "text-white mr-1 bg-white/10 px-4 py-1.5 rounded-xl border border-white/5 shadow-inner min-w-[140px]"
+          : "text-white mr-1 bg-white/10 px-4 py-1.5 rounded-xl border border-white/5 shadow-inner min-w-[150px]"
       )}
     >
       {/* Large bold Ethiopian Time with seconds */}
@@ -100,6 +111,7 @@ export function HeaderClock({ compact = false }: { compact?: boolean }) {
         )}
       >
         {open && <span className="h-2 w-2 rounded-full bg-status-green animate-pulse" />}
+        {!open && completed && <span className="h-2 w-2 rounded-full bg-brand-muted" />}
         <span>{statusText}</span>
       </div>
     </div>

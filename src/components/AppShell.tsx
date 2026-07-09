@@ -83,8 +83,8 @@ export function AppShell({
   const iconBtn =
     "inline-flex h-10 items-center gap-1.5 rounded-xl bg-white/10 px-2.5 text-sm text-white transition-colors hover:bg-white/20";
 
-  // Attendance: every staff role clocks in/out; owners and platform admin don't.
-  const showClock = Boolean(user?.role && user.role !== "cafe_owner" && user.role !== "saas_owner");
+  // Attendance: every cafe role clocks in/out; platform admin doesn't.
+  const showClock = Boolean(user?.role && user.role !== "saas_owner");
 
   // Dynamically determine the module theme based on the path and mode
   const isDark = themeMode === "dark";

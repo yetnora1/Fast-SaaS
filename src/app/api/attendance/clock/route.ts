@@ -1,24 +1,61 @@
-import { handler, ok } from "@/lib/api";
+import { handler, ok, fail } from "@/lib/api";
 import { requireTenant } from "@/lib/auth/server";
 import { prisma } from "@/lib/db/client";
 import { audit } from "@/lib/audit";
 
-// Every staff role clocks attendance — the café owner does not track their own.
-const CLOCK_ROLES = ["cafe_manager", "waiter", "cashier", "barista", "kitchen", "store_manager"] as const;
+// Allow all roles except saas_owner (platform admin)
+const CLOCK_ROLES = ["cafe_owner", "cafe_manager", "waiter", "cashier", "barista", "kitchen", "store_manager"] as const;
 
-/** My current attendance status: the open (not clocked-out) record, if any. */
+function getTodayRangeEAT() {
+  const now = new Date();
+  // Adjust to UTC+3 (Ethiopia Time)
+  const eatOffset = 3 * 60 * 60 * 1000;
+  const eatDate = new Date(now.getTime() + eatOffset);
+  
+  // Start of today in EAT
+  const startOfTodayEAT = new Date(eatDate);
+  startOfTodayEAT.setUTCHours(0, 0, 0, 0);
+  const startOfTodayUTC = new Date(startOfTodayEAT.getTime() - eatOffset);
+  
+  // End of today in EAT
+  const endOfTodayEAT = new Date(eatDate);
+  endOfTodayEAT.setUTCHours(23, 59, 59, 999);
+  const endOfTodayUTC = new Date(endOfTodayEAT.getTime() - eatOffset);
+  
+  return { start: startOfTodayUTC, end: endOfTodayUTC };
+}
+
+/** My current attendance status: the open record and completed today record, if any. */
 export const GET = handler(async () => {
   const me = await requireTenant(...CLOCK_ROLES);
+  
   const open = await prisma.staffAttendance.findFirst({
     where: { userId: me.sub, clockOut: null },
     orderBy: { clockIn: "desc" },
   });
-  return ok({ open: open ? { id: open.id, clockIn: open.clockIn } : null });
+
+  const { start, end } = getTodayRangeEAT();
+  const completed = await prisma.staffAttendance.findFirst({
+    where: {
+      userId: me.sub,
+      clockOut: { not: null },
+      clockIn: {
+        gte: start,
+        lte: end,
+      },
+    },
+    orderBy: { clockIn: "desc" },
+  });
+
+  return ok({ 
+    open: open ? { id: open.id, clockIn: open.clockIn } : null,
+    completed: completed ? { id: completed.id, clockIn: completed.clockIn, clockOut: completed.clockOut } : null
+  });
 });
 
 /**
- * Toggle clock in/out. No open record → clock IN (new permanent daily row,
- * linked to the branch's open shift when one exists). Open record → clock OUT.
+ * Toggle clock in/out. No open record → clock IN (if not already clocked in today).
+ * Open record → clock OUT.
  */
 export const POST = handler(async () => {
   const me = await requireTenant(...CLOCK_ROLES);
@@ -34,7 +71,23 @@ export const POST = handler(async () => {
       data: { clockOut: new Date() },
     });
     await audit({ userId: me.sub, tenantId: me.tenantId, action: "attendance.clock_out", entity: "staff_attendance", entityId: done.id });
-    return ok({ action: "OUT", clockIn: done.clockIn, clockOut: done.clockOut });
+    return ok({ action: "OUT", open: null, completed: done });
+  }
+
+  // Guard: Check if user already clocked in today (once per 24 hour / day)
+  const { start, end } = getTodayRangeEAT();
+  const existingToday = await prisma.staffAttendance.findFirst({
+    where: {
+      userId: me.sub,
+      clockIn: {
+        gte: start,
+        lte: end,
+      },
+    },
+  });
+
+  if (existingToday) {
+    return fail("You have already completed your attendance today. Only one clock-in/out session is allowed per day.", 400);
   }
 
   // Guard against duplicate same-moment rows (double tap) — one open row max.
@@ -43,5 +96,5 @@ export const POST = handler(async () => {
     data: { userId: me.sub, shiftId: shift?.id ?? null },
   });
   await audit({ userId: me.sub, tenantId: me.tenantId, action: "attendance.clock_in", entity: "staff_attendance", entityId: rec.id });
-  return ok({ action: "IN", clockIn: rec.clockIn, clockOut: null });
+  return ok({ action: "IN", open: rec, completed: null });
 });
