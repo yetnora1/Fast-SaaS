@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { api, usePoll } from "@/components/fetcher";
@@ -67,39 +67,101 @@ export function AppShell({
   const showClock = Boolean(user?.role && user.role !== "cafe_owner" && user.role !== "saas_owner");
 
   // Dynamically determine the module theme based on the path
-  let accentColor = "#05AD98"; // default Vichy teal
+  let bg = "#0b0f19";
+  let surface = "#161f30";
+  let surface2 = "#222d41";
+  let border = "#2a384e";
+  let muted = "#ACBCBF";
+  let foreground = "#F4FCFB";
+  let accent = "#05AD98";
   let accentHover = "#048e7d";
 
   if (pathname.includes("/dashboard")) {
     // Sapphire nightfall whisper (Deep sapphire blue)
-    accentColor = "#0474c4";
+    bg = "#070a13";
+    surface = "#0e1524";
+    surface2 = "#182235";
+    border = "#1a263c";
+    muted = "#5379AE";
+    foreground = "#A8C4EC";
+    accent = "#0474c4";
     accentHover = "#035fa3";
   } else if (pathname.includes("/menu")) {
     // Vichy (Signature Vichy teal/green)
-    accentColor = "#05AD98";
+    bg = "#0d1117";
+    surface = "#161b22";
+    surface2 = "#21262d";
+    border = "#30363d";
+    muted = "#878787";
+    foreground = "#FFFFFF";
+    accent = "#05AD98";
     accentHover = "#048e7d";
   } else if (pathname.includes("/staff") || pathname.includes("/attendance")) {
     // Arctic reflection (Frosty slate/arctic blue)
-    accentColor = "#5289ad";
+    bg = "#0b131a";
+    surface = "#121e29";
+    surface2 = "#1d2f3f";
+    border = "#243c4c";
+    muted = "#acbcbf";
+    foreground = "#f4fcfb";
+    accent = "#5289ad";
     accentHover = "#3d6b8a";
   } else if (pathname.includes("/payments") || pathname.includes("/reports") || pathname.includes("/branches")) {
     // Neptune (Vibrant sea green/blue)
-    accentColor = "#4ab5b5";
+    bg = "#0c1017";
+    surface = "#141a24";
+    surface2 = "#1f2937";
+    border = "#2e3d52";
+    muted = "#6d8bc0";
+    foreground = "#8fd9fb";
+    accent = "#4ab5b5";
     accentHover = "#369494";
   } else if (pathname.includes("/payroll")) {
-    // Amethyst / Violet
-    accentColor = "#818cf8";
+    // Amethyst / Velvet Evening (Violet)
+    bg = "#0a0915";
+    surface = "#131124";
+    surface2 = "#1d1b33";
+    border = "#252244";
+    muted = "#a5b4fc";
+    foreground = "#e0e7ff";
+    accent = "#818cf8";
     accentHover = "#6366f1";
   } else if (pathname.includes("/equipment")) {
     // Slate (Olive/forest green)
-    accentColor = "#4DBE55";
+    bg = "#0c0e0b";
+    surface = "#141712";
+    surface2 = "#1f241d";
+    border = "#2c3329";
+    muted = "#71776d";
+    foreground = "#79ed91";
+    accent = "#4DBE55";
     accentHover = "#3c9a43";
   }
 
   const themeStyles = {
-    "--theme-accent": accentColor,
+    "--theme-bg": bg,
+    "--theme-surface": surface,
+    "--theme-surface2": surface2,
+    "--theme-border": border,
+    "--theme-muted": muted,
+    "--theme-foreground": foreground,
+    "--theme-accent": accent,
     "--theme-accent-hover": accentHover,
   } as React.CSSProperties;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const root = document.documentElement;
+      root.style.setProperty("--theme-bg", bg);
+      root.style.setProperty("--theme-surface", surface);
+      root.style.setProperty("--theme-surface2", surface2);
+      root.style.setProperty("--theme-border", border);
+      root.style.setProperty("--theme-muted", muted);
+      root.style.setProperty("--theme-foreground", foreground);
+      root.style.setProperty("--theme-accent", accent);
+      root.style.setProperty("--theme-accent-hover", accentHover);
+    }
+  }, [pathname, bg, surface, surface2, border, muted, foreground, accent, accentHover]);
 
   return (
     <div className="min-h-dvh" style={themeStyles}>

@@ -11,15 +11,15 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          bg: "#0b0f19", // app background — Sapphire nightfall whisper dark
-          surface: "#161f30", // cards / panels — Sapphire nightfall whisper medium
-          surface2: "#222d41", // inputs / raised surfaces — Sapphire nightfall whisper light
-          accent: "var(--theme-accent, #05AD98)", // primary action / brand minty green — dynamic
+          bg: "var(--theme-bg, #0b0f19)", // dynamic background
+          surface: "var(--theme-surface, #161f30)", // dynamic surface cards
+          surface2: "var(--theme-surface2, #222d41)", // dynamic inputs
+          accent: "var(--theme-accent, #05AD98)", // dynamic primary action
           accentHover: "var(--theme-accent-hover, #048e7d)", // dynamic hover
           accentFg: "#ffffff", // white text on accent
-          border: "#2a384e", // hairline borders — mix of Slate and Nightfall
-          muted: "#ACBCBF", // muted / secondary text — Arctic reflection soft grey
-          foreground: "#F4FCFB", // primary text — Arctic reflection ice white
+          border: "var(--theme-border, #2a384e)", // dynamic borders
+          muted: "var(--theme-muted, #ACBCBF)", // dynamic muted text
+          foreground: "var(--theme-foreground, #F4FCFB)", // dynamic foreground text
         },
         status: {
           available: "#05AD98", // Vichy teal
