@@ -127,6 +127,85 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
     document.body.removeChild(link);
   };
 
+  const handleView = (table: CafeTableRow) => {
+    const dataUrl = qrDataUrls[table.id];
+    if (!dataUrl) return;
+    const w = window.open();
+    if (w) {
+      w.document.write(`
+        <html>
+          <head>
+            <title>Table ${table.number} QR Code</title>
+            <style>
+              body {
+                margin: 0;
+                background: #0b0f19;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                color: white;
+              }
+              .card {
+                background: #111827;
+                padding: 32px;
+                border-radius: 24px;
+                border: 1px solid rgba(255,255,255,0.08);
+                box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+              }
+              h1 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 800;
+                letter-spacing: 0.05em;
+                background: linear-gradient(135deg, #a78bfa, #818cf8);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                text-transform: uppercase;
+              }
+              .sub {
+                color: #9ca3af;
+                margin: 6px 0 24px 0;
+                font-size: 13px;
+                font-weight: 500;
+                letter-spacing: 0.02em;
+              }
+              .qr-box {
+                background: white;
+                padding: 16px;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+              img {
+                width: 280px;
+                height: 280px;
+                display: block;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>TABLE ${table.number}</h1>
+              <div class="sub">Welcome to ZAD Cafe</div>
+              <div class="qr-box">
+                <img src="${dataUrl}" />
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      w.document.close();
+    }
+  };
+
   async function addTable() {
     setBusy(true);
     try {
@@ -191,9 +270,11 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
                   ✕
                 </button>
               )}
-              <div className="text-center">
+              <div className="text-center flex flex-col items-center gap-1.5">
                 <span className="font-display text-xs font-bold uppercase tracking-wider text-brand-muted">Table {table.number}</span>
-                <div className="mt-0.5 text-[10px] text-brand-muted/70">{table.capacity} Seats</div>
+                <div className="inline-flex rounded-full bg-brand-accent/10 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-brand-accent">
+                  Welcome to ZAD Cafe
+                </div>
               </div>
 
               <div className="my-4 flex h-36 w-36 items-center justify-center rounded-lg bg-white p-2">
@@ -204,20 +285,22 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
                 )}
               </div>
 
-              <div className="flex w-full gap-1.5">
+              <div className="flex w-full gap-1.5 mt-1">
                 <button
-                  onClick={() => handlePrint([table])}
+                  onClick={() => handleView(table)}
                   disabled={!hasQR}
-                  className="flex-1 rounded-lg bg-brand-surface2 py-1.5 text-xxs font-medium text-brand-foreground transition-colors hover:bg-white/10 disabled:opacity-50"
+                  className="flex-1 rounded-xl bg-brand-surface2 py-2 text-xxs font-semibold text-brand-foreground transition-all hover:bg-white/10 active:scale-[0.97] disabled:opacity-50"
                 >
-                  🖨️ Print
+                  👁️ View
                 </button>
                 <button
                   onClick={() => handleDownload(table)}
                   disabled={!hasQR}
-                  className="flex-1 rounded-lg bg-brand-surface2 py-1.5 text-xxs font-medium text-brand-foreground transition-colors hover:bg-white/10 disabled:opacity-50"
+                  className="rounded-xl bg-brand-surface2 p-2 text-xxs transition-all hover:bg-white/10 active:scale-[0.97] disabled:opacity-50"
+                  title="Download QR"
+                  aria-label="Download QR"
                 >
-                  💾 Download
+                  💾
                 </button>
               </div>
             </div>
