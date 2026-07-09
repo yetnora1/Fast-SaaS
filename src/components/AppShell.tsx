@@ -79,7 +79,7 @@ export function AppShell({
   }
 
   const iconBtn =
-    "inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand-surface2 px-2.5 text-sm text-brand-foreground transition-colors hover:bg-white/10";
+    "inline-flex h-10 items-center gap-1.5 rounded-xl bg-white/10 px-2.5 text-sm text-white transition-colors hover:bg-white/20";
 
   // Attendance: every staff role clocks in/out; owners and platform admin don't.
   const showClock = Boolean(user?.role && user.role !== "cafe_owner" && user.role !== "saas_owner");
@@ -90,7 +90,7 @@ export function AppShell({
   let bg = isDark ? "#0b0f19" : "#FFFFFF";
   let surface = isDark ? "#161f30" : "#f8fafc";
   let surface2 = isDark ? "#222d41" : "#f1f5f9";
-  let header = isDark ? "#141d2b" : "#f1f5f9";
+  let header = "#3289F4"; // Permanent bright blue header
   let border = isDark ? "#2a384e" : "#cbd5e1";
   let muted = isDark ? "#ACBCBF" : "#64748b";
   let foreground = isDark ? "#FFFFFF" : "#0f172a";
@@ -102,7 +102,6 @@ export function AppShell({
     bg = isDark ? "#070a13" : "#FFFFFF";
     surface = isDark ? "#0e1524" : "#f0f4f8";
     surface2 = isDark ? "#182235" : "#e1e9f0";
-    header = isDark ? "#0b1329" : "#e2ebf5";
     border = isDark ? "#1a263c" : "#d0dfee";
     muted = isDark ? "#5379AE" : "#475569";
     foreground = isDark ? "#FFFFFF" : "#0f172a";
@@ -113,7 +112,6 @@ export function AppShell({
     bg = isDark ? "#0d1117" : "#FFFFFF";
     surface = isDark ? "#161b22" : "#f2f9f8";
     surface2 = isDark ? "#21262d" : "#e3efef";
-    header = isDark ? "#071a17" : "#e3f2f0";
     border = isDark ? "#30363d" : "#c7e2df";
     muted = isDark ? "#878787" : "#4b5563";
     foreground = isDark ? "#FFFFFF" : "#0d1117";
@@ -124,7 +122,6 @@ export function AppShell({
     bg = isDark ? "#0b131a" : "#FFFFFF";
     surface = isDark ? "#121e29" : "#f1f5f9";
     surface2 = isDark ? "#1d2f3f" : "#e2e8f0";
-    header = isDark ? "#0e1c2b" : "#e6f0fa";
     border = isDark ? "#243c4c" : "#cbd5e1";
     muted = isDark ? "#acbcbf" : "#64748b";
     foreground = isDark ? "#FFFFFF" : "#0f172a";
@@ -135,7 +132,6 @@ export function AppShell({
     bg = isDark ? "#0c1017" : "#FFFFFF";
     surface = isDark ? "#141a24" : "#edf7fd";
     surface2 = isDark ? "#1f2937" : "#d8eefb";
-    header = isDark ? "#0a1a24" : "#e0f2fe";
     border = isDark ? "#2e3d52" : "#b5dffa";
     muted = isDark ? "#6d8bc0" : "#334155";
     foreground = isDark ? "#FFFFFF" : "#0c1017";
@@ -146,7 +142,6 @@ export function AppShell({
     bg = isDark ? "#060b07" : "#FFFFFF";
     surface = isDark ? "#0c140e" : "#f0fdf4";
     surface2 = isDark ? "#142217" : "#dcfce7";
-    header = isDark ? "#081a0e" : "#e6f9eb";
     border = isDark ? "#1b2e20" : "#bbf7d0";
     muted = isDark ? "#86a38b" : "#166534";
     foreground = isDark ? "#FFFFFF" : "#060b07";
@@ -157,7 +152,6 @@ export function AppShell({
     bg = isDark ? "#0c0e0b" : "#FFFFFF";
     surface = isDark ? "#141712" : "#f4f6f0";
     surface2 = isDark ? "#1f241d" : "#e7eae0";
-    header = isDark ? "#10170c" : "#f0f4e8";
     border = isDark ? "#2c3329" : "#d1d7c4";
     muted = isDark ? "#71776d" : "#374151";
     foreground = isDark ? "#FFFFFF" : "#0c0e0b";
@@ -202,29 +196,29 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh" style={themeStyles}>
-      <header className="sticky top-0 z-nav border-b border-brand-border/70 bg-brand-header/80 backdrop-blur-md relative">
+      <header className="sticky top-0 z-nav border-b border-[#2875d1] bg-[#3289F4] relative">
         <div className="flex items-center gap-4 px-4 py-2.5">
-          <span className="font-display text-lg font-bold tracking-tight">
-            Cafe<span className="text-brand-accent">Flow</span>
+          <span className="font-display text-lg font-bold tracking-tight text-white">
+            CafeFlow
           </span>
 
           {user && (
             <Link
               href={profileHref}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full overflow-hidden border-2 border-brand-border transition-all hover:scale-105 hover:border-brand-accent active:scale-95 shadow-md"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full overflow-hidden border-2 border-white/20 transition-all hover:scale-105 hover:border-white active:scale-95 shadow-md"
               title={user.name}
             >
               {user.avatarUrl ? (
                 <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-brand-accent/15 text-brand-accent text-sm font-bold">
+                <div className="flex h-full w-full items-center justify-center bg-white/20 text-white text-sm font-bold">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               )}
             </Link>
           )}
 
-          <span className="hidden text-sm text-brand-muted sm:inline">{navLabel(title)}</span>
+          <span className="hidden text-sm text-white/70 sm:inline">{navLabel(title)}</span>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex ml-2 items-center gap-1 text-sm">
@@ -236,8 +230,8 @@ export function AppShell({
                 className={cn(
                   "rounded-lg px-3 py-1.5 font-medium transition-colors",
                   isActive(n.href)
-                    ? "bg-brand-accent/15 text-brand-accent"
-                    : "text-brand-muted hover:bg-white/5 hover:text-brand-foreground",
+                    ? "bg-white/20 text-white"
+                    : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
                 {navLabel(n.label)}
@@ -257,7 +251,7 @@ export function AppShell({
               {themeMode === "light" ? (
                 <MoonIcon className="h-4 w-4" />
               ) : (
-                <SunIcon className="h-4 w-4 text-amber-400" />
+                <SunIcon className="h-4 w-4 text-amber-300" />
               )}
               <span className="font-medium">{themeMode === "light" ? "Dark" : "Light"}</span>
             </button>
@@ -269,13 +263,13 @@ export function AppShell({
 
             <Link
               href="/notifications"
-              className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-surface2 text-brand-foreground transition-colors hover:bg-white/10"
+              className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20"
               title={t("notifications")}
               aria-label={t("notifications")}
             >
               <BellIcon className="h-5 w-5" />
               {data?.unread ? (
-                <span className="tabular absolute -right-1 -top-1 min-w-[18px] rounded-full bg-brand-accent px-1 text-center text-[11px] font-bold leading-[18px] text-brand-accentFg">
+                <span className="tabular absolute -right-1 -top-1 min-w-[18px] rounded-full bg-white px-1 text-center text-[11px] font-bold leading-[18px] text-[#3289F4]">
                   {data.unread > 99 ? "99+" : data.unread}
                 </span>
               ) : null}
@@ -290,7 +284,7 @@ export function AppShell({
           {/* Mobile Hamburger toggle button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-surface2 text-brand-foreground transition-colors hover:bg-white/10 md:hidden"
+            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20 md:hidden"
             aria-expanded={isMenuOpen}
             aria-label="Toggle menu"
           >
