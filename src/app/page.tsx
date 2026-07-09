@@ -43,8 +43,11 @@ export default function Home() {
   return (
     <main className="min-h-dvh relative overflow-hidden">
       {/* Premium Ambient Background Logo Glow */}
-      <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[url('/LOGO.jpg')] bg-cover bg-center opacity-[0.06] blur-[50px]" />
-      <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-gradient-to-t from-brand-bg via-transparent to-transparent" />
+      <img
+        src="/LOGO.jpg"
+        alt=""
+        className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-[600px] w-[600px] -translate-x-1/2 rounded-full object-cover opacity-20 blur-[60px]"
+      />
 
       {/* Nav */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 relative z-10">
