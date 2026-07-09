@@ -66,8 +66,43 @@ export function AppShell({
   // Attendance: every staff role clocks in/out; owners and platform admin don't.
   const showClock = Boolean(user?.role && user.role !== "cafe_owner" && user.role !== "saas_owner");
 
+  // Dynamically determine the module theme based on the path
+  let accentColor = "#05AD98"; // default Vichy teal
+  let accentHover = "#048e7d";
+
+  if (pathname.includes("/dashboard")) {
+    // Sapphire nightfall whisper (Deep sapphire blue)
+    accentColor = "#0474c4";
+    accentHover = "#035fa3";
+  } else if (pathname.includes("/menu")) {
+    // Vichy (Signature Vichy teal/green)
+    accentColor = "#05AD98";
+    accentHover = "#048e7d";
+  } else if (pathname.includes("/staff") || pathname.includes("/attendance")) {
+    // Arctic reflection (Frosty slate/arctic blue)
+    accentColor = "#5289ad";
+    accentHover = "#3d6b8a";
+  } else if (pathname.includes("/payments") || pathname.includes("/reports") || pathname.includes("/branches")) {
+    // Neptune (Vibrant sea green/blue)
+    accentColor = "#4ab5b5";
+    accentHover = "#369494";
+  } else if (pathname.includes("/payroll")) {
+    // Amethyst / Violet
+    accentColor = "#818cf8";
+    accentHover = "#6366f1";
+  } else if (pathname.includes("/equipment")) {
+    // Slate (Olive/forest green)
+    accentColor = "#4DBE55";
+    accentHover = "#3c9a43";
+  }
+
+  const themeStyles = {
+    "--theme-accent": accentColor,
+    "--theme-accent-hover": accentHover,
+  } as React.CSSProperties;
+
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh" style={themeStyles}>
       <header className="sticky top-0 z-nav border-b border-brand-border/70 bg-brand-surface/80 backdrop-blur-md relative">
         <div className="flex items-center gap-4 px-4 py-2.5">
           <span className="font-display text-lg font-bold tracking-tight">

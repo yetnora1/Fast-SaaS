@@ -14,8 +14,8 @@ const config: Config = {
           bg: "#0b0f19", // app background — Sapphire nightfall whisper dark
           surface: "#161f30", // cards / panels — Sapphire nightfall whisper medium
           surface2: "#222d41", // inputs / raised surfaces — Sapphire nightfall whisper light
-          accent: "#05AD98", // primary action / brand minty green — Vichy teal
-          accentHover: "#048e7d", // dark Vichy hover
+          accent: "var(--theme-accent, #05AD98)", // primary action / brand minty green — dynamic
+          accentHover: "var(--theme-accent-hover, #048e7d)", // dynamic hover
           accentFg: "#ffffff", // white text on accent
           border: "#2a384e", // hairline borders — mix of Slate and Nightfall
           muted: "#ACBCBF", // muted / secondary text — Arctic reflection soft grey

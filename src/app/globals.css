@@ -95,12 +95,12 @@ body {
 
 /* ── Accessible focus ring (keyboard users only) ── */
 :focus-visible {
-  @apply outline-none ring-2 ring-brand-accent/70 ring-offset-2 ring-offset-brand-bg;
+  @apply outline-none ring-2 ring-brand-accent ring-offset-2 ring-offset-brand-bg;
 }
 
 /* ── Themed selection + scrollbar to match the dark palette ── */
 ::selection {
-  @apply bg-brand-accent/30 text-white;
+  @apply bg-brand-surface2 text-white;
 }
 
 * {
