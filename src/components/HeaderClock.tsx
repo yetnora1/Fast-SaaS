@@ -34,7 +34,13 @@ function getCompletedElapsedText(inTime: string, outTime: string): string {
  *
  * Supports a `compact` prop for mobile responsive rendering inside drawers.
  */
-export function HeaderClock({ compact = false }: { compact?: boolean }) {
+export function HeaderClock({
+  compact = false,
+  showStatus = true,
+}: {
+  compact?: boolean;
+  showStatus?: boolean;
+}) {
   const [time, setTime] = useState<Date | null>(null);
   const { lang } = useLang();
   
@@ -42,7 +48,7 @@ export function HeaderClock({ compact = false }: { compact?: boolean }) {
   const { data } = usePoll<{ 
     open: { id: string; clockIn: string } | null;
     completed: { id: string; clockIn: string; clockOut: string } | null;
-  }>("/api/attendance/clock", 30000);
+  }>(showStatus ? "/api/attendance/clock" : null, 30000);
   const open = data?.open ?? null;
   const completed = data?.completed ?? null;
 

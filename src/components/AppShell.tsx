@@ -315,7 +315,7 @@ export function AppShell({
             ))}
           </nav>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <HeaderClock />
+            <HeaderClock showStatus={showClock} />
             {showClock && <ClockInOut />}
           </div>
         </div>
@@ -349,7 +349,7 @@ export function AppShell({
               ))}
             </nav>
             <div className="mt-4 flex flex-col gap-2 border-t border-brand-border/60 pt-4">
-              <HeaderClock compact />
+              <HeaderClock compact showStatus={showClock} />
               {showClock && <ClockInOut compact />}
               <button
                 onClick={toggleTheme}
