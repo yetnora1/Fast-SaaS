@@ -90,6 +90,7 @@ export function AppShell({
   let bg = isDark ? "#0b0f19" : "#FFFFFF";
   let surface = isDark ? "#161f30" : "#f8fafc";
   let surface2 = isDark ? "#222d41" : "#f1f5f9";
+  let header = isDark ? "#141d2b" : "#f1f5f9";
   let border = isDark ? "#2a384e" : "#cbd5e1";
   let muted = isDark ? "#ACBCBF" : "#64748b";
   let foreground = isDark ? "#FFFFFF" : "#0f172a";
@@ -101,6 +102,7 @@ export function AppShell({
     bg = isDark ? "#070a13" : "#FFFFFF";
     surface = isDark ? "#0e1524" : "#f0f4f8";
     surface2 = isDark ? "#182235" : "#e1e9f0";
+    header = isDark ? "#0b1329" : "#e2ebf5";
     border = isDark ? "#1a263c" : "#d0dfee";
     muted = isDark ? "#5379AE" : "#475569";
     foreground = isDark ? "#FFFFFF" : "#0f172a";
@@ -111,6 +113,7 @@ export function AppShell({
     bg = isDark ? "#0d1117" : "#FFFFFF";
     surface = isDark ? "#161b22" : "#f2f9f8";
     surface2 = isDark ? "#21262d" : "#e3efef";
+    header = isDark ? "#071a17" : "#e3f2f0";
     border = isDark ? "#30363d" : "#c7e2df";
     muted = isDark ? "#878787" : "#4b5563";
     foreground = isDark ? "#FFFFFF" : "#0d1117";
@@ -121,6 +124,7 @@ export function AppShell({
     bg = isDark ? "#0b131a" : "#FFFFFF";
     surface = isDark ? "#121e29" : "#f1f5f9";
     surface2 = isDark ? "#1d2f3f" : "#e2e8f0";
+    header = isDark ? "#0e1c2b" : "#e6f0fa";
     border = isDark ? "#243c4c" : "#cbd5e1";
     muted = isDark ? "#acbcbf" : "#64748b";
     foreground = isDark ? "#FFFFFF" : "#0f172a";
@@ -131,6 +135,7 @@ export function AppShell({
     bg = isDark ? "#0c1017" : "#FFFFFF";
     surface = isDark ? "#141a24" : "#edf7fd";
     surface2 = isDark ? "#1f2937" : "#d8eefb";
+    header = isDark ? "#0a1a24" : "#e0f2fe";
     border = isDark ? "#2e3d52" : "#b5dffa";
     muted = isDark ? "#6d8bc0" : "#334155";
     foreground = isDark ? "#FFFFFF" : "#0c1017";
@@ -141,6 +146,7 @@ export function AppShell({
     bg = isDark ? "#060b07" : "#FFFFFF";
     surface = isDark ? "#0c140e" : "#f0fdf4";
     surface2 = isDark ? "#142217" : "#dcfce7";
+    header = isDark ? "#081a0e" : "#e6f9eb";
     border = isDark ? "#1b2e20" : "#bbf7d0";
     muted = isDark ? "#86a38b" : "#166534";
     foreground = isDark ? "#FFFFFF" : "#060b07";
@@ -151,6 +157,7 @@ export function AppShell({
     bg = isDark ? "#0c0e0b" : "#FFFFFF";
     surface = isDark ? "#141712" : "#f4f6f0";
     surface2 = isDark ? "#1f241d" : "#e7eae0";
+    header = isDark ? "#10170c" : "#f0f4e8";
     border = isDark ? "#2c3329" : "#d1d7c4";
     muted = isDark ? "#71776d" : "#374151";
     foreground = isDark ? "#FFFFFF" : "#0c0e0b";
@@ -162,6 +169,7 @@ export function AppShell({
     "--theme-bg": bg,
     "--theme-surface": surface,
     "--theme-surface2": surface2,
+    "--theme-header": header,
     "--theme-border": border,
     "--theme-muted": muted,
     "--theme-foreground": foreground,
@@ -175,6 +183,7 @@ export function AppShell({
       root.style.setProperty("--theme-bg", bg);
       root.style.setProperty("--theme-surface", surface);
       root.style.setProperty("--theme-surface2", surface2);
+      root.style.setProperty("--theme-header", header);
       root.style.setProperty("--theme-border", border);
       root.style.setProperty("--theme-muted", muted);
       root.style.setProperty("--theme-foreground", foreground);
@@ -189,11 +198,11 @@ export function AppShell({
         root.classList.remove("dark");
       }
     }
-  }, [pathname, themeMode, bg, surface, surface2, border, muted, foreground, accent, accentHover]);
+  }, [pathname, themeMode, bg, surface, surface2, header, border, muted, foreground, accent, accentHover]);
 
   return (
     <div className="min-h-dvh" style={themeStyles}>
-      <header className="sticky top-0 z-nav border-b border-brand-border/70 bg-brand-surface/80 backdrop-blur-md relative">
+      <header className="sticky top-0 z-nav border-b border-brand-border/70 bg-brand-header/80 backdrop-blur-md relative">
         <div className="flex items-center gap-4 px-4 py-2.5">
           <span className="font-display text-lg font-bold tracking-tight">
             Cafe<span className="text-brand-accent">Flow</span>

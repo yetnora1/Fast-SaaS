@@ -14,6 +14,7 @@ const config: Config = {
           bg: "var(--theme-bg, #0b0f19)", // dynamic background
           surface: "var(--theme-surface, #161f30)", // dynamic surface cards
           surface2: "var(--theme-surface2, #222d41)", // dynamic inputs
+          header: "var(--theme-header, #161f30)", // dynamic unique header background
           accent: "var(--theme-accent, #05AD98)", // dynamic primary action
           accentHover: "var(--theme-accent-hover, #048e7d)", // dynamic hover
           accentFg: "#ffffff", // white text on accent
