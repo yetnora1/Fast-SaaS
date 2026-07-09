@@ -41,12 +41,17 @@ const STEPS = [
 
 export default function Home() {
   return (
-    <main className="min-h-dvh">
+    <main className="min-h-dvh relative overflow-hidden">
+      {/* Premium Ambient Background Logo Glow */}
+      <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[url('/LOGO.jpg')] bg-cover bg-center opacity-[0.06] blur-[50px]" />
+      <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-gradient-to-t from-brand-bg via-transparent to-transparent" />
+
       {/* Nav */}
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <span className="font-display text-xl font-bold tracking-tight">
-          Cafe<span className="text-brand-accent">Flow</span>
-        </span>
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 relative z-10">
+        <Link href="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
+          <img src="/LOGO.jpg" alt="Logo" className="h-6 w-6 rounded-lg object-cover border border-white/10 shadow-sm" />
+          <span>Cafe<span className="text-brand-accent">Flow</span></span>
+        </Link>
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/login" className="rounded-lg px-3 py-2 text-brand-muted transition-colors hover:text-brand-foreground">
             Log in
