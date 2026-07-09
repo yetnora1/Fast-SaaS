@@ -278,11 +278,13 @@ export function Modal({
   onClose,
   title,
   children,
+  className,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   if (!open) return null;
   return (
@@ -294,7 +296,10 @@ export function Modal({
       aria-label={title}
     >
       <div
-        className="animate-in w-full max-w-sm rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-pop"
+        className={cn(
+          "animate-in w-full max-w-sm rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-pop",
+          className,
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">

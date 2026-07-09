@@ -1,6 +1,7 @@
 "use client";
+import { useState } from "react";
 import { usePoll } from "@/components/fetcher";
-import { Card, StatusChip, TimerBadge, PageHeader, LiveDot, EmptyState } from "@/components/ui";
+import { Card, StatusChip, TimerBadge, PageHeader, LiveDot, EmptyState, Button, Modal } from "@/components/ui";
 import { AlertTriangleIcon, InboxIcon } from "@/components/icons";
 import { TableQRCodes } from "@/components/TableQR";
 import { FeedbackCard } from "@/components/FeedbackCard";
@@ -10,16 +11,22 @@ interface Order { id: string; status: string; submittedAt: string | null; table:
 
 export default function ManagerDashboard() {
   const { t } = useLang();
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const orders = usePoll<{ orders: Order[] }>("/api/manager/orders/live", 4000);
   const alerts = usePoll<{ alerts: { id: string; name: string; status: string }[] }>("/api/manager/inventory/alerts", 10000);
 
   return (
     <div className="space-y-5">
       <PageHeader title={t("operationsDashboard")} subtitle="Live floor & kitchen activity">
-        <LiveDot label={t("live")} />
+        <div className="flex items-center gap-3">
+          <Button onClick={() => setIsQrModalOpen(true)} variant="ghost" size="sm" className="font-semibold tracking-wider">
+            📱 QR CODE
+          </Button>
+          <LiveDot label={t("live")} />
+        </div>
       </PageHeader>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3">
         <Card>
           <div className="mb-2 font-medium">{t("liveOrderFeed")}</div>
           <div className="space-y-1 text-sm">
@@ -32,12 +39,13 @@ export default function ManagerDashboard() {
             ))}
           </div>
         </Card>
-
-        <Card>
-          <div className="mb-2 font-medium">{t("tableQrCodes")}</div>
-          <TableQRCodes />
-        </Card>
       </div>
+
+      <Modal open={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="Table QR Codes" className="max-w-4xl">
+        <div className="max-h-[75vh] overflow-y-auto pr-1">
+          <TableQRCodes />
+        </div>
+      </Modal>
 
       {alerts.data && alerts.data.alerts.length > 0 && (
         <Card className="border-status-red/40 bg-status-red/10">

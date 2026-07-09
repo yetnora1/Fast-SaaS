@@ -1,9 +1,11 @@
 "use client";
+import { useState } from "react";
 import { usePoll } from "@/components/fetcher";
-import { Card, KPICard, PageHeader, LiveDot, StatusChip, EmptyState, SkeletonCard, Skeleton } from "@/components/ui";
+import { Card, KPICard, PageHeader, LiveDot, StatusChip, EmptyState, SkeletonCard, Skeleton, Button, Modal } from "@/components/ui";
 import { AlertTriangleIcon, CoinsIcon, TrendUpIcon, ReceiptIcon, CheckCircleIcon, PackageIcon } from "@/components/icons";
 import { ChartTooltip, CHART_COLORS, CHART_GRID, CHART_AXIS } from "@/components/charts";
 import { FeedbackCard } from "@/components/FeedbackCard";
+import { TableQRCodes } from "@/components/TableQR";
 import { useLang } from "@/lib/i18n";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
@@ -49,6 +51,7 @@ function DashboardSkeleton() {
 
 export default function OwnerDashboard() {
   const { t } = useLang();
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const { data, loading } = usePoll<Dash>("/api/owner/dashboard", 15000);
   if (loading || !data) return <DashboardSkeleton />;
 
@@ -58,8 +61,19 @@ export default function OwnerDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader title={t("todaysOverview")} subtitle="Live performance across all branches">
-        <LiveDot label={t("live")} />
+        <div className="flex items-center gap-3">
+          <Button onClick={() => setIsQrModalOpen(true)} variant="ghost" size="sm" className="font-semibold tracking-wider">
+            📱 QR CODE
+          </Button>
+          <LiveDot label={t("live")} />
+        </div>
       </PageHeader>
+
+      <Modal open={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="Table QR Codes" className="max-w-4xl">
+        <div className="max-h-[75vh] overflow-y-auto pr-1">
+          <TableQRCodes />
+        </div>
+      </Modal>
 
       {data.lowStock.length > 0 && (
         <Card className="border-status-red/40 bg-status-red/10">
