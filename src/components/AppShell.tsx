@@ -92,7 +92,7 @@ export function AppShell({
   let surface2 = isDark ? "#222d41" : "#f1f5f9";
   let border = isDark ? "#2a384e" : "#cbd5e1";
   let muted = isDark ? "#ACBCBF" : "#64748b";
-  let foreground = isDark ? "#F4FCFB" : "#0f172a";
+  let foreground = isDark ? "#FFFFFF" : "#0f172a";
   let accent = "#05AD98";
   let accentHover = "#048e7d";
 
@@ -103,7 +103,7 @@ export function AppShell({
     surface2 = isDark ? "#182235" : "#e1e9f0";
     border = isDark ? "#1a263c" : "#d0dfee";
     muted = isDark ? "#5379AE" : "#475569";
-    foreground = isDark ? "#A8C4EC" : "#0f172a";
+    foreground = isDark ? "#FFFFFF" : "#0f172a";
     accent = "#0474c4";
     accentHover = "#035fa3";
   } else if (pathname.includes("/menu")) {
@@ -123,7 +123,7 @@ export function AppShell({
     surface2 = isDark ? "#1d2f3f" : "#e2e8f0";
     border = isDark ? "#243c4c" : "#cbd5e1";
     muted = isDark ? "#acbcbf" : "#64748b";
-    foreground = isDark ? "#f4fcfb" : "#0f172a";
+    foreground = isDark ? "#FFFFFF" : "#0f172a";
     accent = "#5289ad";
     accentHover = "#3d6b8a";
   } else if (pathname.includes("/payments") || pathname.includes("/reports") || pathname.includes("/branches")) {
@@ -133,7 +133,7 @@ export function AppShell({
     surface2 = isDark ? "#1f2937" : "#d8eefb";
     border = isDark ? "#2e3d52" : "#b5dffa";
     muted = isDark ? "#6d8bc0" : "#334155";
-    foreground = isDark ? "#8fd9fb" : "#0c1017";
+    foreground = isDark ? "#FFFFFF" : "#0c1017";
     accent = "#4ab5b5";
     accentHover = "#369494";
   } else if (pathname.includes("/payroll")) {
@@ -143,7 +143,7 @@ export function AppShell({
     surface2 = isDark ? "#142217" : "#dcfce7";
     border = isDark ? "#1b2e20" : "#bbf7d0";
     muted = isDark ? "#86a38b" : "#166534";
-    foreground = isDark ? "#e8f5e9" : "#060b07";
+    foreground = isDark ? "#FFFFFF" : "#060b07";
     accent = "#22C55E";
     accentHover = "#16A34A";
   } else if (pathname.includes("/equipment")) {
@@ -153,7 +153,7 @@ export function AppShell({
     surface2 = isDark ? "#1f241d" : "#e7eae0";
     border = isDark ? "#2c3329" : "#d1d7c4";
     muted = isDark ? "#71776d" : "#374151";
-    foreground = isDark ? "#79ed91" : "#0c0e0b";
+    foreground = isDark ? "#FFFFFF" : "#0c0e0b";
     accent = "#4DBE55";
     accentHover = "#3c9a43";
   }
