@@ -2,7 +2,7 @@
 import { usePoll } from "@/components/fetcher";
 import { Card, KPICard, PageHeader, EmptyState } from "@/components/ui";
 import { CoinsIcon, ReceiptIcon, ChartIcon } from "@/components/icons";
-import { ChartTooltip, CHART_GRID, CHART_AXIS } from "@/components/charts";
+import { ChartTooltip, CHART_COLORS, CHART_GRID, CHART_AXIS } from "@/components/charts";
 import { useLang } from "@/lib/i18n";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
@@ -33,7 +33,7 @@ export default function ReportsPage() {
               <XAxis dataKey="hour" stroke={CHART_AXIS} fontSize={11} tickLine={false} axisLine={false} />
               <YAxis stroke={CHART_AXIS} fontSize={11} tickLine={false} axisLine={false} width={48} />
               <Tooltip cursor={{ stroke: CHART_GRID }} content={<ChartTooltip suffix=" ETB" />} />
-              <Line type="monotone" dataKey="revenue" name={t("revenue")} stroke="#22C55E" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+              <Line type="monotone" dataKey="revenue" name={t("revenue")} stroke={CHART_COLORS[0]} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         ) : (

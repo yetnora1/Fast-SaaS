@@ -117,7 +117,7 @@ export default function StoreDashboard() {
             onChange={(e) => setQty(e.target.value)}
           />
           {action?.type === "adjust" && <Input placeholder={t("reason")} value={reason} onChange={(e) => setReason(e.target.value)} />}
-          {err && <p className="text-sm text-status-red">{err}</p>}
+          {err && <p className="text-sm text-status-redText">{err}</p>}
           <div className="flex gap-2">
             <Button variant="ghost" className="flex-1" onClick={() => setAction(null)}>{t("cancel")}</Button>
             <Button className="flex-1" onClick={submitAction} disabled={!qty || busy}>{t("confirm")}</Button>

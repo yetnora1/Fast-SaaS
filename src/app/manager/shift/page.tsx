@@ -51,7 +51,7 @@ export default function ShiftPage() {
             <div className="tabular text-sm text-brand-muted">{t("expectedCash")}: {(Number(data.shift.openingFloat) + data.totals.cash).toLocaleString()} ETB</div>
             <Input placeholder={t("actualCashPlaceholder")} type="number" value={actual} onChange={(e) => setActual(e.target.value)} />
             <Button onClick={close} disabled={!actual}>{t("countCloseBtn")}</Button>
-            {result && <p className="text-sm text-brand-accent">{result}</p>}
+            {result && <p className="text-sm text-brand-accentText">{result}</p>}
           </Card>
         </>
       )}

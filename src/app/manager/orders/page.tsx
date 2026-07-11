@@ -64,7 +64,7 @@ export default function ManagerOrders() {
         <div className="space-y-3">
           <Input placeholder={t("managerPin")} inputMode="numeric" maxLength={4} type="password" value={pin} onChange={(e) => setPin(e.target.value)} />
           <Input placeholder={t("reasonForVoid")} value={reason} onChange={(e) => setReason(e.target.value)} />
-          {err && <p className="text-sm text-status-red">{err}</p>}
+          {err && <p className="text-sm text-status-redText">{err}</p>}
           <div className="flex gap-2">
             <Button variant="ghost" className="flex-1" onClick={() => setVoidId(null)}>{t("cancel")}</Button>
             <Button variant="danger" className="flex-1" onClick={confirmVoid} disabled={!pin || !reason || busy}>{t("confirmVoid")}</Button>

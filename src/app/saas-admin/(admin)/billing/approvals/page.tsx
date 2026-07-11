@@ -49,7 +49,7 @@ export default function ApprovalsPage() {
               {Number(p.amount).toLocaleString()} ETB · {t("uploaded")} {new Date(p.createdAt).toLocaleString()}
             </div>
             {p.receiptUrl ? (
-              <a href={p.receiptUrl} target="_blank" className="text-sm text-brand-accent underline">
+              <a href={p.receiptUrl} target="_blank" className="text-sm text-brand-accentText underline">
                 {t("viewReceipt")}
               </a>
             ) : (

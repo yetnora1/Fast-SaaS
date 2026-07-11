@@ -86,10 +86,10 @@ const CAT_DICT_KEY: Record<string, string> = {
 };
 
 const COND_COLOR: Record<string, string> = {
-  NEW: "bg-status-green/15 text-status-green",
-  GOOD: "bg-status-green/15 text-status-green",
-  WORN: "bg-status-yellow/15 text-status-yellow",
-  NEEDS_REPAIR: "bg-status-red/15 text-status-red",
+  NEW: "bg-status-green/15 text-status-greenText",
+  GOOD: "bg-status-green/15 text-status-greenText",
+  WORN: "bg-status-yellow/15 text-status-yellowText",
+  NEEDS_REPAIR: "bg-status-red/15 text-status-redText",
   RETIRED: "bg-white/10 text-brand-muted",
 };
 
@@ -267,7 +267,7 @@ export function EquipmentRegistry() {
 
   const SortIcon = ({ col }: { col: SortKey }) =>
     sortKey === col ? (
-      <span className="ml-1 text-brand-accent">{sortDir === "asc" ? "↑" : "↓"}</span>
+      <span className="ml-1 text-brand-accentText">{sortDir === "asc" ? "↑" : "↓"}</span>
     ) : (
       <span className="ml-1 opacity-30">↕</span>
     );
@@ -402,7 +402,7 @@ export function EquipmentRegistry() {
                   <td className="px-4 py-3 font-medium text-brand-foreground">{item.name}</td>
                   <td className="px-4 py-3 text-brand-muted">{catLabel(item.category)}</td>
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-brand-accent/15 px-2 py-0.5 text-xs font-medium text-brand-accent">
+                    <span className="rounded-full bg-brand-accent/15 px-2 py-0.5 text-xs font-medium text-brand-accentText">
                       {deptLabel(item.department)}
                     </span>
                   </td>
@@ -419,7 +419,7 @@ export function EquipmentRegistry() {
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
                       <button
-                        className="rounded-lg px-2 py-1 text-xs text-brand-accent hover:bg-brand-accent/10 transition-colors"
+                        className="rounded-lg px-2 py-1 text-xs text-brand-accentText hover:bg-brand-accent/10 transition-colors"
                         onClick={() => {
                           setEditing(item);
                           setFormOpen(true);
@@ -428,7 +428,7 @@ export function EquipmentRegistry() {
                         ✏️
                       </button>
                       <button
-                        className="rounded-lg px-2 py-1 text-xs text-status-red hover:bg-status-red/10 transition-colors"
+                        className="rounded-lg px-2 py-1 text-xs text-status-redText hover:bg-status-red/10 transition-colors"
                         onClick={() => {
                           setDeleteTarget(item);
                           setDeleteOpen(true);

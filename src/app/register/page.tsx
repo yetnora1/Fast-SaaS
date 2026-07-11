@@ -43,7 +43,7 @@ export default function RegisterPage() {
           <Input placeholder={t("phone")} value={form.phone} onChange={set("phone")} />
           <Input placeholder={t("address")} value={form.address} onChange={set("address")} />
           <Input type="password" placeholder={t("passwordMin")} value={form.password} onChange={set("password")} required />
-          {error && <p className="text-sm text-status-red">{error}</p>}
+          {error && <p className="text-sm text-status-redText">{error}</p>}
           <Button type="submit" loading={busy} className="w-full">
             {busy ? t("creating") : t("createAccount")}
           </Button>

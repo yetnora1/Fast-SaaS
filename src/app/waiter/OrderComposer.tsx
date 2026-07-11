@@ -53,7 +53,7 @@ export function OrderComposer({ tableId, onSent }: { tableId?: string; onSent: (
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
         <div className="text-4xl">✓</div>
-        <div className="font-display text-lg font-bold text-status-green">{t("orderPlaced")}</div>
+        <div className="font-display text-lg font-bold text-status-greenText">{t("orderPlaced")}</div>
         <div className="text-sm text-brand-muted">{t("waiterConfirm")}</div>
       </div>
     );
@@ -95,7 +95,7 @@ export function OrderComposer({ tableId, onSent }: { tableId?: string; onSent: (
               <div key={i} className="border-t border-brand-border/60 pt-2 text-sm">
                 <div className="flex justify-between">
                   <span>{l.quantity}× {tr(l.name, l.nameAm)}</span>
-                  <button className="text-xs text-status-red hover:underline" onClick={() => setCart((c) => c.filter((_, idx) => idx !== i))}>{t("remove")}</button>
+                  <button className="text-xs text-status-redText hover:underline" onClick={() => setCart((c) => c.filter((_, idx) => idx !== i))}>{t("remove")}</button>
                 </div>
                 <Input className="mt-1 text-xs" placeholder={t("notes")} value={l.notes ?? ""} onChange={(e) => setNote(i, "notes", e.target.value)} />
                 <Input className="mt-1 text-xs" placeholder={t("allergyNote")} value={l.allergyNote ?? ""} onChange={(e) => setNote(i, "allergyNote", e.target.value)} />

@@ -69,9 +69,9 @@ export default function SaasDashboard() {
   const pct = (val: number) => Math.round((val / breakdownTotal) * 100);
 
   const statusColors: Record<string, string> = {
-    APPROVED: "bg-status-green/15 text-status-green",
-    PENDING: "bg-status-yellow/15 text-status-yellow",
-    REJECTED: "bg-status-red/15 text-status-red",
+    APPROVED: "bg-status-green/15 text-status-greenText",
+    PENDING: "bg-status-yellow/15 text-status-yellowText",
+    REJECTED: "bg-status-red/15 text-status-redText",
   };
 
   return (
@@ -157,7 +157,7 @@ export default function SaasDashboard() {
             {/* Active Tenants Progress */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-status-green">{t("activeLabel")}</span>
+                <span className="text-status-greenText">{t("activeLabel")}</span>
                 <span className="text-brand-foreground">{data.breakdown.active} ({pct(data.breakdown.active)}%)</span>
               </div>
               <div className="h-2 w-full rounded-full bg-brand-surface2 overflow-hidden">
@@ -171,7 +171,7 @@ export default function SaasDashboard() {
             {/* Trialing Tenants Progress */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-status-yellow">{t("trialingLabel")}</span>
+                <span className="text-status-yellowText">{t("trialingLabel")}</span>
                 <span className="text-brand-foreground">{data.breakdown.trialing} ({pct(data.breakdown.trialing)}%)</span>
               </div>
               <div className="h-2 w-full rounded-full bg-brand-surface2 overflow-hidden">
@@ -185,7 +185,7 @@ export default function SaasDashboard() {
             {/* Expired Tenants Progress */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-status-red">{t("expiredLabel")}</span>
+                <span className="text-status-redText">{t("expiredLabel")}</span>
                 <span className="text-brand-foreground">{data.breakdown.expired} ({pct(data.breakdown.expired)}%)</span>
               </div>
               <div className="h-2 w-full rounded-full bg-brand-surface2 overflow-hidden">

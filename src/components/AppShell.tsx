@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { api, usePoll } from "@/components/fetcher";
@@ -9,6 +9,14 @@ import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { BellIcon, GlobeIcon, LogOutIcon, SunIcon, MoonIcon } from "@/components/icons";
 import { CafeStatusFAB } from "@/components/CafeStatusFAB";
+
+// "#0d7d6c" -> "13 125 108", the triplet form Tailwind's
+// rgb(var(--x-rgb) / <alpha-value>) color tokens consume.
+function hexToRgbTriplet(hex: string): string {
+  const h = hex.replace("#", "");
+  return [0, 2, 4].map((i) => parseInt(h.substr(i, 2), 16)).join(" ");
+}
+
 export function AppShell({
   title,
   nav,
@@ -92,12 +100,15 @@ export function AppShell({
   let bg = isDark ? "#0b0f19" : "#FFFFFF";
   let surface = isDark ? "#161f30" : "#f8fafc";
   let surface2 = isDark ? "#222d41" : "#f1f5f9";
-  let header = "#3289F4"; // Permanent bright blue header
+  let header = "#2563EB"; // Permanent bright blue header (white text 5.17:1)
   let border = isDark ? "#2a384e" : "#cbd5e1";
   let muted = isDark ? "#ACBCBF" : "#64748b";
   let foreground = isDark ? "#FFFFFF" : "#0f172a";
-  let accent = "#05AD98";
-  let accentHover = "#048e7d";
+  let accent = "#0d7d6c";
+  let accentHover = "#0a6558";
+  // Accent-as-text needs a brighter hue on dark surfaces (the button accents
+  // above are tuned for white-on-accent and drop to ~3:1 as dark-mode text).
+  let accentTextDark = "#05AD98";
 
   if (pathname.includes("/dashboard")) {
     // Sapphire nightfall whisper
@@ -105,10 +116,11 @@ export function AppShell({
     surface = isDark ? "#0e1524" : "#f0f4f8";
     surface2 = isDark ? "#182235" : "#e1e9f0";
     border = isDark ? "#1a263c" : "#d0dfee";
-    muted = isDark ? "#5379AE" : "#475569";
+    muted = isDark ? "#7d9cc9" : "#475569";
     foreground = isDark ? "#FFFFFF" : "#0f172a";
     accent = "#0474c4";
     accentHover = "#035fa3";
+    accentTextDark = "#4A9FE8";
   } else if (pathname.includes("/menu")) {
     // Vichy
     bg = isDark ? "#0d1117" : "#FFFFFF";
@@ -117,8 +129,9 @@ export function AppShell({
     border = isDark ? "#30363d" : "#c7e2df";
     muted = isDark ? "#878787" : "#4b5563";
     foreground = isDark ? "#FFFFFF" : "#0d1117";
-    accent = "#05AD98";
-    accentHover = "#048e7d";
+    accent = "#0d7d6c";
+    accentHover = "#0a6558";
+    accentTextDark = "#05AD98";
   } else if (pathname.includes("/staff") || pathname.includes("/attendance")) {
     // Arctic reflection
     bg = isDark ? "#0b131a" : "#FFFFFF";
@@ -127,8 +140,9 @@ export function AppShell({
     border = isDark ? "#243c4c" : "#cbd5e1";
     muted = isDark ? "#acbcbf" : "#64748b";
     foreground = isDark ? "#FFFFFF" : "#0f172a";
-    accent = "#5289ad";
-    accentHover = "#3d6b8a";
+    accent = "#3f6f92";
+    accentHover = "#33597a";
+    accentTextDark = "#6FA0C0";
   } else if (pathname.includes("/payments") || pathname.includes("/reports") || pathname.includes("/branches")) {
     // Neptune
     bg = isDark ? "#0c1017" : "#FFFFFF";
@@ -137,8 +151,9 @@ export function AppShell({
     border = isDark ? "#2e3d52" : "#b5dffa";
     muted = isDark ? "#6d8bc0" : "#334155";
     foreground = isDark ? "#FFFFFF" : "#0c1017";
-    accent = "#4ab5b5";
-    accentHover = "#369494";
+    accent = "#267676";
+    accentHover = "#1f6060";
+    accentTextDark = "#4ab5b5";
   } else if (pathname.includes("/payroll")) {
     // Green (Emerald)
     bg = isDark ? "#060b07" : "#FFFFFF";
@@ -147,44 +162,82 @@ export function AppShell({
     border = isDark ? "#1b2e20" : "#bbf7d0";
     muted = isDark ? "#86a38b" : "#166534";
     foreground = isDark ? "#FFFFFF" : "#060b07";
-    accent = "#22C55E";
-    accentHover = "#16A34A";
+    accent = "#16803C";
+    accentHover = "#126632";
+    accentTextDark = "#22C55E";
   } else if (pathname.includes("/equipment")) {
     // Slate
     bg = isDark ? "#0c0e0b" : "#FFFFFF";
     surface = isDark ? "#141712" : "#f4f6f0";
     surface2 = isDark ? "#1f241d" : "#e7eae0";
     border = isDark ? "#2c3329" : "#d1d7c4";
-    muted = isDark ? "#71776d" : "#374151";
+    muted = isDark ? "#8a9186" : "#374151";
     foreground = isDark ? "#FFFFFF" : "#0c0e0b";
-    accent = "#4DBE55";
-    accentHover = "#3c9a43";
+    accent = "#2e7d36";
+    accentHover = "#266a2d";
+    accentTextDark = "#4DBE55";
   }
+  const accentText = isDark ? accentTextDark : accent;
 
-  const themeStyles = {
-    "--theme-bg": bg,
-    "--theme-surface": surface,
-    "--theme-surface2": surface2,
-    "--theme-header": header,
-    "--theme-border": border,
-    "--theme-muted": muted,
-    "--theme-foreground": foreground,
-    "--theme-accent": accent,
-    "--theme-accent-hover": accentHover,
-  } as React.CSSProperties;
+  // Chart series + status text colors: bright set on dark, darker set on light
+  // so lines/bars keep >=3:1 and status text >=4.5:1 against the page.
+  const chartColors = isDark
+    ? ["#22C55E", "#3B82F6", "#F59E0B", "#A855F7", "#14B8A6", "#EF4444"]
+    : ["#15803D", "#2563EB", "#B45309", "#7E22CE", "#0F766E", "#DC2626"];
+  const statusYellowText = isDark ? "#F59E0B" : "#B45309";
+  const statusRedText = isDark ? "#F87171" : "#B91C1C";
+  const statusBlueText = isDark ? "#60A5FA" : "#0474C4";
+  const statusGreenText = isDark ? "#05AD98" : "#0d7d6c";
+  const statusOccupiedText = isDark ? "#4AB5B5" : "#267676";
+
+  // Each brand color is exposed twice: plain hex (charts and other direct
+  // var() consumers) and an "R G B" triplet, which Tailwind's
+  // rgb(var(--x-rgb) / <alpha-value>) tokens need for opacity modifiers
+  // like bg-brand-accent/15 to work.
+  const themeVars = useMemo(() => {
+    const vars: Record<string, string> = {
+      "--theme-bg": bg,
+      "--theme-surface": surface,
+      "--theme-surface2": surface2,
+      "--theme-header": header,
+      "--theme-border": border,
+      "--theme-muted": muted,
+      "--theme-foreground": foreground,
+      "--theme-accent": accent,
+      "--theme-accent-hover": accentHover,
+      "--theme-accent-text": accentText,
+      "--chart-1": chartColors[0],
+      "--chart-2": chartColors[1],
+      "--chart-3": chartColors[2],
+      "--chart-4": chartColors[3],
+      "--chart-5": chartColors[4],
+      "--chart-6": chartColors[5],
+      "--status-yellow-text": statusYellowText,
+      "--status-red-text": statusRedText,
+      "--status-blue-text": statusBlueText,
+      "--status-green-text": statusGreenText,
+      "--status-occupied-text": statusOccupiedText,
+    };
+    for (const name of [
+      "bg", "surface", "surface2", "header", "border", "muted", "foreground", "accent", "accent-hover", "accent-text",
+    ]) {
+      vars[`--theme-${name}-rgb`] = hexToRgbTriplet(vars[`--theme-${name}`]);
+    }
+    for (const name of ["yellow", "red", "blue", "green", "occupied"]) {
+      vars[`--status-${name}-text-rgb`] = hexToRgbTriplet(vars[`--status-${name}-text`]);
+    }
+    return vars;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bg, surface, surface2, header, border, muted, foreground, accent, accentHover, accentText, isDark]);
+
+  const themeStyles = themeVars as React.CSSProperties;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const root = document.documentElement;
-      root.style.setProperty("--theme-bg", bg);
-      root.style.setProperty("--theme-surface", surface);
-      root.style.setProperty("--theme-surface2", surface2);
-      root.style.setProperty("--theme-header", header);
-      root.style.setProperty("--theme-border", border);
-      root.style.setProperty("--theme-muted", muted);
-      root.style.setProperty("--theme-foreground", foreground);
-      root.style.setProperty("--theme-accent", accent);
-      root.style.setProperty("--theme-accent-hover", accentHover);
+      for (const [name, value] of Object.entries(themeVars)) {
+        root.style.setProperty(name, value);
+      }
 
       if (themeMode === "dark") {
         root.style.colorScheme = "dark";
@@ -194,11 +247,11 @@ export function AppShell({
         root.classList.remove("dark");
       }
     }
-  }, [pathname, themeMode, bg, surface, surface2, header, border, muted, foreground, accent, accentHover]);
+  }, [themeVars, themeMode]);
 
   return (
     <div className="min-h-dvh" style={themeStyles}>
-      <header className="sticky top-0 z-nav border-b border-[#2875d1] bg-[#3289F4] relative w-full">
+      <header className="sticky top-0 z-nav border-b border-[#1D4ED8] bg-[#2563EB] relative w-full">
         {/* Row 1: Identity & Brand & Actions */}
         <div className="flex items-center justify-between px-6 py-3.5 relative">
           {/* Left Side: Profile & Welcome */}
@@ -216,7 +269,7 @@ export function AppShell({
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-[#3289F4] shadow-sm" />
+                <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-[#2563EB] shadow-sm" />
               </Link>
             )}
 
@@ -264,7 +317,7 @@ export function AppShell({
               >
                 <BellIcon className="h-5 w-5" />
                 {data?.unread ? (
-                  <span className="tabular absolute -right-1 -top-1 min-w-[18px] rounded-full bg-white px-1 text-center text-[11px] font-bold leading-[18px] text-[#3289F4]">
+                  <span className="tabular absolute -right-1 -top-1 min-w-[18px] rounded-full bg-white px-1 text-center text-[11px] font-bold leading-[18px] text-[#2563EB]">
                     {data.unread > 99 ? "99+" : data.unread}
                   </span>
                 ) : null}
@@ -307,8 +360,8 @@ export function AppShell({
                 className={cn(
                   "rounded-xl px-3.5 py-1.5 font-bold transition-all active:scale-95 whitespace-nowrap text-xs uppercase tracking-wider",
                   isActive(n.href)
-                    ? "bg-white text-[#3289F4] shadow-sm"
-                    : "text-white/80 hover:bg-white/15 hover:text-white",
+                    ? "bg-white text-[#2563EB] shadow-sm"
+                    : "text-white/95 hover:bg-white/15 hover:text-white",
                 )}
               >
                 {navLabel(n.label)}
@@ -341,7 +394,7 @@ export function AppShell({
                   className={cn(
                     "touch-target flex items-center rounded-xl px-4 py-3 font-medium transition-colors text-sm",
                     isActive(n.href)
-                      ? "bg-brand-accent/15 text-brand-accent"
+                      ? "bg-brand-accent/15 text-brand-accentText"
                       : "text-brand-muted hover:bg-white/5 hover:text-brand-foreground",
                   )}
                 >
@@ -362,7 +415,7 @@ export function AppShell({
                   <SunIcon className="h-4 w-4 text-amber-400" />
                 )}
                 <span>{themeMode === "light" ? "Dark Mode" : "Light Mode"}</span>
-                <span className="ml-auto font-bold text-brand-accent">
+                <span className="ml-auto font-bold text-brand-accentText">
                   {themeMode === "light" ? "Dark" : "Light"}
                 </span>
               </button>
@@ -373,7 +426,7 @@ export function AppShell({
               >
                 <GlobeIcon className="h-4 w-4 text-brand-muted" />
                 <span>Language / ቋንቋ</span>
-                <span className="ml-auto font-bold text-brand-accent">{lang === "en" ? "አማ" : "EN"}</span>
+                <span className="ml-auto font-bold text-brand-accentText">{lang === "en" ? "አማ" : "EN"}</span>
               </button>
 
               <Link
@@ -395,8 +448,8 @@ export function AppShell({
                 onClick={logout}
                 className="touch-target flex w-full items-center gap-3 rounded-xl bg-brand-surface2 px-4 py-3 text-sm font-medium text-brand-foreground transition-colors hover:bg-white/10"
               >
-                <LogOutIcon className="h-4 w-4 text-status-red" />
-                <span className="text-status-red">{t("logout")}</span>
+                <LogOutIcon className="h-4 w-4 text-status-redText" />
+                <span className="text-status-redText">{t("logout")}</span>
               </button>
             </div>
           </div>

@@ -31,7 +31,7 @@ export default function ConfigPage() {
           </Field>
         ))}
         <Button onClick={save}>{t("saveConfig")}</Button>
-        {msg && <p className="text-sm text-brand-accent">{msg}</p>}
+        {msg && <p className="text-sm text-brand-accentText">{msg}</p>}
       </Card>
     </div>
   );

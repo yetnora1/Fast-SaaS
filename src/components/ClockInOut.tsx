@@ -76,11 +76,11 @@ export function ClockInOut({ compact = false }: { compact?: boolean }) {
       className={cn(
         "inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100",
         compact
-          ? "w-full justify-center py-3 bg-status-green/15 text-status-green hover:bg-status-green/25"
+          ? "w-full justify-center py-3 bg-status-green/15 text-status-greenText hover:bg-status-green/25"
           : open
-            ? "bg-red-500 text-white hover:bg-red-600 shadow-sm"
-            : "bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm",
-        compact && open && "bg-status-red/15 text-status-red hover:bg-status-red/25"
+            ? "bg-status-redSolid text-white hover:bg-red-700 shadow-sm"
+            : "bg-status-greenSolid text-white hover:bg-green-800 shadow-sm",
+        compact && open && "bg-status-red/15 text-status-redText hover:bg-status-red/25"
       )}
       title={open ? t("clockOut") : t("clockIn")}
     >

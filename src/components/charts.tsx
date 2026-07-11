@@ -1,9 +1,18 @@
 "use client";
-// Shared chart theming for Recharts — dark on-brand tooltip + palette.
+// Shared chart theming for Recharts — on-brand tooltip + palette.
+// Colors are CSS variables set per light/dark theme by AppShell, so series
+// stay >=3:1 against the page and gridlines stay subtle in both modes.
 
-export const CHART_COLORS = ["#22C55E", "#3B82F6", "#F59E0B", "#A855F7", "#14B8A6", "#EF4444"];
-export const CHART_GRID = "#22304A";
-export const CHART_AXIS = "#64748B";
+export const CHART_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+];
+export const CHART_GRID = "var(--theme-border)";
+export const CHART_AXIS = "var(--theme-muted)";
 
 /** Dark, on-brand tooltip for all charts (skill: tooltips show exact values). */
 export function ChartTooltip({ active, payload, label, suffix }: any) {

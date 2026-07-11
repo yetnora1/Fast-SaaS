@@ -188,7 +188,7 @@ export function MenuManager() {
               <Input placeholder="Group" value={m.groupName} onChange={(e) => setMods((ms) => ms.map((x, idx) => idx === i ? { ...x, groupName: e.target.value } : x))} />
               <Input placeholder="Option" value={m.option} onChange={(e) => setMods((ms) => ms.map((x, idx) => idx === i ? { ...x, option: e.target.value } : x))} />
               <Input placeholder="+ETB" type="number" value={m.extraPrice} onChange={(e) => setMods((ms) => ms.map((x, idx) => idx === i ? { ...x, extraPrice: e.target.value } : x))} />
-              <button onClick={() => setMods((ms) => ms.filter((_, idx) => idx !== i))} className="rounded-lg bg-brand-surface2 text-status-red hover:bg-white/10">✕</button>
+              <button onClick={() => setMods((ms) => ms.filter((_, idx) => idx !== i))} className="rounded-lg bg-brand-surface2 text-status-redText hover:bg-white/10">✕</button>
             </div>
           ))}
           <Button variant="ghost" size="sm" onClick={() => setMods((ms) => [...ms, { groupName: "", option: "", extraPrice: 0 }])}>+ Add option</Button>
@@ -203,7 +203,7 @@ export function MenuManager() {
           <div className="mb-2 flex items-center justify-between">
             <span className="font-medium">{tr(c.name, c.nameAm)}</span>
             {c.items.length === 0 && (
-              <button onClick={() => deleteCategory(c.id)} className="text-xs text-status-red hover:underline">Delete category</button>
+              <button onClick={() => deleteCategory(c.id)} className="text-xs text-status-redText hover:underline">Delete category</button>
             )}
           </div>
           <div className="space-y-1 text-sm">
@@ -248,7 +248,7 @@ export function MenuManager() {
                     <span className="flex shrink-0 items-center gap-1">
                       <Button variant="ghost" size="sm" onClick={() => startEdit(it)}>Edit</Button>
                       <Button variant="ghost" size="sm" onClick={() => toggle(it.id)}>{it.available ? t("markUnavailable") : t("markAvailable")}</Button>
-                      <Button variant="ghost" size="sm" onClick={() => deleteItem(it.id)} className="text-status-red">🗑</Button>
+                      <Button variant="ghost" size="sm" onClick={() => deleteItem(it.id)} className="text-status-redText">🗑</Button>
                     </span>
                   </div>
                 )}

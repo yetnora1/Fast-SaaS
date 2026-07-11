@@ -19,9 +19,9 @@ export default function StandaloneStatusPage() {
     : 0;
 
   const healthColor =
-    healthScore >= 80 ? "text-status-green" :
-    healthScore >= 50 ? "text-status-yellow" :
-    "text-status-red";
+    healthScore >= 80 ? "text-status-greenText" :
+    healthScore >= 50 ? "text-status-yellowText" :
+    "text-status-redText";
 
   const healthLabel =
     healthScore >= 80 ? (lang === "am" ? "ጥሩ" : "Excellent") :

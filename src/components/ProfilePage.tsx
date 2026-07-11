@@ -113,7 +113,7 @@ export function ProfilePage() {
 
   if (error && !profile) {
     return (
-      <Card className="mx-auto max-w-lg border-status-red/40 bg-status-red/5 p-6 text-center text-status-red">
+      <Card className="mx-auto max-w-lg border-status-red/40 bg-status-red/5 p-6 text-center text-status-redText">
         <p className="font-semibold">Error Loading Profile</p>
         <p className="mt-1 text-sm opacity-90">{error}</p>
       </Card>
@@ -147,7 +147,7 @@ export function ProfilePage() {
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border text-2xl font-bold tracking-wider text-brand-accent">
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border text-2xl font-bold tracking-wider text-brand-accentText">
                     {initials}
                   </div>
                 )}
@@ -193,12 +193,12 @@ export function ProfilePage() {
         <Card className="md:col-span-2 p-6">
           <form onSubmit={handleSave} className="space-y-4">
             {successMsg && (
-              <div className="animate-fade rounded-xl border border-status-green/30 bg-status-green/10 p-3 text-sm text-status-green font-medium">
+              <div className="animate-fade rounded-xl border border-status-green/30 bg-status-green/10 p-3 text-sm text-status-greenText font-medium">
                 {successMsg}
               </div>
             )}
             {error && (
-              <div className="animate-fade rounded-xl border border-status-red/30 bg-status-red/10 p-3 text-sm text-status-red font-medium">
+              <div className="animate-fade rounded-xl border border-status-red/30 bg-status-red/10 p-3 text-sm text-status-redText font-medium">
                 {error}
               </div>
             )}
@@ -317,8 +317,8 @@ function PasswordCard() {
         {msg && (
           <div className={`animate-fade rounded-xl border p-3 text-xs font-medium ${
             msg.type === "success" 
-              ? "border-status-green/30 bg-status-green/10 text-status-green" 
-              : "border-status-red/30 bg-status-red/10 text-status-red"
+              ? "border-status-green/30 bg-status-green/10 text-status-greenText" 
+              : "border-status-red/30 bg-status-red/10 text-status-redText"
           }`}>
             {msg.text}
           </div>

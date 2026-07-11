@@ -49,7 +49,7 @@ export default function ManagerDashboard() {
 
       {alerts.data && alerts.data.alerts.length > 0 && (
         <Card className="border-status-red/40 bg-status-red/10">
-          <div className="mb-2 flex items-center gap-2 font-medium text-status-red">
+          <div className="mb-2 flex items-center gap-2 font-medium text-status-redText">
             <AlertTriangleIcon className="h-5 w-5" />
             {t("inventoryAlerts")}
           </div>

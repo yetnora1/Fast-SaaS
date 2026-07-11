@@ -53,7 +53,7 @@ export default function Home() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 relative z-10">
         <Link href="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight text-slate-900">
           <img src="/LOGO.jpg" alt="Logo" className="h-6 w-6 rounded-lg object-cover border border-slate-200 shadow-sm" />
-          <span>Cafe<span className="text-brand-accent">Flow</span></span>
+          <span>Cafe<span className="text-brand-accentText">Flow</span></span>
         </Link>
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/login" className="rounded-lg px-3 py-2 text-slate-600 font-semibold transition-colors hover:text-slate-900">
@@ -74,7 +74,7 @@ export default function Home() {
           Built for Ethiopian cafés · English + አማርኛ
         </p>
         <h1 className="mx-auto max-w-3xl font-display text-4xl font-bold leading-tight tracking-tight text-slate-900 sm:text-6xl">
-          Run your whole café from <span className="text-brand-accent">one system</span>
+          Run your whole café from <span className="text-brand-accentText">one system</span>
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-slate-600 sm:text-lg">
           QR self-ordering, kitchen displays, cashier, inventory, and owner reports — multi-branch, multi-role, in English and Amharic.
@@ -93,7 +93,7 @@ export default function Home() {
             Staff / Owner login
           </Link>
         </div>
-        <p className="mt-3 text-xs text-slate-500">No credit card required · Cancel anytime during the trial</p>
+        <p className="mt-3 text-xs text-slate-600">No credit card required · Cancel anytime during the trial</p>
       </section>
 
       {/* Features */}
@@ -150,9 +150,9 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-8 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 py-8 text-center text-xs text-slate-600">
         <p>
-          Cafe<span className="text-brand-accent">Flow</span> — café management for Ethiopia · ለኢትዮጵያ ካፌዎች የተሰራ
+          Cafe<span className="text-brand-accentText">Flow</span> — café management for Ethiopia · ለኢትዮጵያ ካፌዎች የተሰራ
         </p>
       </footer>
     </main>

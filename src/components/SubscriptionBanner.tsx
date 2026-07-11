@@ -7,7 +7,7 @@ export function SubscriptionBanner({ status }: { status: SubscriptionStatus }) {
   const base = "flex items-center gap-2 px-4 py-2 text-sm font-medium";
   if (status.state === "WARNING") {
     return (
-      <div className={`${base} bg-status-yellow/15 text-status-yellow`}>
+      <div className={`${base} bg-status-yellow/15 text-status-yellowText`}>
         <AlertTriangleIcon className="h-4 w-4" />
         <span>Subscription expires in {status.subDaysLeft} days. Renew to avoid lockout.</span>
         <PayNowButton className="bg-status-yellow text-black hover:opacity-90" />
@@ -16,17 +16,17 @@ export function SubscriptionBanner({ status }: { status: SubscriptionStatus }) {
   }
   if (status.state === "GRACE") {
     return (
-      <div className={`${base} bg-status-red/15 text-status-red`}>
+      <div className={`${base} bg-status-red/15 text-status-redText`}>
         <AlertTriangleIcon className="h-4 w-4" />
         <span>Subscription expired — service suspended in {status.graceDaysLeft} days. (View-only access)</span>
-        <PayNowButton className="bg-status-red text-white hover:opacity-90" />
+        <PayNowButton className="bg-status-redSolid text-white hover:opacity-90" />
       </div>
     );
   }
   if (status.state === "TRIAL") {
     const remainingText = status.trialTimeLeftText || `${status.trialDaysLeft} days`;
     return (
-      <div className={`${base} bg-brand-accent/15 text-brand-accent`}>
+      <div className={`${base} bg-brand-accent/15 text-brand-accentText`}>
         <ClockIcon className="h-4 w-4" />
         <span>Trial: {remainingText} remaining.</span>
         <PayNowButton className="bg-brand-accent text-brand-accentFg hover:opacity-90" />
@@ -35,7 +35,7 @@ export function SubscriptionBanner({ status }: { status: SubscriptionStatus }) {
   }
   if (status.state === "PENDING") {
     return (
-      <div className={`${base} bg-status-blue/15 text-status-blue`}>
+      <div className={`${base} bg-status-blue/15 text-status-blueText`}>
         <ClockIcon className="h-4 w-4" />
         Receipt under review — read-only access until approved.
       </div>

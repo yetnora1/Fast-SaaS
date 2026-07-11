@@ -45,14 +45,14 @@ export function GoodsReceiving({ station }: { station: "KITCHEN" | "BARISTA" }) 
     <div className="space-y-5">
       <PageHeader title={t("receivingTitle")} subtitle={t("receivingSubtitle")} />
 
-      {err && <p className="text-sm text-status-red">{err}</p>}
+      {err && <p className="text-sm text-status-redText">{err}</p>}
 
       <Card>
         <div className="mb-3 flex items-center gap-2 font-medium">
-          <PackageIcon className="h-5 w-5 text-status-yellow" />
+          <PackageIcon className="h-5 w-5 text-status-yellowText" />
           {t("pendingDeliveries")}
           {pending.length > 0 && (
-            <span className="tabular rounded-full bg-status-yellow/20 px-2 py-0.5 text-xs font-bold text-status-yellow">{pending.length}</span>
+            <span className="tabular rounded-full bg-status-yellow/20 px-2 py-0.5 text-xs font-bold text-status-yellowText">{pending.length}</span>
           )}
         </div>
         {pending.length === 0 ? (
@@ -63,7 +63,7 @@ export function GoodsReceiving({ station }: { station: "KITCHEN" | "BARISTA" }) 
               <div key={i.id} className="flex flex-col gap-2 rounded-xl border border-status-yellow/40 bg-status-yellow/[0.06] p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="font-semibold">{i.itemName}</div>
-                  <div className="tabular shrink-0 rounded-lg bg-brand-surface2 px-2 py-0.5 text-sm font-bold text-brand-accent">
+                  <div className="tabular shrink-0 rounded-lg bg-brand-surface2 px-2 py-0.5 text-sm font-bold text-brand-accentText">
                     {i.quantity} {i.unit}
                   </div>
                 </div>

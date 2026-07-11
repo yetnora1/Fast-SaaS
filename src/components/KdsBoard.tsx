@@ -51,7 +51,7 @@ export function KdsBoard({ endpoint, station }: { endpoint: string; station: "BA
                   </div>
 
                   {allergy && !o.allergyAck && (
-                    <div className="animate-fade rounded-lg bg-status-red p-2 text-sm font-bold text-white">
+                    <div className="animate-fade rounded-lg bg-status-redSolid p-2 text-sm font-bold text-white">
                       <span className="flex items-center gap-1.5">
                         <AlertTriangleIcon className="h-4 w-4" /> {t("allergy")}: {o.items.filter((i) => i.allergyNote).map((i) => i.allergyNote).join("; ")}
                       </span>
@@ -64,7 +64,7 @@ export function KdsBoard({ endpoint, station }: { endpoint: string; station: "BA
                       <li key={it.id} className="flex justify-between items-center border-t border-brand-border/60 pt-1">
                         <span>
                           {it.quantity}× {tr(it.menuItem.name, it.menuItem.nameAm)}
-                          {it.notes && <span className="flex items-center gap-1 text-xs text-status-yellow"><NoteIcon className="h-3.5 w-3.5" /> {it.notes}</span>}
+                          {it.notes && <span className="flex items-center gap-1 text-xs text-status-yellowText"><NoteIcon className="h-3.5 w-3.5" /> {it.notes}</span>}
                         </span>
                         <span className="flex gap-1">
                           {it.status === "NEW" || it.status === "ACCEPTED" ? (
@@ -76,13 +76,13 @@ export function KdsBoard({ endpoint, station }: { endpoint: string; station: "BA
                           {["PREPARING", "PLATING"].includes(it.status) && (
                             <Button variant="ghost" onClick={() => itemAction(it.id, "ready")}>{t("ready")}</Button>
                           )}
-                          {it.status === "READY" && <CheckCircleIcon className="h-5 w-5 text-status-green" />}
+                          {it.status === "READY" && <CheckCircleIcon className="h-5 w-5 text-status-greenText" />}
                         </span>
                       </li>
                     ))}
                   </ul>
 
-                  {o.heldForBar && <div className="flex items-center gap-1.5 text-sm text-status-yellow"><PauseIcon className="h-4 w-4" /> {t("holdForBar")}</div>}
+                  {o.heldForBar && <div className="flex items-center gap-1.5 text-sm text-status-yellowText"><PauseIcon className="h-4 w-4" /> {t("holdForBar")}</div>}
 
                   <div className="flex gap-2">
                     {station === "KITCHEN" && <Button variant="ghost" className="flex-1" onClick={() => orderAction(o.id, "accept")}>{t("accept")}</Button>}

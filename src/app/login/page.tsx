@@ -45,7 +45,7 @@ function LoginForm() {
     <main className="flex min-h-dvh items-center justify-center p-6">
       <Card className="w-full max-w-sm">
         <h1 className="mb-1 font-display text-2xl font-bold">
-          Cafe<span className="text-brand-accent">Flow</span>
+          Cafe<span className="text-brand-accentText">Flow</span>
         </h1>
         <p className="mb-4 text-xs text-brand-muted">{pinMode ? t("posPinLogin") : t("emailPassword")}</p>
         <form onSubmit={submit} className="space-y-3">
@@ -60,12 +60,12 @@ function LoginForm() {
               <Input type="password" placeholder={t("password")} value={password} onChange={(e) => setPassword(e.target.value)} required />
             </>
           )}
-          {error && <p className="text-sm text-status-red">{error}</p>}
+          {error && <p className="text-sm text-status-redText">{error}</p>}
           <Button type="submit" loading={busy} className="w-full">
             {busy ? t("signingIn") : t("signIn")}
           </Button>
         </form>
-        <button onClick={() => setPinMode(!pinMode)} className="mt-3 text-xs font-medium text-brand-accent hover:underline">
+        <button onClick={() => setPinMode(!pinMode)} className="mt-3 text-xs font-medium text-brand-accentText hover:underline">
           {pinMode ? t("useEmailPassword") : t("usePosPin")}
         </button>
       </Card>

@@ -140,7 +140,7 @@ export function AttendanceReport() {
                   <div className="mt-0.5"><RoleBadge role={s.role} /></div>
                 </div>
                 <div className="text-right">
-                  <div className="tabular text-lg font-bold text-brand-accent">{s.totalHours} h</div>
+                  <div className="tabular text-lg font-bold text-brand-accentText">{s.totalHours} h</div>
                   <div className="text-xs text-brand-muted">{s.daysPresent} {t("daysWord")}</div>
                 </div>
               </button>
@@ -181,7 +181,7 @@ export function AttendanceReport() {
                       {r.clockOut ? (
                         new Date(r.clockOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-status-green/15 px-2 py-0.5 text-xs font-medium text-status-green">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-status-green/15 px-2 py-0.5 text-xs font-medium text-status-greenText">
                           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
                           {t("onDutyChip")}
                         </span>

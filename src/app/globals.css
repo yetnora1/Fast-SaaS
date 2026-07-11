@@ -105,7 +105,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: theme("colors.brand.surface2") transparent;
+  scrollbar-color: rgb(var(--theme-surface2-rgb, 34 45 65)) transparent;
 }
 
 ::-webkit-scrollbar {

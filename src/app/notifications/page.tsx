@@ -22,7 +22,7 @@ export default function NotificationsPage() {
     <main className="mx-auto min-h-dvh max-w-2xl space-y-3 p-4 sm:p-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold tracking-tight">{t("notifications")}</h1>
-        <button onClick={() => router.back()} className="text-sm font-medium text-brand-accent hover:underline">{t("back")}</button>
+        <button onClick={() => router.back()} className="text-sm font-medium text-brand-accentText hover:underline">{t("back")}</button>
       </div>
       {data?.notifications.length === 0 && <EmptyState icon={<BellIcon className="h-7 w-7" />}>{t("noNotifications")}</EmptyState>}
       {data?.notifications.map((n) => (

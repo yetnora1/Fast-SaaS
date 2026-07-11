@@ -46,8 +46,8 @@ function formatETB(n: number) {
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     DRAFT: "bg-brand-surface2 text-brand-muted",
-    PROCESSED: "bg-status-yellow/15 text-status-yellow",
-    APPROVED: "bg-status-green/15 text-status-green",
+    PROCESSED: "bg-status-yellow/15 text-status-yellowText",
+    APPROVED: "bg-status-green/15 text-status-greenText",
   };
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${styles[status] || styles.DRAFT}`}>
@@ -208,8 +208,8 @@ function OverviewTab() {
           {approveMsg && (
             <div className={`rounded-xl border p-3 text-sm ${
               approveMsg.ok
-                ? "border-status-green/30 bg-status-green/10 text-status-green"
-                : "border-status-red/30 bg-status-red/10 text-status-red"
+                ? "border-status-green/30 bg-status-green/10 text-status-greenText"
+                : "border-status-red/30 bg-status-red/10 text-status-redText"
             }`}>
               {approveMsg.text}
             </div>
@@ -245,12 +245,12 @@ function OverviewTab() {
                       </td>
                       <td className="py-3 pr-3"><RoleBadge role={r.userRole} /></td>
                       <td className="py-3 pr-3 text-right tabular text-brand-foreground">{formatETB(r.grossSalary)}</td>
-                      <td className="py-3 pr-3 text-right tabular text-status-green">{r.workedDays}/{r.totalDays}</td>
-                      <td className="py-3 pr-3 text-right tabular text-status-red">{r.absentDays}</td>
+                      <td className="py-3 pr-3 text-right tabular text-status-greenText">{r.workedDays}/{r.totalDays}</td>
+                      <td className="py-3 pr-3 text-right tabular text-status-redText">{r.absentDays}</td>
                       <td className="py-3 pr-3 text-right tabular text-brand-foreground">{formatETB(r.earnedSalary)}</td>
                       <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(r.pension)}</td>
                       <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(r.incomeTax)}</td>
-                      <td className="py-3 pr-3 text-right tabular font-bold text-brand-accent">{formatETB(r.netSalary)}</td>
+                      <td className="py-3 pr-3 text-right tabular font-bold text-brand-accentText">{formatETB(r.netSalary)}</td>
                       <td className="py-3 text-center"><StatusBadge status={r.status} /></td>
                     </tr>
                   ))}
@@ -264,7 +264,7 @@ function OverviewTab() {
                     <td className="py-3 pr-3 text-right tabular">{formatETB(totals.earned)}</td>
                     <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(totals.pension)}</td>
                     <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(totals.tax)}</td>
-                    <td className="py-3 pr-3 text-right tabular font-bold text-brand-accent">{formatETB(totals.net)}</td>
+                    <td className="py-3 pr-3 text-right tabular font-bold text-brand-accentText">{formatETB(totals.net)}</td>
                     <td />
                   </tr>
                 </tfoot>

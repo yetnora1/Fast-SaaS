@@ -209,7 +209,7 @@ export default function StaffPage() {
               </Button>
             </div>
             {inviteMsg && (
-              <p className="break-all rounded-xl border border-brand-accent/20 bg-brand-accent/5 p-3 text-xs text-brand-accent">
+              <p className="break-all rounded-xl border border-brand-accent/20 bg-brand-accent/5 p-3 text-xs text-brand-accentText">
                 {inviteMsg}
               </p>
             )}
@@ -276,8 +276,8 @@ export default function StaffPage() {
             {newStaffMsg && (
               <p className={`break-all rounded-xl border p-3 text-xs ${
                 newStaffMsg.includes("successfully") 
-                  ? "border-status-green/30 bg-status-green/10 text-status-green"
-                  : "border-status-red/30 bg-status-red/10 text-status-red"
+                  ? "border-status-green/30 bg-status-green/10 text-status-greenText"
+                  : "border-status-red/30 bg-status-red/10 text-status-redText"
               }`}>
                 {newStaffMsg}
               </p>
@@ -349,7 +349,7 @@ export default function StaffPage() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={s.avatarUrl} alt={s.name} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border font-bold text-brand-accent">
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border font-bold text-brand-accentText">
                             {initials}
                           </div>
                         )}
@@ -362,7 +362,7 @@ export default function StaffPage() {
                         <div className="flex flex-wrap gap-1.5 pt-1">
                           <RoleBadge role={s.role} />
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                            s.active ? "bg-status-green/10 text-status-green" : "bg-status-red/10 text-status-red"
+                            s.active ? "bg-status-green/10 text-status-greenText" : "bg-status-red/10 text-status-redText"
                           }`}>
                             {s.active ? t("active") : t("inactive")}
                           </span>
@@ -409,7 +409,7 @@ export default function StaffPage() {
       {/* MODAL 1: Edit Role / Branch / Status */}
       <Modal open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Staff Member">
         <form onSubmit={handleUpdateStaff} className="space-y-4 pt-2">
-          {editError && <div className="text-xs text-status-red bg-status-red/10 p-2.5 rounded-xl">{editError}</div>}
+          {editError && <div className="text-xs text-status-redText bg-status-red/10 p-2.5 rounded-xl">{editError}</div>}
 
           <Field label={t("role")}>
             <Select value={editRole} onChange={(e) => setEditRole(e.target.value as Role)}>
@@ -477,7 +477,7 @@ export default function StaffPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={selectedStaff.avatarUrl} alt={selectedStaff.name} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border text-lg font-bold text-brand-accent">
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border text-lg font-bold text-brand-accentText">
                     {selectedStaff.name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2)}
                   </div>
                 )}
@@ -505,7 +505,7 @@ export default function StaffPage() {
               </div>
               <div className="py-2 flex justify-between">
                 <span className="text-brand-muted">Monthly Salary (ETB)</span>
-                <span className="text-brand-foreground font-medium font-semibold text-brand-accent">
+                <span className="text-brand-foreground font-medium font-semibold text-brand-accentText">
                   {selectedStaff.grossSalary != null ? selectedStaff.grossSalary.toLocaleString("en-ET", { minimumFractionDigits: 2 }) : "—"}
                 </span>
               </div>

@@ -59,7 +59,7 @@ function StatRow({ label, value, color }: { label: string; value: string; color?
 }
 
 export function CafeStatusContent({ d, lang }: { d: StatusData; lang: string }) {
-  const growthColor = d.month.growth >= 0 ? "text-status-green" : "text-status-red";
+  const growthColor = d.month.growth >= 0 ? "text-status-greenText" : "text-status-redText";
   const growthIcon = d.month.growth >= 0 ? "↑" : "↓";
 
   return (
@@ -71,20 +71,20 @@ export function CafeStatusContent({ d, lang }: { d: StatusData; lang: string }) 
           <KPICard label={lang === "am" ? "ትርፍ" : "Profit"} value={fmtETB(d.today.profit)} icon={<TrendUpIcon className="h-4 w-4" />} tone={d.today.profit >= 0 ? "green" : "red"} />
         </div>
         <Card className="divide-y divide-brand-border/30">
-          <StatRow label={lang === "am" ? "ጠቅላላ ወጪ" : "Cost of Goods"} value={fmtETB(d.today.cost)} color="text-status-yellow" />
-          <StatRow label={lang === "am" ? "ትርፍ %" : "Profit Margin"} value={`${d.today.margin}%`} color={d.today.margin >= 30 ? "text-status-green" : "text-status-yellow"} />
+          <StatRow label={lang === "am" ? "ጠቅላላ ወጪ" : "Cost of Goods"} value={fmtETB(d.today.cost)} color="text-status-yellowText" />
+          <StatRow label={lang === "am" ? "ትርፍ %" : "Profit Margin"} value={`${d.today.margin}%`} color={d.today.margin >= 30 ? "text-status-greenText" : "text-status-yellowText"} />
           <StatRow label={lang === "am" ? "ጠቅላላ ትዕዛዞች" : "Total Orders"} value={String(d.today.orders)} />
-          <StatRow label={lang === "am" ? "የተጠናቀቁ" : "Completed"} value={String(d.today.completed)} color="text-status-green" />
-          <StatRow label={lang === "am" ? "በመጠበቅ" : "Pending"} value={String(d.today.pending)} color={d.today.pending > 0 ? "text-status-yellow" : "text-brand-muted"} />
+          <StatRow label={lang === "am" ? "የተጠናቀቁ" : "Completed"} value={String(d.today.completed)} color="text-status-greenText" />
+          <StatRow label={lang === "am" ? "በመጠበቅ" : "Pending"} value={String(d.today.pending)} color={d.today.pending > 0 ? "text-status-yellowText" : "text-brand-muted"} />
         </Card>
       </Section>
 
       {/* Monthly Performance */}
       <Section title={lang === "am" ? "📅 የወሩ አፈጻጸም" : "📅 This Month"}>
         <Card className="divide-y divide-brand-border/30">
-          <StatRow label={lang === "am" ? "ገቢ" : "Revenue"} value={fmtETB(d.month.revenue)} color="text-status-green" />
-          <StatRow label={lang === "am" ? "ወጪ" : "Cost of Goods"} value={fmtETB(d.month.cost)} color="text-status-yellow" />
-          <StatRow label={lang === "am" ? "ትርፍ" : "Net Profit"} value={fmtETB(d.month.profit)} color={d.month.profit >= 0 ? "text-status-green" : "text-status-red"} />
+          <StatRow label={lang === "am" ? "ገቢ" : "Revenue"} value={fmtETB(d.month.revenue)} color="text-status-greenText" />
+          <StatRow label={lang === "am" ? "ወጪ" : "Cost of Goods"} value={fmtETB(d.month.cost)} color="text-status-yellowText" />
+          <StatRow label={lang === "am" ? "ትርፍ" : "Net Profit"} value={fmtETB(d.month.profit)} color={d.month.profit >= 0 ? "text-status-greenText" : "text-status-redText"} />
           <StatRow label={lang === "am" ? "ትርፍ %" : "Margin"} value={`${d.month.margin}%`} />
           <StatRow label={lang === "am" ? "ትዕዛዞች" : "Orders"} value={String(d.month.orders)} />
           <div className="flex items-center justify-between py-1.5">
@@ -111,9 +111,9 @@ export function CafeStatusContent({ d, lang }: { d: StatusData; lang: string }) 
       <Section title={lang === "am" ? "🛒 ግዢ እና ብድር" : "🛒 Purchases & Credits"}>
         <Card className="divide-y divide-brand-border/30">
           <StatRow label={lang === "am" ? "ጠቅላላ ግዢ" : "Total Purchases"} value={fmtETB(d.purchases.total)} />
-          <StatRow label={lang === "am" ? "የተከፈለ" : "Paid"} value={fmtETB(d.purchases.paid)} color="text-status-green" />
-          <StatRow label={lang === "am" ? "ያልተከፈለ ብድር" : "Outstanding Credit"} value={fmtETB(d.purchases.credit)} color={d.purchases.credit > 0 ? "text-status-red" : "text-status-green"} />
-          <StatRow label={lang === "am" ? "በብድር ያሉ ትዕዛዞች" : "Credit Orders"} value={String(d.purchases.creditOrders)} color={d.purchases.creditOrders > 0 ? "text-status-red" : "text-brand-muted"} />
+          <StatRow label={lang === "am" ? "የተከፈለ" : "Paid"} value={fmtETB(d.purchases.paid)} color="text-status-greenText" />
+          <StatRow label={lang === "am" ? "ያልተከፈለ ብድር" : "Outstanding Credit"} value={fmtETB(d.purchases.credit)} color={d.purchases.credit > 0 ? "text-status-redText" : "text-status-greenText"} />
+          <StatRow label={lang === "am" ? "በብድር ያሉ ትዕዛዞች" : "Credit Orders"} value={String(d.purchases.creditOrders)} color={d.purchases.creditOrders > 0 ? "text-status-redText" : "text-brand-muted"} />
           <StatRow label={lang === "am" ? "ጠቅላላ የግዢ ትዕዛዞች" : "Total POs"} value={String(d.purchases.orderCount)} />
         </Card>
       </Section>
@@ -126,7 +126,7 @@ export function CafeStatusContent({ d, lang }: { d: StatusData; lang: string }) 
             <p className="text-xs text-brand-muted">{lang === "am" ? "ጠቅላላ" : "Total Staff"}</p>
           </Card>
           <Card className="text-center space-y-1 py-3">
-            <p className="text-2xl font-bold text-status-green tabular">{d.staff.activeToday}</p>
+            <p className="text-2xl font-bold text-status-greenText tabular">{d.staff.activeToday}</p>
             <p className="text-xs text-brand-muted">{lang === "am" ? "ዛሬ የገቡ" : "Clocked In Today"}</p>
           </Card>
         </div>
@@ -136,7 +136,7 @@ export function CafeStatusContent({ d, lang }: { d: StatusData; lang: string }) 
       <Section title={lang === "am" ? "📦 ክምችት" : "📦 Inventory"}>
         <Card className="divide-y divide-brand-border/30">
           <StatRow label={lang === "am" ? "ጠቅላላ ዕቃዎች" : "Total Items"} value={String(d.inventory.total)} />
-          <StatRow label={lang === "am" ? "ዝቅተኛ ክምችት" : "Low Stock Alerts"} value={String(d.inventory.lowStock)} color={d.inventory.lowStock > 0 ? "text-status-red" : "text-status-green"} />
+          <StatRow label={lang === "am" ? "ዝቅተኛ ክምችት" : "Low Stock Alerts"} value={String(d.inventory.lowStock)} color={d.inventory.lowStock > 0 ? "text-status-redText" : "text-status-greenText"} />
           <StatRow label={lang === "am" ? "የክምችት ዋጋ" : "Inventory Value"} value={fmtETB(d.inventory.value)} />
         </Card>
       </Section>
@@ -145,7 +145,7 @@ export function CafeStatusContent({ d, lang }: { d: StatusData; lang: string }) 
       <Section title={lang === "am" ? "🔧 መሳሪያዎች" : "🔧 Equipment"}>
         <Card className="divide-y divide-brand-border/30">
           <StatRow label={lang === "am" ? "ጠቅላላ" : "Total Equipment"} value={String(d.equipment.total)} />
-          <StatRow label={lang === "am" ? "ጥገና ያስፈልጋል" : "Needs Repair"} value={String(d.equipment.needsRepair)} color={d.equipment.needsRepair > 0 ? "text-status-red" : "text-status-green"} />
+          <StatRow label={lang === "am" ? "ጥገና ያስፈልጋል" : "Needs Repair"} value={String(d.equipment.needsRepair)} color={d.equipment.needsRepair > 0 ? "text-status-redText" : "text-status-greenText"} />
         </Card>
       </Section>
 
@@ -174,7 +174,7 @@ export function CafeStatusContent({ d, lang }: { d: StatusData; lang: string }) 
             {d.topItems.map((item, i) => (
               <div key={i} className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-accent/15 text-[11px] font-bold text-brand-accent">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-accent/15 text-[11px] font-bold text-brand-accentText">
                     {i + 1}
                   </span>
                   <span className="text-sm font-medium text-brand-foreground">{item.name}</span>
@@ -208,9 +208,9 @@ export function CafeStatusFAB() {
     : 0;
 
   const healthColor =
-    healthScore >= 80 ? "text-status-green" :
-    healthScore >= 50 ? "text-status-yellow" :
-    "text-status-red";
+    healthScore >= 80 ? "text-status-greenText" :
+    healthScore >= 50 ? "text-status-yellowText" :
+    "text-status-redText";
 
   const healthLabel =
     healthScore >= 80 ? (lang === "am" ? "ጥሩ" : "Excellent") :

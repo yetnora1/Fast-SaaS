@@ -48,7 +48,7 @@ export default function TenantsPage() {
           <Input placeholder={t("ownerEmail")} value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} />
         </div>
         <Button onClick={createTenant}>{t("createTenant")}</Button>
-        {msg && <p className="text-sm text-brand-accent">{msg}</p>}
+        {msg && <p className="text-sm text-brand-accentText">{msg}</p>}
       </Card>
 
       <Card className="overflow-x-auto">
@@ -66,7 +66,7 @@ export default function TenantsPage() {
           <tbody>
             {data?.tenants.map((tn) => (
               <tr key={tn.id} className="border-t border-brand-border/60">
-                <td className="p-2"><Link href={`/saas-admin/tenants/${tn.id}`} className="font-medium text-brand-accent hover:underline">{tn.name}</Link></td>
+                <td className="p-2"><Link href={`/saas-admin/tenants/${tn.id}`} className="font-medium text-brand-accentText hover:underline">{tn.name}</Link></td>
                 <td className="p-2"><StatusChip status={tn.status} /></td>
                 <td className="tabular p-2">{tn._count.users}</td>
                 <td className="tabular p-2">{tn._count.branches}</td>

@@ -77,7 +77,7 @@ export default function OwnerDashboard() {
 
       {data.lowStock.length > 0 && (
         <Card className="border-status-red/40 bg-status-red/10">
-          <div className="flex items-center gap-2 font-medium text-status-red">
+          <div className="flex items-center gap-2 font-medium text-status-redText">
             <AlertTriangleIcon className="h-5 w-5" />
             {t("criticalStock")}
           </div>
@@ -150,7 +150,7 @@ export default function OwnerDashboard() {
                 <XAxis dataKey="name" stroke={CHART_AXIS} fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke={CHART_AXIS} fontSize={12} tickLine={false} axisLine={false} width={48} />
                 <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<ChartTooltip suffix=" ETB" />} />
-                <Bar dataKey="revenue" name={t("revenue")} fill="#22C55E" radius={[6, 6, 0, 0]} maxBarSize={48} />
+                <Bar dataKey="revenue" name={t("revenue")} fill={CHART_COLORS[0]} radius={[6, 6, 0, 0]} maxBarSize={48} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -171,7 +171,7 @@ export default function OwnerDashboard() {
                 className="flex items-center justify-between rounded-lg px-2 py-2 text-sm transition-colors hover:bg-white/5"
               >
                 <span className="flex items-center gap-3">
-                  <span className="tabular flex h-6 w-6 items-center justify-center rounded-md bg-brand-accent/15 text-xs font-bold text-brand-accent">
+                  <span className="tabular flex h-6 w-6 items-center justify-center rounded-md bg-brand-accent/15 text-xs font-bold text-brand-accentText">
                     {i + 1}
                   </span>
                   <span className="text-brand-foreground">{it.name}</span>

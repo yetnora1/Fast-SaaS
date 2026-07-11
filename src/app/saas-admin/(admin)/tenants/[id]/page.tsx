@@ -70,7 +70,7 @@ export default function TenantDetailPage({ params }: { params: { id: string } })
           )}
           <Button variant="danger" onClick={() => confirm("Terminate (soft-delete) this tenant? Data retained 90 days.") && action("terminate")}>{t("terminate")}</Button>
         </div>
-        {msg && <p className="text-sm text-status-red">{msg}</p>}
+        {msg && <p className="text-sm text-status-redText">{msg}</p>}
       </Card>
 
       <div className="grid gap-3 lg:grid-cols-2">
@@ -84,7 +84,7 @@ export default function TenantDetailPage({ params }: { params: { id: string } })
                   <td className="p-1.5">{u.name}</td>
                   <td className="p-1.5 text-brand-muted">{u.email}</td>
                   <td className="p-1.5">{u.role}</td>
-                  <td className="p-1.5">{u.active ? <CheckCircleIcon className="h-4 w-4 text-status-green" /> : <span className="text-brand-muted">—</span>}</td>
+                  <td className="p-1.5">{u.active ? <CheckCircleIcon className="h-4 w-4 text-status-greenText" /> : <span className="text-brand-muted">—</span>}</td>
                 </tr>
               ))}
               {tenant.users.length === 0 && <tr><td className="p-1.5 text-brand-muted" colSpan={4}>{t("noStaff")}</td></tr>}

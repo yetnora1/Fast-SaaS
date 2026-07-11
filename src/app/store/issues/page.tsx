@@ -64,7 +64,7 @@ export default function StoreIssuesPage() {
       onClick={() => setDestination(d)}
       className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
         destination === d
-          ? "border-brand-accent bg-brand-accent/15 text-brand-accent"
+          ? "border-brand-accent bg-brand-accent/15 text-brand-accentText"
           : "border-brand-border bg-brand-surface2 text-brand-muted hover:text-brand-foreground"
       }`}
     >
@@ -120,8 +120,8 @@ export default function StoreIssuesPage() {
             <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="…" />
           </Field>
 
-          {err && <p className="text-sm text-status-red">{err}</p>}
-          {okMsg && <p className="text-sm text-status-green">✓ {okMsg}</p>}
+          {err && <p className="text-sm text-status-redText">{err}</p>}
+          {okMsg && <p className="text-sm text-status-greenText">✓ {okMsg}</p>}
 
           <Button className="w-full" onClick={submit} loading={busy} disabled={!itemId || !qty || Number(qty) <= 0}>
             <PackageIcon className="h-4 w-4" />
@@ -161,7 +161,7 @@ export default function StoreIssuesPage() {
                       <td className="px-2 py-2 text-brand-muted">{i.issuedBy?.name ?? "—"}</td>
                       <td className="px-2 py-2">
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
-                          i.status === "RECEIVED" ? "bg-status-green/15 text-status-green" : "bg-status-yellow/15 text-status-yellow"
+                          i.status === "RECEIVED" ? "bg-status-green/15 text-status-greenText" : "bg-status-yellow/15 text-status-yellowText"
                         }`}>
                           <span className="h-1.5 w-1.5 rounded-full bg-current" />
                           {statusLabel(i.status)}

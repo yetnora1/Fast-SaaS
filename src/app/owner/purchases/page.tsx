@@ -131,7 +131,7 @@ export default function PurchaserPage() {
           >
             {tb.label}
             {tb.key === "credits" && totalCredit > 0 && (
-              <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-status-red text-[10px] font-bold text-white px-1">
+              <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-status-redSolid text-[10px] font-bold text-white px-1">
                 {creditOrders.length}
               </span>
             )}
@@ -190,12 +190,12 @@ function OrdersList({ pos, reload, lang }: { pos: PO[]; reload: () => void; lang
               </div>
               <div className="flex justify-between">
                 <span className="text-brand-muted">{lang === "am" ? "የተከፈለ" : "Paid"}</span>
-                <span className="tabular font-semibold text-status-green">{fmtETB(paid)}</span>
+                <span className="tabular font-semibold text-status-greenText">{fmtETB(paid)}</span>
               </div>
               {po.isCredit && (
                 <div className="flex justify-between">
                   <span className="text-brand-muted">{lang === "am" ? "ብድር" : "Credit"}</span>
-                  <span className={`tabular font-semibold ${credit > 0 ? "text-status-red" : "text-status-green"}`}>
+                  <span className={`tabular font-semibold ${credit > 0 ? "text-status-redText" : "text-status-greenText"}`}>
                     {fmtETB(credit)}
                   </span>
                 </div>
@@ -324,7 +324,7 @@ function NewPurchaseForm({
             <button
               type="button"
               onClick={addLine}
-              className="inline-flex items-center gap-1 rounded-lg bg-brand-accent/15 px-2.5 py-1 text-xs font-medium text-brand-accent transition-colors hover:bg-brand-accent/25"
+              className="inline-flex items-center gap-1 rounded-lg bg-brand-accent/15 px-2.5 py-1 text-xs font-medium text-brand-accentText transition-colors hover:bg-brand-accent/25"
             >
               <PlusIcon className="h-3.5 w-3.5" /> {lang === "am" ? "ጨምር" : "Add Item"}
             </button>
@@ -378,7 +378,7 @@ function NewPurchaseForm({
                 <button
                   type="button"
                   onClick={() => removeLine(idx)}
-                  className="rounded-lg p-2 text-brand-muted transition-colors hover:bg-status-red/15 hover:text-status-red"
+                  className="rounded-lg p-2 text-brand-muted transition-colors hover:bg-status-red/15 hover:text-status-redText"
                 >
                   ✕
                 </button>
@@ -420,11 +420,11 @@ function NewPurchaseForm({
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-xl bg-status-green/10 p-3 text-center">
                   <p className="text-xs text-brand-muted">{lang === "am" ? "አሁን ክፈል" : "Pay Now"}</p>
-                  <p className="tabular text-lg font-bold text-status-green">{fmtETB(paidAmount)}</p>
+                  <p className="tabular text-lg font-bold text-status-greenText">{fmtETB(paidAmount)}</p>
                 </div>
                 <div className="rounded-xl bg-status-red/10 p-3 text-center">
                   <p className="text-xs text-brand-muted">{lang === "am" ? "ብድር" : "Credit"}</p>
-                  <p className="tabular text-lg font-bold text-status-red">{fmtETB(creditAmount)}</p>
+                  <p className="tabular text-lg font-bold text-status-redText">{fmtETB(creditAmount)}</p>
                 </div>
               </div>
             </div>
@@ -479,11 +479,11 @@ function CreditsList({ credits, reload, lang }: { credits: PO[]; reload: () => v
       {totalOutstanding > 0 && (
         <Card className="flex items-center gap-4 border-status-red/30 bg-status-red/5">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-status-red/15">
-            <CoinsIcon className="h-6 w-6 text-status-red" />
+            <CoinsIcon className="h-6 w-6 text-status-redText" />
           </div>
           <div>
             <p className="text-xs text-brand-muted">{lang === "am" ? "ጠቅላላ ያልተከፈለ ብድር" : "Total Outstanding Credit"}</p>
-            <p className="tabular text-2xl font-bold text-status-red">{fmtETB(totalOutstanding)}</p>
+            <p className="tabular text-2xl font-bold text-status-redText">{fmtETB(totalOutstanding)}</p>
           </div>
         </Card>
       )}
@@ -504,7 +504,7 @@ function CreditsList({ credits, reload, lang }: { credits: PO[]; reload: () => v
                     <p className="font-semibold">{po.supplier?.name ?? "—"}</p>
                     <p className="text-xs text-brand-muted">{fmtDate(po.createdAt)}</p>
                   </div>
-                  <span className="tabular rounded-full bg-status-red/15 px-2.5 py-0.5 text-xs font-bold text-status-red">
+                  <span className="tabular rounded-full bg-status-red/15 px-2.5 py-0.5 text-xs font-bold text-status-redText">
                     {fmtETB(credit)}
                   </span>
                 </div>
@@ -545,7 +545,7 @@ function CreditsList({ credits, reload, lang }: { credits: PO[]; reload: () => v
         {payModal && (
           <div className="space-y-4">
             <div className="text-sm text-brand-muted">
-              {payModal.supplier?.name ?? "—"} · {lang === "am" ? "ቀሪ ብድር" : "Remaining credit"}: <strong className="text-status-red">{fmtETB(Number(payModal.creditAmount))}</strong>
+              {payModal.supplier?.name ?? "—"} · {lang === "am" ? "ቀሪ ብድር" : "Remaining credit"}: <strong className="text-status-redText">{fmtETB(Number(payModal.creditAmount))}</strong>
             </div>
             <Field label={lang === "am" ? "መክፈል የሚፈለግ" : "Payment Amount"}>
               <Input
@@ -627,8 +627,8 @@ function PurchaseReport({ pos, lang }: { pos: PO[]; lang: string }) {
                     <td className="py-2.5 pr-4 font-medium">{row.name}</td>
                     <td className="py-2.5 pr-4 tabular text-right">{row.count}</td>
                     <td className="py-2.5 pr-4 tabular text-right">{fmtETB(row.total)}</td>
-                    <td className="py-2.5 pr-4 tabular text-right text-status-green">{fmtETB(row.paid)}</td>
-                    <td className={`py-2.5 tabular text-right ${row.credit > 0 ? "text-status-red font-semibold" : "text-brand-muted"}`}>
+                    <td className="py-2.5 pr-4 tabular text-right text-status-greenText">{fmtETB(row.paid)}</td>
+                    <td className={`py-2.5 tabular text-right ${row.credit > 0 ? "text-status-redText font-semibold" : "text-brand-muted"}`}>
                       {fmtETB(row.credit)}
                     </td>
                   </tr>
@@ -664,8 +664,8 @@ function PurchaseReport({ pos, lang }: { pos: PO[]; lang: string }) {
                     <td className="py-2.5 pr-4 font-medium">{month}</td>
                     <td className="py-2.5 pr-4 tabular text-right">{row.count}</td>
                     <td className="py-2.5 pr-4 tabular text-right">{fmtETB(row.total)}</td>
-                    <td className="py-2.5 pr-4 tabular text-right text-status-green">{fmtETB(row.paid)}</td>
-                    <td className={`py-2.5 tabular text-right ${row.credit > 0 ? "text-status-red font-semibold" : "text-brand-muted"}`}>
+                    <td className="py-2.5 pr-4 tabular text-right text-status-greenText">{fmtETB(row.paid)}</td>
+                    <td className={`py-2.5 tabular text-right ${row.credit > 0 ? "text-status-redText font-semibold" : "text-brand-muted"}`}>
                       {fmtETB(row.credit)}
                     </td>
                   </tr>

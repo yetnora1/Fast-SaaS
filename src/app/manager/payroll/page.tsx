@@ -48,8 +48,8 @@ function formatETB(n: number) {
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     DRAFT: "bg-brand-surface2 text-brand-muted",
-    PROCESSED: "bg-status-yellow/15 text-status-yellow",
-    APPROVED: "bg-status-green/15 text-status-green",
+    PROCESSED: "bg-status-yellow/15 text-status-yellowText",
+    APPROVED: "bg-status-green/15 text-status-greenText",
   };
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${styles[status] || styles.DRAFT}`}>
@@ -138,8 +138,8 @@ function SalaryTab() {
       {msg && (
         <div className={`rounded-xl border p-3 text-sm ${
           msg.ok
-            ? "border-status-green/30 bg-status-green/10 text-status-green"
-            : "border-status-red/30 bg-status-red/10 text-status-red"
+            ? "border-status-green/30 bg-status-green/10 text-status-greenText"
+            : "border-status-red/30 bg-status-red/10 text-status-redText"
         }`}>
           {msg.text}
         </div>
@@ -297,7 +297,7 @@ function ProcessTab() {
       </Card>
 
       {error && (
-        <div className="rounded-xl border border-status-red/30 bg-status-red/10 p-3 text-sm text-status-red">
+        <div className="rounded-xl border border-status-red/30 bg-status-red/10 p-3 text-sm text-status-redText">
           {error}
         </div>
       )}
@@ -331,22 +331,22 @@ function ProcessTab() {
                     </td>
                     <td className="py-3 pr-3">
                       {r.status === "processed" ? (
-                        <span className="text-xs font-medium text-status-green">✓ Processed</span>
+                        <span className="text-xs font-medium text-status-greenText">✓ Processed</span>
                       ) : r.status === "skipped" ? (
-                        <span className="text-xs font-medium text-status-yellow">⚠ {r.error}</span>
+                        <span className="text-xs font-medium text-status-yellowText">⚠ {r.error}</span>
                       ) : (
-                        <span className="text-xs font-medium text-status-red">✕ {r.error}</span>
+                        <span className="text-xs font-medium text-status-redText">✕ {r.error}</span>
                       )}
                     </td>
                     {r.breakdown ? (
                       <>
                         <td className="py-3 pr-3 text-right tabular text-brand-foreground">{formatETB(r.breakdown.grossSalary)}</td>
-                        <td className="py-3 pr-3 text-right tabular text-status-green">{r.breakdown.workedDays}</td>
-                        <td className="py-3 pr-3 text-right tabular text-status-red">{r.breakdown.absentDays}</td>
+                        <td className="py-3 pr-3 text-right tabular text-status-greenText">{r.breakdown.workedDays}</td>
+                        <td className="py-3 pr-3 text-right tabular text-status-redText">{r.breakdown.absentDays}</td>
                         <td className="py-3 pr-3 text-right tabular text-brand-foreground">{formatETB(r.breakdown.earnedSalary)}</td>
                         <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(r.breakdown.pension)}</td>
                         <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(r.breakdown.incomeTax)}</td>
-                        <td className="py-3 text-right tabular font-bold text-brand-accent">{formatETB(r.breakdown.netSalary)}</td>
+                        <td className="py-3 text-right tabular font-bold text-brand-accentText">{formatETB(r.breakdown.netSalary)}</td>
                       </>
                     ) : (
                       <td colSpan={7} className="py-3 text-center text-brand-muted">—</td>
@@ -448,12 +448,12 @@ function RecordsTab() {
                     </td>
                     <td className="py-3 pr-3"><RoleBadge role={r.userRole} /></td>
                     <td className="py-3 pr-3 text-right tabular text-brand-foreground">{formatETB(r.grossSalary)}</td>
-                    <td className="py-3 pr-3 text-right tabular text-status-green">{r.workedDays}/{r.totalDays}</td>
-                    <td className="py-3 pr-3 text-right tabular text-status-red">{r.absentDays}</td>
+                    <td className="py-3 pr-3 text-right tabular text-status-greenText">{r.workedDays}/{r.totalDays}</td>
+                    <td className="py-3 pr-3 text-right tabular text-status-redText">{r.absentDays}</td>
                     <td className="py-3 pr-3 text-right tabular text-brand-foreground">{formatETB(r.earnedSalary)}</td>
                     <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(r.pension)}</td>
                     <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(r.incomeTax)}</td>
-                    <td className="py-3 pr-3 text-right tabular font-bold text-brand-accent">{formatETB(r.netSalary)}</td>
+                    <td className="py-3 pr-3 text-right tabular font-bold text-brand-accentText">{formatETB(r.netSalary)}</td>
                     <td className="py-3 text-center"><StatusBadge status={r.status} /></td>
                   </tr>
                 ))}
@@ -468,7 +468,7 @@ function RecordsTab() {
                   <td className="py-3 pr-3 text-right tabular">{formatETB(totals.earned)}</td>
                   <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(totals.pension)}</td>
                   <td className="py-3 pr-3 text-right tabular text-brand-muted">-{formatETB(totals.tax)}</td>
-                  <td className="py-3 pr-3 text-right tabular font-bold text-brand-accent">{formatETB(totals.net)}</td>
+                  <td className="py-3 pr-3 text-right tabular font-bold text-brand-accentText">{formatETB(totals.net)}</td>
                   <td />
                 </tr>
               </tfoot>

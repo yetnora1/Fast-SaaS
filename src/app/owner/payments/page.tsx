@@ -29,10 +29,10 @@ interface PaymentsResp {
 const fmtDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 function statusClass(s: string): string {
-  if (s === "CONFIRMED") return "bg-status-green/15 text-status-green";
-  if (s === "PENDING") return "bg-status-yellow/15 text-status-yellow";
-  if (s === "REFUNDED") return "bg-status-blue/15 text-status-blue";
-  return "bg-status-red/15 text-status-red"; // FAILED
+  if (s === "CONFIRMED") return "bg-status-green/15 text-status-greenText";
+  if (s === "PENDING") return "bg-status-yellow/15 text-status-yellowText";
+  if (s === "REFUNDED") return "bg-status-blue/15 text-status-blueText";
+  return "bg-status-red/15 text-status-redText"; // FAILED
 }
 
 export default function OwnerPaymentsPage() {
@@ -291,12 +291,12 @@ function PaymentAccountsCard() {
         </div>
       )}
 
-      {err && <p className="text-sm text-status-red">{err}</p>}
+      {err && <p className="text-sm text-status-redText">{err}</p>}
 
       <div className="flex items-center gap-3">
         <Button onClick={save} loading={saving} disabled={!loaded}>{t("savePaymentAccounts")}</Button>
         {savedAt && (
-          <span className="inline-flex items-center gap-1.5 text-sm text-status-green">
+          <span className="inline-flex items-center gap-1.5 text-sm text-status-greenText">
             <CheckCircleIcon className="h-4 w-4" />{t("saved")}
           </span>
         )}

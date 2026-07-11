@@ -52,11 +52,11 @@ export function PageHeader({
 /* ── KPI / stats ──────────────────────────────────────────────────── */
 
 const TONE_RING: Record<string, string> = {
-  green: "text-status-green",
-  red: "text-status-red",
-  yellow: "text-status-yellow",
-  blue: "text-status-blue",
-  accent: "text-brand-accent",
+  green: "text-status-greenText",
+  red: "text-status-redText",
+  yellow: "text-status-yellowText",
+  blue: "text-status-blueText",
+  accent: "text-brand-accentText",
 };
 
 export function KPICard({
@@ -85,8 +85,8 @@ export function KPICard({
         <div
           className={cn(
             "mt-2 inline-flex items-center gap-1 text-xs font-medium",
-            trend === "up" && "text-status-green",
-            trend === "down" && "text-status-red",
+            trend === "up" && "text-status-greenText",
+            trend === "down" && "text-status-redText",
             !trend && "text-brand-muted",
           )}
         >
@@ -125,7 +125,7 @@ export function Button({
         size === "md" ? "touch-target px-4 py-2 text-sm" : "min-h-[40px] px-3 py-1.5 text-sm",
         variant === "primary" && "bg-brand-accent text-brand-accentFg shadow-card hover:bg-brand-accentHover",
         variant === "ghost" && "bg-brand-surface2 text-brand-foreground hover:bg-white/10",
-        variant === "danger" && "bg-status-red text-white hover:opacity-90",
+        variant === "danger" && "bg-status-redSolid text-white hover:opacity-90",
         className,
       )}
     >
@@ -179,7 +179,7 @@ export function Field({
     <label className="block space-y-1.5">
       <span className="text-xs font-medium text-brand-foreground">
         {label}
-        {required && <span className="ml-0.5 text-status-red">*</span>}
+        {required && <span className="ml-0.5 text-status-redText">*</span>}
       </span>
       {children}
       {hint && <span className="block text-xs text-brand-muted">{hint}</span>}
@@ -227,19 +227,19 @@ export function EmptyState({ icon, children }: { icon?: React.ReactNode; childre
 
 export function RoleBadge({ role }: { role: Role }) {
   return (
-    <span className="rounded-full bg-brand-accent/15 px-2 py-0.5 text-xs font-medium text-brand-accent">
+    <span className="rounded-full bg-brand-accent/15 px-2 py-0.5 text-xs font-medium text-brand-accentText">
       {ROLE_LABEL[role]}
     </span>
   );
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  OK: "bg-status-green/15 text-status-green",
-  LOW: "bg-status-yellow/15 text-status-yellow",
-  CRITICAL: "bg-status-red/15 text-status-red",
-  available: "bg-status-green/15 text-status-green",
-  occupied: "bg-status-occupied/15 text-status-occupied",
-  attention: "bg-status-red/15 text-status-red",
+  OK: "bg-status-green/15 text-status-greenText",
+  LOW: "bg-status-yellow/15 text-status-yellowText",
+  CRITICAL: "bg-status-red/15 text-status-redText",
+  available: "bg-status-green/15 text-status-greenText",
+  occupied: "bg-status-occupied/15 text-status-occupiedText",
+  attention: "bg-status-red/15 text-status-redText",
 };
 
 export function StatusChip({ status }: { status: string }) {
@@ -324,7 +324,7 @@ export function Modal({
 export function TimerBadge({ since }: { since: string | Date }) {
   const ms = Date.now() - new Date(since).getTime();
   const min = Math.floor(ms / 60000);
-  const color = min < 5 ? "text-status-green" : min < 10 ? "text-status-yellow" : "text-status-red";
+  const color = min < 5 ? "text-status-greenText" : min < 10 ? "text-status-yellowText" : "text-status-redText";
   return (
     <span className={cn("tabular font-mono text-sm font-bold", color)}>
       {min}:{String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}

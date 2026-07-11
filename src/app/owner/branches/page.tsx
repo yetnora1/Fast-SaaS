@@ -49,7 +49,7 @@ export default function BranchesPage() {
           <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-brand-border bg-brand-surface text-brand-foreground shadow-pop">
             <div className="flex items-center justify-between border-b border-brand-border/70 px-6 py-4">
               <div>
-                <h3 className="font-display text-lg font-bold text-[#c87a53]">{viewingBranch.name} — Table QR Codes</h3>
+                <h3 className="font-display text-lg font-bold text-brand-accentText">{viewingBranch.name} — Table QR Codes</h3>
                 <p className="text-xs text-brand-muted">Manage tables and generate QR self-ordering codes.</p>
               </div>
               <button

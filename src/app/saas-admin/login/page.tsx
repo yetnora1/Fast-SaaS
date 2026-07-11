@@ -43,7 +43,7 @@ export default function SaasLoginPage() {
         <form onSubmit={submit} className="space-y-3">
           <Input type="email" placeholder={t("email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
           <Input type="password" placeholder={t("password")} value={password} onChange={(e) => setPassword(e.target.value)} required />
-          {error && <p className="text-sm text-status-red">{error}</p>}
+          {error && <p className="text-sm text-status-redText">{error}</p>}
           <Button type="submit" loading={busy} className="w-full">
             {busy ? t("signingIn") : t("signIn")}
           </Button>

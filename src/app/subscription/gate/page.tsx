@@ -58,12 +58,12 @@ export default function SubscriptionGatePage() {
         {data && (
           <>
             <div className="my-4 text-center">
-              <div className="tabular text-3xl font-bold text-brand-accent">{data.amount.toLocaleString()} ETB</div>
+              <div className="tabular text-3xl font-bold text-brand-accentText">{data.amount.toLocaleString()} ETB</div>
               <div className="text-sm text-brand-muted">{t("forLabel")} {data.periodMonths} {t("months")}</div>
             </div>
 
             {pending ? (
-              <div className="flex flex-col items-center py-6 text-center text-status-blue">
+              <div className="flex flex-col items-center py-6 text-center text-status-blueText">
                 <ClockIcon className="h-10 w-10" />
                 <div className="mt-2 text-lg">{t("receiptUnderReview")}</div>
                 <p className="mt-2 text-sm text-brand-muted">{t("notifyEmailApproved")}</p>
@@ -71,7 +71,7 @@ export default function SubscriptionGatePage() {
             ) : (
               <>
                 {data.latest?.status === "REJECTED" && (
-                  <p className="mb-3 rounded-lg bg-status-red/15 px-3 py-2 text-sm text-status-red">
+                  <p className="mb-3 rounded-lg bg-status-red/15 px-3 py-2 text-sm text-status-redText">
                     {data.latest.rejectReason}
                   </p>
                 )}
@@ -92,7 +92,7 @@ export default function SubscriptionGatePage() {
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                   className="mt-3 w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-brand-surface2 file:px-3 file:py-1.5 file:text-sm file:text-brand-foreground"
                 />
-                {error && <p className="mt-2 text-sm text-status-red">{error}</p>}
+                {error && <p className="mt-2 text-sm text-status-redText">{error}</p>}
                 <Button onClick={upload} loading={busy} disabled={!file} className="mt-3 w-full">
                   {busy ? t("uploading") : t("sendForApproval")}
                 </Button>
@@ -100,7 +100,7 @@ export default function SubscriptionGatePage() {
             )}
           </>
         )}
-        {error && !data && <p className="mt-2 text-sm text-status-red">{error}</p>}
+        {error && !data && <p className="mt-2 text-sm text-status-redText">{error}</p>}
       </Card>
     </main>
   );

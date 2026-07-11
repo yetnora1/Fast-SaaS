@@ -21,9 +21,9 @@ const STATUS_DOT: Record<string, string> = {
   dirty: "bg-brand-muted",
 };
 const STATUS_BTN: Record<string, string> = {
-  available: "border-status-green/40 bg-status-green/10 text-status-green",
-  occupied: "border-status-occupied/40 bg-status-occupied/10 text-status-occupied",
-  attention: "border-status-red/40 bg-status-red/10 text-status-red",
+  available: "border-status-green/40 bg-status-green/10 text-status-greenText",
+  occupied: "border-status-occupied/40 bg-status-occupied/10 text-status-occupiedText",
+  attention: "border-status-red/40 bg-status-red/10 text-status-redText",
   dirty: "border-brand-border bg-brand-surface2 text-brand-muted",
 };
 const EDIT_ROLES = ["cafe_manager", "cafe_owner"];
@@ -263,7 +263,7 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
               {canEdit && (
                 <button
                   onClick={() => removeTable(table.id, table.number)}
-                  className="absolute right-2 top-2 rounded-md px-1.5 text-brand-muted transition-colors hover:bg-status-red/15 hover:text-status-red"
+                  className="absolute right-2 top-2 rounded-md px-1.5 text-brand-muted transition-colors hover:bg-status-red/15 hover:text-status-redText"
                   title="Remove table"
                   aria-label={`Remove table ${table.number}`}
                 >
@@ -272,7 +272,7 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
               )}
               <div className="text-center flex flex-col items-center gap-1.5">
                 <span className="font-display text-xs font-bold uppercase tracking-wider text-brand-muted">Table {table.number}</span>
-                <div className="inline-flex rounded-full bg-brand-accent/10 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-brand-accent">
+                <div className="inline-flex rounded-full bg-brand-accent/10 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-brand-accentText">
                   Welcome to ZAD Cafe
                 </div>
               </div>
@@ -281,7 +281,7 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
                 {hasQR ? (
                   <img src={qrDataUrls[table.id]} className="h-full w-full object-contain" alt={`Table ${table.number} QR`} />
                 ) : (
-                  <div className="text-xs text-slate-400">Generating...</div>
+                  <div className="text-xs text-slate-500">Generating...</div>
                 )}
               </div>
 

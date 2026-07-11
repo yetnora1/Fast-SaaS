@@ -132,11 +132,11 @@ export default function CashierPOS() {
             <Button className="w-full" onClick={pay}>{t("processPayment")}</Button>
             {pending && (
               <div className="animate-fade rounded-lg border border-status-yellow/40 bg-status-yellow/10 p-3 space-y-2">
-                <p className="text-sm text-status-yellow">Demo · Ref {pending.reference}</p>
+                <p className="text-sm text-status-yellowText">Demo · Ref {pending.reference}</p>
                 <Button className="w-full" onClick={confirmDemo}>{t("confirmDemo")}</Button>
               </div>
             )}
-            {msg && <p className="text-sm text-brand-accent">{msg}</p>}
+            {msg && <p className="text-sm text-brand-accentText">{msg}</p>}
             {receipt && <pre className="whitespace-pre-wrap rounded-lg border border-brand-border bg-brand-bg/60 p-3 text-xs">{receipt}</pre>}
           </>
         )}
@@ -180,13 +180,13 @@ function PendingPayments() {
   return (
     <Card className="border-status-yellow/40 bg-status-yellow/[0.06]">
       <div className="mb-3 flex items-center gap-2">
-        <ReceiptIcon className="h-5 w-5 text-status-yellow" />
+        <ReceiptIcon className="h-5 w-5 text-status-yellowText" />
         <span className="font-display font-bold">{t("pendingPayments")}</span>
-        <span className="tabular rounded-full bg-status-yellow/20 px-2 py-0.5 text-xs font-bold text-status-yellow">{orders.length}</span>
+        <span className="tabular rounded-full bg-status-yellow/20 px-2 py-0.5 text-xs font-bold text-status-yellowText">{orders.length}</span>
         <span className="ml-auto flex items-center gap-1 text-xs text-brand-muted"><ClockIcon className="h-3.5 w-3.5" />{t("verifyReceiptHint")}</span>
       </div>
 
-      {err && <p className="mb-2 text-sm text-status-red">{err}</p>}
+      {err && <p className="mb-2 text-sm text-status-redText">{err}</p>}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {orders.map((o) => {
@@ -196,7 +196,7 @@ function PendingPayments() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="font-medium">{t("table")} {o.table ?? "—"}</div>
-                  <div className="tabular text-lg font-bold text-brand-accent">{o.total.toLocaleString()} ETB</div>
+                  <div className="tabular text-lg font-bold text-brand-accentText">{o.total.toLocaleString()} ETB</div>
                 </div>
                 <button
                   onClick={() => setViewUrl(o.receiptUrl)}
@@ -246,7 +246,7 @@ function PendingPayments() {
           <div className="animate-in flex max-h-[90vh] w-full max-w-2xl flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="mb-2 flex items-center justify-between">
               <span className="font-medium text-white">{t("paymentReceipt")}</span>
-              <a href={viewUrl} target="_blank" rel="noreferrer" className="text-sm text-brand-accent underline">{t("openOriginal")}</a>
+              <a href={viewUrl} target="_blank" rel="noreferrer" className="text-sm text-brand-accentText underline">{t("openOriginal")}</a>
             </div>
             {orders.find((o) => o.receiptUrl === viewUrl)?.receiptIsPdf ? (
               <iframe src={viewUrl} className="h-[80vh] w-full rounded-xl border border-brand-border bg-white" title="receipt" />

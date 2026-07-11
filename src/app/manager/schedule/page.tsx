@@ -86,7 +86,7 @@ export default function SchedulePage() {
             </button>
           ))}
         </div>
-        {msg && <p className="text-sm text-brand-accent">{msg}</p>}
+        {msg && <p className="text-sm text-brand-accentText">{msg}</p>}
       </Card>
 
       <div className="grid gap-2 md:grid-cols-7">
@@ -99,7 +99,7 @@ export default function SchedulePage() {
                 <div className="tabular text-brand-muted">{s.shiftStart}-{s.shiftEnd}</div>
                 <div className="mt-1 flex items-center justify-between">
                   <span className="text-[10px] text-brand-muted">{s.status}</span>
-                  <button className="text-status-red hover:opacity-80" onClick={() => remove(s.id)} title="Remove">✕</button>
+                  <button className="text-status-redText hover:opacity-80" onClick={() => remove(s.id)} title="Remove">✕</button>
                 </div>
               </div>
             ))}

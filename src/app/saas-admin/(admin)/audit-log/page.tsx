@@ -33,7 +33,7 @@ export default function AuditLogPage() {
             {data?.logs.map((l) => (
               <tr key={l.id} className="border-t border-brand-border/60">
                 <td className="tabular p-2 text-brand-muted">{new Date(l.createdAt).toLocaleString()}</td>
-                <td className="p-2 font-mono text-xs text-brand-accent">{l.action}</td>
+                <td className="p-2 font-mono text-xs text-brand-accentText">{l.action}</td>
                 <td className="p-2">{l.entity ?? "—"}</td>
                 <td className="p-2 text-xs text-brand-muted">{l.userId ?? "—"}</td>
                 <td className="tabular p-2 text-xs text-brand-muted">{l.ip ?? "—"}</td>
