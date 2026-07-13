@@ -1,4 +1,14 @@
 import Link from "next/link";
+import { ChartIcon, ChefHatIcon, CoinsIcon, PackageIcon, StoreIcon, TableIcon } from "@/components/icons";
+
+const FEATURE_ICONS = {
+  "QR Self-Ordering": TableIcon,
+  "Kitchen & Barista Displays": ChefHatIcon,
+  "Cashier & Shifts": CoinsIcon,
+  "Inventory & Store": PackageIcon,
+  "Owner Reports": ChartIcon,
+  "Multi-Branch, 8 Roles": StoreIcon,
+};
 
 const FEATURES = [
   {
@@ -102,7 +112,14 @@ export default function Home() {
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <div key={f.title} className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-              <div className="text-2xl">{f.icon}</div>
+              {(() => {
+                const Icon = FEATURE_ICONS[f.title as keyof typeof FEATURE_ICONS];
+                return (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-accent/10 text-brand-accentText">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                );
+              })()}
               <h3 className="mt-3 font-display text-lg font-bold text-slate-900">{f.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{f.body}</p>
             </div>

@@ -360,11 +360,11 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
               </div>
 
               <div className="border-t border-dashed border-slate-300 pt-6 w-72 text-center flex flex-col gap-3">
-                <div className="text-[12px] font-medium leading-relaxed text-slate-850">
+                <div className="text-[12px] font-medium leading-relaxed text-slate-800">
                   <p className="font-bold text-slate-900">Scan to access the menu items</p>
                   <p className="text-slate-500 mt-0.5 font-normal">Browse our menu and place your order directly from your phone.</p>
                 </div>
-                <div className="text-[12px] font-medium leading-relaxed text-slate-850">
+                <div className="text-[12px] font-medium leading-relaxed text-slate-800">
                   <p className="font-bold text-slate-900">የምግብ ዝርዝሩን ለመመልከት ይህንን ይቃኙ</p>
                   <p className="text-slate-500 mt-0.5 font-normal">ከተቀመጡበት ሆነው ምናሌውን በመመልከት ቀጥታ ማዘዝ ይችላሉ።</p>
                 </div>

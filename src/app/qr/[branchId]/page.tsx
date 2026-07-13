@@ -632,7 +632,7 @@ function QrOrder() {
                 ? "bg-[color:var(--qr-accent,#c87a53)] text-white shadow-md" 
                 : theme === "dark" 
                 ? "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white" 
-                : "bg-white border border-slate-200 text-slate-650 hover:text-slate-900"
+                : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
             }`}
           >
             🍽️ {lang === "en" ? "All Items" : "ሁሉንም"}
@@ -648,7 +648,7 @@ function QrOrder() {
                 ? "bg-[#dc2626] text-white shadow-md" 
                 : theme === "dark" 
                 ? "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white" 
-                : "bg-white border border-slate-200 text-slate-650 hover:text-slate-900"
+                : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
             }`}
           >
             ❤️ {lang === "en" ? `Favorites (${favorites.length})` : `ተወዳጆች (${favorites.length})`}
@@ -666,7 +666,7 @@ function QrOrder() {
                   ? "bg-[color:var(--qr-accent,#c87a53)] text-white shadow-md" 
                   : theme === "dark" 
                   ? "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white" 
-                  : "bg-white border border-slate-200 text-slate-650 hover:text-slate-900"
+                  : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
               }`}
             >
               {getCategoryEmoji(c.name)} {tr(c.name, c.nameAm)}
@@ -991,7 +991,7 @@ function ItemDetailModal({
                             ? "bg-[color:var(--qr-accent,#c87a53)] text-white scale-105" 
                             : theme === "dark" 
                             ? "bg-slate-950 text-slate-400 hover:text-white border border-slate-800" 
-                            : "bg-slate-50 text-slate-650 hover:text-slate-900 border border-slate-200"
+                            : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200"
                         }`}
                       >
                         {opt.option} {Number(opt.extraPrice) > 0 && `(+${Number(opt.extraPrice)} ETB)`}
@@ -1014,7 +1014,7 @@ function ItemDetailModal({
                             ? "bg-[color:var(--qr-accent,#c87a53)] text-white scale-105" 
                             : theme === "dark" 
                             ? "bg-slate-950 text-slate-400 hover:text-white border border-slate-800" 
-                            : "bg-slate-50 text-slate-650 hover:text-slate-900 border border-slate-200"
+                            : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200"
                         }`}
                       >
                         {opt.option} {opt.extraPrice > 0 && `(+${opt.extraPrice} ETB)`}
@@ -1152,7 +1152,7 @@ function CartDrawer({
       >
         {/* Header */}
         <div className={`p-4 border-b flex items-center justify-between ${
-          theme === "dark" ? "border-slate-850" : "border-slate-100"
+          theme === "dark" ? "border-slate-800" : "border-slate-100"
         }`}>
           <div className="flex items-center gap-2">
             <h2 className="font-display text-base font-bold">
@@ -1404,7 +1404,7 @@ function PaymentModal({
                   ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)]" 
                   : theme === "dark"
                   ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
-                  : "bg-slate-50 border-slate-200 text-slate-650 hover:text-slate-900"
+                  : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
               }`}
             >
               <span className="text-lg">📱</span>
@@ -1417,7 +1417,7 @@ function PaymentModal({
                   ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)]" 
                   : theme === "dark"
                   ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
-                  : "bg-slate-50 border-slate-200 text-slate-650 hover:text-slate-900"
+                  : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
               }`}
             >
               <span className="text-lg">🏦</span>
@@ -1769,7 +1769,7 @@ function OrderTracker({
                           : isCompleted
                           ? "bg-[color:var(--qr-accent,#c87a53)] border-[color:var(--qr-accent,#c87a53)] text-white"
                           : theme === "dark" 
-                          ? "bg-slate-900 border-slate-800 text-slate-550"
+                          ? "bg-slate-900 border-slate-800 text-slate-500"
                           : "bg-white border-slate-200 text-slate-400"
                       }`}
                     >
@@ -1787,7 +1787,7 @@ function OrderTracker({
                       >
                         {lang === "en" ? step.titleEn : step.titleAm}
                       </span>
-                      <span className="text-[10px] text-slate-450 leading-tight">
+                      <span className="text-[10px] text-slate-400 leading-tight">
                         {lang === "en" ? step.descEn : step.descAm}
                       </span>
                     </div>
@@ -1804,7 +1804,7 @@ function OrderTracker({
           </h3>
           <ul className="divide-y divide-slate-800/20">
             {order.items.map((it) => {
-              let itemStatusColor = "text-slate-500 bg-slate-850";
+              let itemStatusColor = "text-slate-500 bg-slate-800";
               let statusLabelEn = it.status;
               let statusLabelAm = it.status;
 
@@ -1867,7 +1867,7 @@ function OrderTracker({
                     <span 
                       key={star} 
                       className={`text-base ${
-                        star <= (order.feedbackRating || feedbackRating) ? "text-amber-550" : "text-slate-700"
+                        star <= (order.feedbackRating || feedbackRating) ? "text-amber-500" : "text-slate-700"
                       }`}
                     >
                       ★
@@ -1901,7 +1901,7 @@ function OrderTracker({
                         onClick={() => setFeedbackRating(star)}
                         onMouseEnter={() => setHoveredRating(star)}
                         onMouseLeave={() => setHoveredRating(0)}
-                        className="text-2xl focus:outline-none transition-transform hover:scale-120 duration-150 text-slate-650"
+                        className="text-2xl focus:outline-none transition-transform hover:scale-120 duration-150 text-slate-600"
                       >
                         <span className={`transition-colors ${
                           star <= (hoveredRating || feedbackRating) ? "text-amber-500" : "text-slate-700"
@@ -2010,7 +2010,7 @@ const MenuItemCard = memo(function MenuItemCard({
       onClick={handleSelect}
     >
       {/* Image panel */}
-      <div className="relative h-32 sm:h-40 w-full overflow-hidden bg-slate-850">
+      <div className="relative h-32 sm:h-40 w-full overflow-hidden bg-slate-800">
         <img 
           src={getLocalItemImage(item.name, item.imageUrl)} 
           alt={item.name} 
@@ -2211,4 +2211,3 @@ function KioskSuccessScreen({ orderId, tableNumber, lang, theme, onDone }: Kiosk
     </main>
   );
 }
-

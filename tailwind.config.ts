@@ -19,7 +19,7 @@ const config: Config = {
           bg: "rgb(var(--theme-bg-rgb, 11 15 25) / <alpha-value>)", // dynamic background (#0b0f19)
           surface: "rgb(var(--theme-surface-rgb, 22 31 48) / <alpha-value>)", // dynamic surface cards (#161f30)
           surface2: "rgb(var(--theme-surface2-rgb, 34 45 65) / <alpha-value>)", // dynamic inputs (#222d41)
-          header: "rgb(var(--theme-header-rgb, 37 99 235) / <alpha-value>)", // header background (#2563EB)
+          header: "rgb(var(--theme-header-rgb, 31 58 61) / <alpha-value>)", // header background (#1F3A3D)
           accent: "rgb(var(--theme-accent-rgb, 13 125 108) / <alpha-value>)", // primary action (#0d7d6c, white text passes AA)
           accentHover: "rgb(var(--theme-accent-hover-rgb, 10 101 88) / <alpha-value>)", // hover (#0a6558)
           accentText: "rgb(var(--theme-accent-text-rgb, 13 125 108) / <alpha-value>)", // accent-as-text: bright on dark, deep on light

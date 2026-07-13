@@ -100,7 +100,10 @@ export function AppShell({
   let bg = isDark ? "#0b0f19" : "#FFFFFF";
   let surface = isDark ? "#161f30" : "#f8fafc";
   let surface2 = isDark ? "#222d41" : "#f1f5f9";
-  let header = "#2563EB"; // Permanent bright blue header (white text 5.17:1)
+  // A quiet evergreen header anchors every operational screen. Keeping this
+  // stable lets the page accent communicate the current module without
+  // competing with a second saturated blue.
+  let header = "#1F3A3D"; // white text: 11.7:1
   let border = isDark ? "#2a384e" : "#cbd5e1";
   let muted = isDark ? "#ACBCBF" : "#64748b";
   let foreground = isDark ? "#FFFFFF" : "#0f172a";
@@ -251,7 +254,7 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh" style={themeStyles}>
-      <header className="sticky top-0 z-nav border-b border-[#1D4ED8] bg-[#2563EB] relative w-full">
+      <header className="sticky top-0 z-nav border-b border-brand-header/80 bg-brand-header relative w-full">
         {/* Row 1: Identity & Brand & Actions */}
         <div className="flex items-center justify-between px-6 py-3.5 relative">
           {/* Left Side: Profile & Welcome */}
@@ -269,7 +272,7 @@ export function AppShell({
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-[#2563EB] shadow-sm" />
+                <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-brand-header shadow-sm" />
               </Link>
             )}
 
@@ -317,7 +320,7 @@ export function AppShell({
               >
                 <BellIcon className="h-5 w-5" />
                 {data?.unread ? (
-                  <span className="tabular absolute -right-1 -top-1 min-w-[18px] rounded-full bg-white px-1 text-center text-[11px] font-bold leading-[18px] text-[#2563EB]">
+                  <span className="tabular absolute -right-1 -top-1 min-w-[18px] rounded-full bg-white px-1 text-center text-[11px] font-bold leading-[18px] text-brand-header">
                     {data.unread > 99 ? "99+" : data.unread}
                   </span>
                 ) : null}
@@ -360,7 +363,7 @@ export function AppShell({
                 className={cn(
                   "rounded-xl px-3.5 py-1.5 font-bold transition-all active:scale-95 whitespace-nowrap text-xs uppercase tracking-wider",
                   isActive(n.href)
-                    ? "bg-white text-[#2563EB] shadow-sm"
+                    ? "bg-white text-brand-header shadow-sm"
                     : "text-white/95 hover:bg-white/15 hover:text-white",
                 )}
               >
@@ -461,4 +464,3 @@ export function AppShell({
     </div>
   );
 }
-
