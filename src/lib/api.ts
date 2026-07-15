@@ -28,9 +28,10 @@ export function handler<T extends (...args: any[]) => Promise<Response>>(fn: T):
       console.error("[api] unhandled", e);
       return fail("Internal server error", 500);
     } finally {
-      if (process.env.NODE_ENV === "production") {
-        await prisma.$disconnect().catch((err) => console.error("Prisma disconnect failed", err));
-      }
+      // Keep prisma connection pooled for performance and concurrent transactions
+      // if (process.env.NODE_ENV === "production") {
+      //   await prisma.$disconnect().catch((err) => console.error("Prisma disconnect failed", err));
+      // }
     }
   }) as T;
 }
