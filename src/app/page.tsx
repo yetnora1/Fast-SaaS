@@ -1,412 +1,150 @@
 import Link from "next/link";
-import { Fraunces, Noto_Serif_Ethiopic } from "next/font/google";
-import { ArrowRightIcon, CheckCircleIcon } from "@/components/icons";
+import { DM_Sans, Newsreader } from "next/font/google";
+import { ArrowRightIcon } from "@/components/icons";
 
-// Landing-page-only faces. The app keeps its own fonts.
-const fraunces = Fraunces({
+const serif = Newsreader({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   style: ["normal", "italic"],
   display: "swap",
 });
 
-const ethiopic = Noto_Serif_Ethiopic({
-  subsets: ["ethiopic"],
-  weight: ["600"],
+const sans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-const TICKER = [
-  "QR ordering",
-  "Kitchen boards",
-  "Cashier & till",
-  "Stock & purchasing",
-  "Shifts & payroll",
-  "Owner reports",
-  "English & አማርኛ",
+const NOTES = [
+  ["01", "For the room", "QR menus, table orders and a clean handoff to the people making the coffee."],
+  ["02", "For the counter", "Payments, receipts and shift close in one place—without turning service into admin."],
+  ["03", "For the back room", "Stock, purchases and daily sales that make sense when you sit down after closing."],
 ];
 
-const FEATURES = [
-  {
-    title: "QR self-ordering",
-    body: "Guests scan the table card and order from a menu in Amharic or English. No app to install, no waving at a busy waiter.",
-  },
-  {
-    title: "Kitchen & barista boards",
-    body: "Tickets land on the prep board the second they are placed. New, preparing, ready. The floor and the kitchen read one queue.",
-  },
-  {
-    title: "Cashier & till",
-    body: "Payments, receipts, refunds, and a shift close that balances to the birr.",
-  },
-  {
-    title: "Stock & purchasing",
-    body: "Recipes draw down stock as orders fire. Purchases, suppliers and waste stay on the record instead of in someone's head.",
-  },
-  {
-    title: "Shifts & payroll",
-    body: "Eight roles, from waiter to owner. Each login opens one job, not a maze of menus.",
-  },
-  {
-    title: "Owner reports",
-    body: "Daily sales, best sellers, branch comparisons. Five minutes with your morning macchiato and you know how the café is doing.",
-  },
+const INCLUDED = [
+  "A menu your guests can order from in Amharic or English",
+  "Live kitchen and barista boards",
+  "Cashier, receipt and shift-close tools",
+  "Stock, purchasing, payroll and owner reporting",
 ];
 
-const STEPS = [
-  {
-    title: "Register the café",
-    body: "Create your account, add a branch, load the menu. It takes an afternoon, not a rollout plan.",
-  },
-  {
-    title: "Print the table cards",
-    body: "Every table gets its QR card. Every staff member gets a login scoped to their role.",
-  },
-  {
-    title: "Open for service",
-    body: "Orders, tickets, payments and stock counts start writing themselves down as you work.",
-  },
-];
-
-const PLAN_INCLUDES = [
-  "7 days free. No card, no commitment.",
-  "Unlimited orders, tables and menu items",
-  "All eight staff roles included",
-  "Every branch under one account",
-];
-
-const RECEIPT_LINES: Array<[string, string]> = [
-  ["1× Macchiato", "85"],
-  ["2× Ful Special", "240"],
-  ["1× Mango Juice", "120"],
-  ["1× Sambusa", "60"],
-];
-
-// Torn thermal-paper edge for the receipt card.
-const ZIGZAG = Array.from({ length: 16 }, (_, i) => `L${i * 20 + 10} 10 L${(i + 1) * 20} 0`).join(" ");
-
-function Squiggle() {
+function CoffeeMark() {
   return (
-    <svg
-      className="absolute -bottom-2 left-0 h-3 w-full sm:-bottom-3 sm:h-4"
-      viewBox="0 0 220 14"
-      fill="none"
-      preserveAspectRatio="none"
-      aria-hidden
-    >
-      <path d="M4 9 C60 3 150 2 216 7" stroke="var(--clay)" strokeWidth="5" strokeLinecap="round" />
-      <path d="M12 12 C70 7 140 6 204 10" stroke="var(--clay)" strokeWidth="3" strokeLinecap="round" opacity=".5" />
+    <svg aria-hidden viewBox="0 0 42 42" className="h-9 w-9 text-[#dd6b3d]">
+      <path d="M8 13h22v13.5a7.5 7.5 0 0 1-7.5 7.5h-7A7.5 7.5 0 0 1 8 26.5V13Z" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M30 17h2.5a4.5 4.5 0 0 1 0 9H30M13 8c0 2 2 2.3 2 4.3M21 8c0 2 2 2.3 2 4.3" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
     </svg>
-  );
-}
-
-function Stamp() {
-  return (
-    <svg viewBox="0 0 120 120" className="lp-spin h-24 w-24 drop-shadow-md sm:h-28 sm:w-28" aria-hidden>
-      <defs>
-        <path id="lp-ring" d="M60 60 m -45 0 a 45 45 0 1 1 90 0 a 45 45 0 1 1 -90 0" />
-      </defs>
-      <circle cx="60" cy="60" r="60" fill="var(--clay)" />
-      <circle cx="60" cy="60" r="33" fill="none" stroke="var(--cream)" strokeOpacity=".45" />
-      <text className={ethiopic.className} x="60" y="69" textAnchor="middle" fontSize="22" fill="var(--cream)">
-        ቡና
-      </text>
-      <text fontSize="10.5" letterSpacing="2.6" fill="var(--cream)">
-        <textPath href="#lp-ring">CAFEFLOW · ADDIS ABABA · TABLE TO TILL ·</textPath>
-      </text>
-    </svg>
-  );
-}
-
-function Receipt() {
-  return (
-    <div className="relative">
-      <div className="absolute -left-5 -top-12 z-10 sm:-left-12 sm:-top-14">
-        <Stamp />
-      </div>
-      <div className="rotate-[1.2deg] [filter:drop-shadow(0_24px_36px_rgba(30,26,20,0.22))]">
-        <div className="border-x border-t border-[color:var(--line)] bg-[#fdfbf5] p-6 pb-4 font-mono text-[13px] leading-6 text-[color:var(--ink)] sm:p-7 sm:pb-5">
-          <div className="flex items-baseline justify-between text-[11px] uppercase tracking-[0.14em] text-[color:var(--soft)]">
-            <span>CafeFlow · Table 06</span>
-            <span className="tabular">12:47</span>
-          </div>
-          <div className="my-4 border-t border-dashed border-[color:var(--line)]" />
-          {RECEIPT_LINES.map(([item, price]) => (
-            <div key={item} className="flex justify-between">
-              <span>{item}</span>
-              <span className="tabular">{price} ETB</span>
-            </div>
-          ))}
-          <div className="my-4 border-t border-dashed border-[color:var(--line)]" />
-          <div className="flex justify-between font-bold">
-            <span>Total</span>
-            <span className="tabular">505 ETB</span>
-          </div>
-          <div className="mt-5 flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-[color:var(--leaf)]">
-            <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-[color:var(--leaf)]" aria-hidden />
-            Sent to kitchen · preparing
-          </div>
-        </div>
-        <svg viewBox="0 0 320 12" preserveAspectRatio="none" className="block h-3 w-full" aria-hidden>
-          <path d={`M0 0 ${ZIGZAG} Z`} fill="#fdfbf5" />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
-function Ticker() {
-  const row = TICKER.map((item) => (
-    <span key={item} className="flex items-center gap-6 sm:gap-10">
-      <span>{item}</span>
-      <span className="text-[color:var(--clay)]">✳</span>
-    </span>
-  ));
-  return (
-    <div className="overflow-hidden border-y border-[color:var(--line)] bg-[color:var(--flour2)] py-3.5">
-      <div className="lp-marquee flex w-max gap-6 font-mono text-[13px] uppercase tracking-[0.16em] text-[color:var(--soft)] sm:gap-10">
-        <div className="flex shrink-0 items-center gap-6 sm:gap-10">{row}</div>
-        <div className="flex shrink-0 items-center gap-6 sm:gap-10" aria-hidden>
-          {row}
-        </div>
-      </div>
-    </div>
   );
 }
 
 export default function Home() {
   return (
-    <main
-      className="min-h-dvh overflow-x-clip bg-[color:var(--flour)] text-[color:var(--ink)]"
-      style={
-        {
-          "--flour": "#f3eee4",
-          "--flour2": "#ece5d5",
-          "--cream": "#f6f1e6",
-          "--ink": "#1e1a14",
-          "--soft": "#615a4b",
-          "--leaf": "#3a5a40",
-          "--pine": "#2a4130",
-          "--clay": "#b14e28",
-          "--line": "#dcd2bf",
-          "--night": "#212b1e",
-        } as React.CSSProperties
-      }
-    >
+    <main className={`${sans.className} min-h-dvh overflow-x-hidden bg-[#f7f1e7] text-[#213b36]`}>
       <style>{`
-        @keyframes lp-marquee { to { transform: translateX(-50%); } }
-        .lp-marquee { animation: lp-marquee 30s linear infinite; }
-        @keyframes lp-spin { to { transform: rotate(360deg); } }
-        .lp-spin { animation: lp-spin 22s linear infinite; transform-origin: center; }
-        @media (prefers-reduced-motion: reduce) {
-          .lp-marquee, .lp-spin { animation: none; }
+        @media (prefers-reduced-motion: no-preference) {
+          .landing-photo { animation: settle 800ms cubic-bezier(.16,1,.3,1) both; }
+          @keyframes settle { from { opacity: 0; transform: translateY(16px) rotate(1deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
         }
       `}</style>
 
-      {/* Paper grain */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-40 opacity-[0.05] mix-blend-multiply"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E\")",
-        }}
-      />
-
-      {/* ── Header ── */}
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-        <Link href="/" className="flex items-center gap-3" aria-label="CafeFlow home">
-          <img src="/LOGO.jpg" alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-[color:var(--line)]" />
-          <span className={`${fraunces.className} text-xl font-semibold tracking-tight`}>CafeFlow</span>
+      <header className="mx-auto flex max-w-[1240px] items-center justify-between px-5 py-5 sm:px-8 sm:py-7">
+        <Link href="/" className="flex items-center gap-2.5" aria-label="CafeFlow home">
+          <CoffeeMark />
+          <span className={`${serif.className} text-[1.45rem] font-semibold tracking-[-0.04em]`}>CafeFlow</span>
         </Link>
-        <nav className="hidden items-center gap-7 font-mono text-[13px] lowercase text-[color:var(--soft)] md:flex" aria-label="Sections">
-          <a href="#inside" className="transition-colors hover:text-[color:var(--ink)]">(inside)</a>
-          <a href="#first-day" className="transition-colors hover:text-[color:var(--ink)]">(first day)</a>
-          <a href="#price" className="transition-colors hover:text-[color:var(--ink)]">(the price)</a>
+        <nav className="hidden items-center gap-8 text-sm font-medium text-[#58706a] md:flex" aria-label="Main navigation">
+          <a className="transition-colors hover:text-[#213b36]" href="#how-it-works">How it works</a>
+          <a className="transition-colors hover:text-[#213b36]" href="#what-is-included">What&apos;s included</a>
+          <a className="transition-colors hover:text-[#213b36]" href="#pricing">Pricing</a>
         </nav>
-        <div className="flex items-center gap-3 text-sm font-semibold">
-          <Link href="/login" className="text-[color:var(--soft)] underline decoration-[color:var(--line)] underline-offset-4 transition-colors hover:text-[color:var(--ink)]">
-            Log in
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-full bg-[color:var(--pine)] px-5 py-2.5 text-[color:var(--cream)] transition-colors hover:bg-[color:var(--leaf)]"
-          >
-            Start free
-          </Link>
+        <div className="flex items-center gap-4 text-sm font-semibold">
+          <Link href="/login" className="hidden text-[#46625b] transition-colors hover:text-[#213b36] sm:block">Sign in</Link>
+          <Link href="/register" className="rounded-full bg-[#213b36] px-4 py-3 text-[#f7f1e7] transition hover:-translate-y-0.5 hover:bg-[#2c514a] sm:px-5">Start free</Link>
         </div>
       </header>
 
-      {/* ── Hero ── */}
-      <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-12 sm:px-8 lg:grid-cols-[1.08fr_0.92fr] lg:pb-28 lg:pt-16">
-        <div>
-          <p className="font-mono text-[13px] text-[color:var(--soft)]">
-            <span className={ethiopic.className}>ከጠረጴዛ እስከ ሂሳብ</span> · table to till
+      <section className="mx-auto grid max-w-[1240px] gap-10 px-5 pb-20 pt-8 sm:px-8 lg:grid-cols-[.88fr_1.12fr] lg:items-center lg:gap-14 lg:pb-28 lg:pt-14">
+        <div className="relative z-10 lg:pb-8">
+          <p className="mb-5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.18em] text-[#dc6b3d]">
+            <span className="h-px w-8 bg-current" /> Made for busy cafés
           </p>
-          <h1
-            className={`${fraunces.className} mt-6 max-w-xl text-[3rem] font-medium leading-[1.02] tracking-[-0.02em] sm:text-[4.2rem]`}
-          >
-            Good coffee deserves{" "}
-            <em className="relative inline-block font-medium not-italic">
-              better books
-              <Squiggle />
-            </em>
-            .
+          <h1 className={`${serif.className} max-w-[11ch] text-[3.65rem] font-medium leading-[.91] tracking-[-.055em] text-[#213b36] sm:text-[5.25rem]`}>
+            Less admin.<br />More <em className="text-[#dd6b3d]">coffee.</em>
           </h1>
-          <p className="mt-8 max-w-lg text-base leading-7 text-[color:var(--soft)] sm:text-lg sm:leading-8">
-            CafeFlow runs the floor, the kitchen, the till and the stockroom. Guests order by QR in
-            Amharic or English, tickets hit the kitchen board live, and every birr shows up in your
-            morning report.
+          <p className="mt-7 max-w-[35rem] text-base leading-7 text-[#52665f] sm:text-lg sm:leading-8">
+            CafeFlow is the practical operating system for independent cafés: the floor, the counter, the kitchen and the numbers—all in step with one another.
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-5">
-            <Link
-              href="/register"
-              className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[color:var(--pine)] px-7 py-3.5 text-sm font-bold text-[color:var(--cream)] transition-colors hover:bg-[color:var(--leaf)]"
-            >
-              Try it free for 7 days
-              <ArrowRightIcon className="h-4 w-4" />
+          <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <Link href="/register" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#dd6b3d] px-6 py-3 text-sm font-bold text-white shadow-[0_9px_0_#b94f28] transition hover:translate-y-[2px] hover:shadow-[0_7px_0_#b94f28]">
+              Take a look inside <ArrowRightIcon className="h-4 w-4" />
             </Link>
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-[color:var(--ink)] underline decoration-[color:var(--clay)] decoration-2 underline-offset-4 transition-colors hover:text-[color:var(--clay)]"
-            >
-              I work here, log me in
-            </Link>
+            <span className="text-sm leading-5 text-[#60736c]">7 days free<br className="sm:hidden" /> · no card needed</span>
           </div>
         </div>
-        <div className="mx-auto w-full max-w-sm pt-8 lg:mx-0 lg:justify-self-end lg:pt-0">
-          <Receipt />
-          <p className="mt-6 text-center font-mono text-xs leading-5 text-[color:var(--soft)]">
-            one ticket, seen by the guest,
-            <br />
-            the kitchen, and the till at once
-          </p>
+
+        <div className="landing-photo relative mx-auto w-full max-w-[680px] lg:mx-0">
+          <div className="absolute -left-3 top-8 z-10 hidden w-44 rounded-sm bg-[#f4b24d] p-4 text-[#213b36] shadow-[8px_9px_0_rgba(33,59,54,.13)] sm:block">
+            <p className={`${serif.className} text-xl leading-none`}>The morning rush, without the rush.</p>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-[.15em]">CafeFlow note / 01</p>
+          </div>
+          <div className="relative aspect-[1.1/1] overflow-hidden rounded-[2px] bg-[#d9c9ae] shadow-[18px_20px_0_#d8e3d7]">
+            <img src="/images/cafe_interior.jpg" alt="A lively independent cafe interior" className="h-full w-full object-cover object-center" />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#172f2a]/80 via-[#172f2a]/20 to-transparent px-6 pb-6 pt-24 text-[#f7f1e7] sm:px-8 sm:pb-8">
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#f4b24d]">One clear rhythm</p>
+              <p className={`${serif.className} mt-1 max-w-sm text-2xl leading-tight sm:text-3xl`}>A good service feels easy because the details are handled.</p>
+            </div>
+          </div>
+          <div className="absolute -bottom-6 right-4 z-10 w-44 rotate-[3deg] border border-[#d7c8b0] bg-[#fffdf8] p-4 shadow-[8px_9px_0_rgba(33,59,54,.13)] sm:right-8 sm:w-52">
+            <div className="flex items-center justify-between border-b border-dashed border-[#d7c8b0] pb-2 text-[10px] font-bold uppercase tracking-[.12em] text-[#60736c]"><span>Table 04</span><span>12:47</span></div>
+            <p className="mt-3 text-xs leading-5 text-[#3d514b]">Order received<br />Kitchen notified<br />Payment tracked</p>
+            <p className="mt-2 text-[10px] font-bold uppercase tracking-[.12em] text-[#dd6b3d]">Quietly handled</p>
+          </div>
         </div>
       </section>
 
-      <Ticker />
+      <section id="how-it-works" className="border-y border-[#d8cdb9] bg-[#e4ece2]">
+        <div className="mx-auto grid max-w-[1240px] gap-px overflow-hidden px-5 sm:grid-cols-3 sm:px-8">
+          {NOTES.map(([number, title, body]) => <article key={number} className="relative border-[#cbd8cb] py-10 sm:border-r sm:px-8 sm:last:border-0 lg:px-12 lg:py-14">
+            <span className="text-xs font-bold tracking-[.14em] text-[#dd6b3d]">{number}</span>
+            <h2 className={`${serif.className} mt-5 text-3xl leading-none tracking-[-.04em] text-[#213b36]`}>{title}</h2>
+            <p className="mt-4 max-w-xs text-sm leading-6 text-[#52665f]">{body}</p>
+          </article>)}
+        </div>
+      </section>
 
-      {/* ── Inside ── */}
-      <section id="inside" className="mx-auto max-w-6xl scroll-mt-8 px-5 py-20 sm:px-8 lg:py-28">
-        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+      <section id="what-is-included" className="mx-auto grid max-w-[1240px] gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[.8fr_1.2fr] lg:py-28">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#dc6b3d]">Everything in its place</p>
+          <h2 className={`${serif.className} mt-4 max-w-md text-5xl leading-[.95] tracking-[-.05em] sm:text-6xl`}>Built around how a café actually runs.</h2>
+        </div>
+        <div className="border-t border-[#d8cdb9]">
+          {INCLUDED.map((item, index) => <div key={item} className="grid grid-cols-[2.5rem_1fr] gap-4 border-b border-[#d8cdb9] py-5 sm:grid-cols-[3.5rem_1fr_auto] sm:items-center sm:py-6">
+            <span className="text-xs font-bold text-[#dd6b3d]">0{index + 1}</span>
+            <p className={`${serif.className} text-xl leading-tight tracking-[-.02em] sm:text-2xl`}>{item}</p>
+            <span className="hidden h-2 w-2 rounded-full bg-[#9db9a3] sm:block" aria-hidden />
+          </div>)}
+        </div>
+      </section>
+
+      <section id="pricing" className="bg-[#213b36] px-5 py-20 text-[#f7f1e7] sm:px-8 lg:py-28">
+        <div className="mx-auto grid max-w-[1240px] gap-12 lg:grid-cols-[1fr_.8fr] lg:items-end">
           <div>
-            <p className="font-mono text-[13px] text-[color:var(--clay)]">(01) inside</p>
-            <h2 className={`${fraunces.className} mt-4 text-4xl font-medium leading-[1.05] tracking-tight sm:text-5xl`}>
-              From the first scan to the last <span className="italic text-[color:var(--leaf)]">birr</span>.
-            </h2>
+            <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#f4b24d]">Straightforward pricing</p>
+            <h2 className={`${serif.className} mt-5 text-5xl leading-[.95] tracking-[-.05em] sm:text-7xl`}>30,000 birr<br /><em className="text-[#b7d2b9]">for six months.</em></h2>
+            <p className="mt-6 max-w-lg text-base leading-7 text-[#d4e0d3]/80">One price for the whole café. Every tool. Every staff role. No per-order fees waiting at the end of the month.</p>
           </div>
-          <p className="max-w-md self-end leading-7 text-[color:var(--soft)]">
-            Most café software is built like a supermarket checkout. CafeFlow is built for the 7am
-            macchiato rush: fast on the floor, calm in the kitchen, honest at the till.
-          </p>
-        </div>
-
-        <div className="mt-14">
-          {FEATURES.map((feature, index) => (
-            <article
-              key={feature.title}
-              className="grid gap-2 border-t border-[color:var(--line)] py-7 last:border-b sm:grid-cols-[64px_260px_1fr] sm:gap-8 sm:py-8"
-            >
-              <span className="font-mono text-sm text-[color:var(--clay)]">{String(index + 1).padStart(2, "0")}</span>
-              <h3 className={`${fraunces.className} text-2xl font-medium leading-tight`}>{feature.title}</h3>
-              <p className="max-w-lg text-sm leading-6 text-[color:var(--soft)] sm:text-[15px] sm:leading-7">
-                {feature.body}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* ── First day ── */}
-      <section id="first-day" className="border-t border-[color:var(--line)] bg-[color:var(--flour2)]">
-        <div className="mx-auto max-w-6xl scroll-mt-8 px-5 py-20 sm:px-8 lg:py-28">
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div>
-              <p className="font-mono text-[13px] text-[color:var(--clay)]">(02) your first day</p>
-              <h2 className={`${fraunces.className} mt-4 text-4xl font-medium tracking-tight sm:text-5xl`}>
-                Live before the evening rush.
-              </h2>
-            </div>
-            <p className="max-w-sm text-sm leading-6 text-[color:var(--soft)]">
-              There is no onboarding project. Three steps from a phone or a laptop and the café is
-              running on CafeFlow.
-            </p>
-          </div>
-          <ol className="mt-14 grid gap-6 sm:grid-cols-3">
-            {STEPS.map((step, index) => (
-              <li
-                key={step.title}
-                className="rounded-t-[160px] border border-[color:var(--line)] bg-[color:var(--cream)] px-7 pb-9 pt-16 text-center"
-              >
-                <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border-2 border-[color:var(--clay)] font-mono text-sm text-[color:var(--clay)]">
-                  {index + 1}
-                </span>
-                <h3 className={`${fraunces.className} mt-6 text-2xl font-medium`}>{step.title}</h3>
-                <p className="mx-auto mt-3 max-w-[26ch] text-sm leading-6 text-[color:var(--soft)]">{step.body}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* ── Price ── */}
-      <section id="price" className="bg-[color:var(--night)] text-[color:var(--cream)]">
-        <div className="mx-auto grid max-w-6xl scroll-mt-8 gap-12 px-5 py-20 sm:px-8 lg:grid-cols-2 lg:items-center lg:py-28">
-          <div className="relative">
-            <p className="font-mono text-[13px] text-[#a9c39b]">(03) the price</p>
-            <h2 className={`${fraunces.className} mt-6 text-5xl font-medium leading-[1.05] tracking-tight sm:text-6xl`}>
-              <span className="tabular">30,000</span> birr.
-              <br />
-              Six months.
-              <br />
-              <span className="italic text-[#a9c39b]">The whole café.</span>
-            </h2>
-            <div className="mt-8 inline-block -rotate-3 rounded-md bg-[color:var(--clay)] px-4 py-2 font-mono text-xs uppercase tracking-[0.14em] text-[color:var(--cream)]">
-              7 days free · no card
-            </div>
-          </div>
-          <div className="lg:justify-self-end">
-            <p className="max-w-md leading-7 text-[color:var(--cream)]/70">
-              No per-order fees, no per-seat pricing, no surprise tiers. One price for the whole café,
-              however busy it gets.
-            </p>
-            <ul className="mt-8 space-y-4 text-sm leading-6">
-              {PLAN_INCLUDES.map((item) => (
-                <li key={item} className="flex gap-3">
-                  <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[#a9c39b]" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/register"
-              className="mt-10 inline-flex min-h-12 items-center gap-2 rounded-full bg-[color:var(--cream)] px-7 py-3.5 text-sm font-bold text-[color:var(--night)] transition-colors hover:bg-white"
-            >
-              Start the trial
-              <ArrowRightIcon className="h-4 w-4" />
-            </Link>
+          <div className="rounded-sm bg-[#f7f1e7] p-7 text-[#213b36] shadow-[10px_10px_0_#dd6b3d] sm:p-9">
+            <p className={`${serif.className} text-3xl leading-none`}>Start with a week on us.</p>
+            <p className="mt-3 text-sm leading-6 text-[#52665f]">Set up a branch, add your menu and see the flow with your own team.</p>
+            <Link href="/register" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#dd6b3d] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#c95c31]">Start your free week <ArrowRightIcon className="h-4 w-4" /></Link>
           </div>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-[color:var(--line)] bg-[color:var(--flour)]">
-        <div className="mx-auto max-w-6xl px-5 pb-10 pt-14 sm:px-8">
-          <p className={`${ethiopic.className} text-lg text-[color:var(--leaf)]`}>
-            ቡና ይፍላ። <span className={`${fraunces.className} italic text-[color:var(--soft)]`}>let the coffee boil.</span>
-          </p>
-          <p className={`${fraunces.className} mt-4 text-6xl font-medium tracking-tight text-[color:var(--ink)] sm:text-8xl`}>
-            CafeFlow
-          </p>
-          <div className="mt-10 flex flex-col justify-between gap-3 border-t border-[color:var(--line)] pt-6 font-mono text-[13px] text-[color:var(--soft)] sm:flex-row sm:items-center">
-            <span>café operations, written down</span>
-            <span className="flex items-center gap-6">
-              <Link href="/login" className="transition-colors hover:text-[color:var(--ink)]">log in</Link>
-              <Link href="/register" className="transition-colors hover:text-[color:var(--ink)]">start free</Link>
-              <span>Addis Ababa · {new Date().getFullYear()}</span>
-            </span>
-          </div>
-        </div>
+      <footer className="mx-auto flex max-w-[1240px] flex-col gap-5 px-5 py-9 text-sm text-[#60736c] sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <Link href="/" className={`${serif.className} text-2xl font-semibold tracking-[-.04em] text-[#213b36]`}>CafeFlow</Link>
+        <p>Made for independent cafés in Ethiopia.</p>
+        <div className="flex gap-5 font-semibold"><Link href="/login" className="hover:text-[#213b36]">Sign in</Link><Link href="/register" className="hover:text-[#213b36]">Start free</Link></div>
       </footer>
     </main>
   );
