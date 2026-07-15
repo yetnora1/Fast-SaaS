@@ -65,9 +65,9 @@ function LoginForm() {
             {busy ? t("signingIn") : t("signIn")}
           </Button>
         </form>
-        <button onClick={() => setPinMode(!pinMode)} className="mt-3 text-xs font-medium text-brand-accentText hover:underline">
+        {/* <button onClick={() => setPinMode(!pinMode)} className="mt-3 text-xs font-medium text-brand-accentText hover:underline">
           {pinMode ? t("useEmailPassword") : t("usePosPin")}
-        </button>
+        </button> */}
       </Card>
     </main>
   );
