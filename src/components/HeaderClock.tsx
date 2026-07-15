@@ -110,16 +110,18 @@ export function HeaderClock({
         {ethClockStr}
       </div>
       {/* Clock-in status badge or standard time */}
-      <div
-        className={cn(
-          "flex items-center gap-1.5 text-[10px] font-bold tracking-wide mt-1.5 leading-none",
-          compact ? "text-brand-muted" : "text-white/70"
-        )}
-      >
-        {open && <span className="h-2 w-2 rounded-full bg-status-green animate-pulse" />}
-        {!open && completed && <span className="h-2 w-2 rounded-full bg-brand-muted" />}
-        <span>{statusText}</span>
-      </div>
+      {showStatus && (
+        <div
+          className={cn(
+            "flex items-center gap-1.5 text-[10px] font-bold tracking-wide mt-1.5 leading-none",
+            compact ? "text-brand-muted" : "text-white/70"
+          )}
+        >
+          {open && <span className="h-2 w-2 rounded-full bg-status-green animate-pulse" />}
+          {!open && completed && <span className="h-2 w-2 rounded-full bg-brand-muted" />}
+          <span>{statusText}</span>
+        </div>
+      )}
     </div>
   );
 }
