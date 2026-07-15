@@ -21,42 +21,47 @@ export const POST = handler(async (req: Request) => {
   const me = await requireTenant("cashier", "cafe_manager", "cafe_owner");
   const body = schema.parse(await req.json());
 
-  const shift = me.branchId ? await prisma.shift.findFirst({ where: { branchId: me.branchId, status: "OPEN" } }) : null;
-  const { total } = await getBill(body.orderId);
+  try {
+    const shift = me.branchId ? await prisma.shift.findFirst({ where: { branchId: me.branchId, status: "OPEN" } }) : null;
+    const { total } = await getBill(body.orderId);
 
-  if (body.method === "SPLIT") {
-    if (!body.parts?.length) return fail("Split requires parts", 422);
-    const sum = body.parts.reduce((s, p) => s + p.amount, 0);
-    if (Math.abs(sum - total) > 0.01) return fail(`Split parts (${sum}) must equal total (${total})`, 422);
-    const results = [];
-    for (const part of body.parts) {
-      const r = await processPayment({
-        orderId: body.orderId,
-        method: part.method,
-        amount: part.amount,
-        tendered: part.tendered,
-        reference: part.reference,
-        cashierId: me.sub,
-        shiftId: shift?.id,
-        confirmNow: part.method === "CASH",
-      });
-      results.push(r);
+    if (body.method === "SPLIT") {
+      if (!body.parts?.length) return fail("Split requires parts", 422);
+      const sum = body.parts.reduce((s, p) => s + p.amount, 0);
+      if (Math.abs(sum - total) > 0.01) return fail(`Split parts (${sum}) must equal total (${total})`, 422);
+      const results = [];
+      for (const part of body.parts) {
+        const r = await processPayment({
+          orderId: body.orderId,
+          method: part.method,
+          amount: part.amount,
+          tendered: part.tendered,
+          reference: part.reference,
+          cashierId: me.sub,
+          shiftId: shift?.id,
+          confirmNow: part.method === "CASH",
+        });
+        results.push(r);
+      }
+      await audit({ userId: me.sub, tenantId: me.tenantId, action: "cashier.payment.split", entity: "order", entityId: body.orderId });
+      return ok({ split: true, results });
     }
-    await audit({ userId: me.sub, tenantId: me.tenantId, action: "cashier.payment.split", entity: "order", entityId: body.orderId });
-    return ok({ split: true, results });
-  }
 
-  const amount = body.amount ?? total;
-  const result = await processPayment({
-    orderId: body.orderId,
-    method: body.method,
-    amount,
-    tendered: body.tendered,
-    reference: body.reference,
-    cashierId: me.sub,
-    shiftId: shift?.id,
-    confirmNow: body.method === "CASH",
-  });
-  await audit({ userId: me.sub, tenantId: me.tenantId, action: "cashier.payment", entity: "order", entityId: body.orderId, meta: { method: body.method, amount } });
-  return ok({ paymentId: result.payment.id, changeDue: result.changeDue, status: result.payment.status });
+    const amount = body.amount ?? total;
+    const result = await processPayment({
+      orderId: body.orderId,
+      method: body.method,
+      amount,
+      tendered: body.tendered,
+      reference: body.reference,
+      cashierId: me.sub,
+      shiftId: shift?.id,
+      confirmNow: body.method === "CASH",
+    });
+    await audit({ userId: me.sub, tenantId: me.tenantId, action: "cashier.payment", entity: "order", entityId: body.orderId, meta: { method: body.method, amount } });
+    return ok({ paymentId: result.payment.id, changeDue: result.changeDue, status: result.payment.status });
+  } catch (error) {
+    console.error("Cashier payment POST failed:", error);
+    return fail((error as Error).message, 500);
+  }
 });
