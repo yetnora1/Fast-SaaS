@@ -79,6 +79,7 @@ export function AppShell({
   }
 
   const showClock = Boolean(user?.role && user.role !== "saas_owner");
+  const showClockActions = Boolean(user?.role && user.role !== "saas_owner" && user.role !== "cafe_owner");
   const isDark = themeMode === "dark";
 
   // Clean, consistent palette — no per-route color switching
@@ -245,7 +246,7 @@ export function AppShell({
           </nav>
           <div className="flex items-center gap-2 flex-shrink-0">
             <HeaderClock showStatus={showClock} />
-            {showClock && <ClockInOut />}
+            {showClockActions && <ClockInOut />}
           </div>
         </div>
 
@@ -271,7 +272,7 @@ export function AppShell({
             </nav>
             <div className="mt-3 flex flex-col gap-1.5 border-t border-brand-border/60 pt-3">
               <HeaderClock compact showStatus={showClock} />
-              {showClock && <ClockInOut compact />}
+              {showClockActions && <ClockInOut compact />}
               <button onClick={toggleTheme} className="flex w-full items-center gap-3 rounded-md bg-brand-surface2 px-3 py-2.5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-surface2/80 min-h-[44px]">
                 {themeMode === "light" ? <MoonIcon className="h-4 w-4 text-brand-muted" /> : <SunIcon className="h-4 w-4 text-amber-400" />}
                 <span>{themeMode === "light" ? "Dark Mode" : "Light Mode"}</span>
