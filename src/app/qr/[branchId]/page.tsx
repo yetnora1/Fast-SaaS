@@ -145,6 +145,7 @@ function QrOrder() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [menuView, setMenuView] = useState<"grid" | "list">("grid");
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -162,6 +163,16 @@ function QrOrder() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    const savedView = localStorage.getItem(`cafeflow_menu_view_${branchId}`);
+    if (savedView === "grid" || savedView === "list") setMenuView(savedView);
+  }, [branchId]);
+
+  const handleMenuViewChange = (view: "grid" | "list") => {
+    setMenuView(view);
+    localStorage.setItem(`cafeflow_menu_view_${branchId}`, view);
+  };
 
   const handleToggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -618,6 +629,41 @@ function QrOrder() {
           )}
         </div>
 
+        <div className="max-w-xl mx-auto flex justify-end">
+          <div
+            role="group"
+            aria-label={lang === "en" ? "Menu layout" : "Menu layout"}
+            className={`flex items-center rounded-2xl border p-1 ${
+              theme === "dark" ? "bg-slate-900/90 border-slate-800" : "bg-white border-slate-200"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => handleMenuViewChange("grid")}
+              aria-label={lang === "en" ? "Grid view" : "Grid view"}
+              aria-pressed={menuView === "grid"}
+              title={lang === "en" ? "Grid view" : "Grid view"}
+              className={`h-10 w-10 rounded-xl flex items-center justify-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--qr-accent,#c87a53)] ${
+                menuView === "grid" ? "bg-[color:var(--qr-accent,#c87a53)] text-white shadow-sm" : theme === "dark" ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleMenuViewChange("list")}
+              aria-label={lang === "en" ? "List view" : "List view"}
+              aria-pressed={menuView === "list"}
+              title={lang === "en" ? "List view" : "List view"}
+              className={`h-10 w-10 rounded-xl flex items-center justify-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--qr-accent,#c87a53)] ${
+                menuView === "list" ? "bg-[color:var(--qr-accent,#c87a53)] text-white shadow-sm" : theme === "dark" ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" strokeWidth={3}/></svg>
+            </button>
+          </div>
+        </div>
+
         {/* Sticky Category Selector Navbar Row */}
         <div className={`sticky top-16 z-40 py-3.5 border-b -mx-4 px-4 overflow-x-auto flex gap-2 no-scrollbar scroll-smooth ${
           theme === "dark" ? "bg-slate-950/95 border-slate-900/60" : "bg-[#faf9f6]/98 border-slate-200/60"
@@ -674,7 +720,7 @@ function QrOrder() {
           ))}
         </div>
 
-        {/* Menu Grid Items grouped by categories */}
+        {/* Menu items grouped by categories */}
         <div className="space-y-12 pt-4">
           {data?.categories.map((c) => {
             // Filter items under this category
@@ -695,20 +741,13 @@ function QrOrder() {
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className={menuView === "grid" ? "grid grid-cols-2 md:grid-cols-3 gap-4" : "space-y-3"}>
                   {categoryFilteredItems.map((it) => (
-                    <MenuItemCard
-                      key={it.id}
-                      item={it}
-                      theme={theme}
-                      lang={lang}
-                      isFavorite={favoritesSet.has(it.id)}
-                      t={t}
-                      tr={tr}
-                      onSelect={handleSelectItem}
-                      onToggleFavorite={handleToggleFavorite}
-                      onAddClick={handleAddClick}
-                    />
+                    menuView === "grid" ? (
+                      <MenuItemCard key={it.id} item={it} theme={theme} lang={lang} isFavorite={favoritesSet.has(it.id)} t={t} tr={tr} onSelect={handleSelectItem} onToggleFavorite={handleToggleFavorite} onAddClick={handleAddClick} />
+                    ) : (
+                      <MenuItemListItem key={it.id} item={it} theme={theme} lang={lang} isFavorite={favoritesSet.has(it.id)} t={t} tr={tr} onSelect={handleSelectItem} onToggleFavorite={handleToggleFavorite} onAddClick={handleAddClick} />
+                    )
                   ))}
                 </div>
               </div>
@@ -2071,6 +2110,94 @@ const MenuItemCard = memo(function MenuItemCard({
     </div>
   );
 });
+
+const MenuItemListItem = memo(function MenuItemListItem({
+  item,
+  theme,
+  lang,
+  isFavorite,
+  t,
+  tr,
+  onSelect,
+  onToggleFavorite,
+  onAddClick
+}: MenuItemCardProps) {
+  const handleSelect = () => onSelect(item);
+  const handleToggle = (e: React.MouseEvent) => onToggleFavorite(item.id, e);
+  const handleAdd = (e: React.MouseEvent) => onAddClick(item, e);
+
+  return (
+    <div 
+      className={`group flex items-center justify-between p-3 rounded-2xl border transition-[border-color,box-shadow] duration-200 cursor-pointer relative gap-3 ${
+        theme === "dark" 
+          ? "bg-slate-900/60 border-slate-900 hover:border-slate-800 hover:shadow-lg" 
+          : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md"
+      }`}
+      onClick={handleSelect}
+    >
+      {/* Left Image & Fav Button */}
+      <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-xl overflow-hidden bg-slate-800 shrink-0">
+        <img 
+          src={getLocalItemImage(item.name, item.imageUrl)} 
+          alt={item.name} 
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover" 
+        />
+        {/* Heart icon button overlay */}
+        <button 
+          onClick={handleToggle}
+          className="absolute top-1.5 left-1.5 h-6.5 w-6.5 rounded-full bg-slate-950/70 flex items-center justify-center text-white hover:text-[#ef4444] transition-colors scale-90 shadow-md border border-white/10"
+        >
+          <svg 
+            viewBox="0 0 24 24" 
+            fill={isFavorite ? "currentColor" : "none"} 
+            stroke="currentColor" 
+            strokeWidth={2.2} 
+            className={`h-3.5 w-3.5 ${isFavorite ? "text-[#ef4444]" : "text-white"}`}
+          >
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Middle Text Details */}
+      <div className="flex-grow min-w-0 text-left space-y-0.5 sm:space-y-1">
+        <h4 className={`font-bold text-xs sm:text-sm transition-colors group-hover:text-[color:var(--qr-accent,#c87a53)] line-clamp-1 leading-tight ${
+          theme === "dark" ? "text-white" : "text-slate-900"
+        }`}>
+          {lang === "en" ? item.name : (item.nameAm || item.name)}
+        </h4>
+        <h5 className="text-[10px] text-slate-400 line-clamp-1 leading-none font-medium">
+          {lang === "en" ? (item.nameAm || "") : item.name}
+        </h5>
+        {item.description && (
+          <p className="text-[10px] sm:text-xs text-slate-400 line-clamp-2 leading-snug font-light mt-0.5">
+            {item.description}
+          </p>
+        )}
+      </div>
+
+      {/* Right Price & Add Action Button */}
+      <div className="flex flex-col items-end justify-between self-stretch shrink-0 min-h-[80px] sm:min-h-[96px] py-0.5">
+        <span className={`font-mono text-xs sm:text-sm font-bold whitespace-nowrap ${
+          theme === "dark" ? "text-slate-100" : "text-slate-900"
+        }`}>
+          {Number(item.price).toLocaleString()} ETB
+        </span>
+        <button 
+          className="bg-[color:var(--qr-accent,#c87a53)] hover:bg-[color:var(--qr-accent-hover,#b3663d)] text-white h-7 px-2.5 sm:px-3 rounded-lg text-xxs font-bold flex items-center gap-1 active:scale-95 transition-[background-color,transform] shrink-0"
+          onClick={handleAdd}
+        >
+          <PlusIcon className="h-3 w-3 stroke-[3.5]" />
+          {t("add")}
+        </button>
+      </div>
+    </div>
+  );
+});
+
+
 
 // ── Kiosk Success Screen component ──────────────────────────────
 interface KioskSuccessProps {
