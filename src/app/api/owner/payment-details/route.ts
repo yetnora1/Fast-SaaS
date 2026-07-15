@@ -6,7 +6,7 @@ import { audit } from "@/lib/audit";
 
 const SELECT = { cbeAccountName: true, cbeAccountNumber: true, telebirrNumber: true } as const;
 
-// The café's own customer-facing payment accounts (shown on the QR payment screen).
+// The cafe's own customer-facing payment accounts (shown on the QR payment screen).
 export const GET = handler(async () => {
   const me = await requireTenant("cafe_owner");
   const t = await prisma.tenant.findUnique({ where: { id: me.tenantId }, select: SELECT });

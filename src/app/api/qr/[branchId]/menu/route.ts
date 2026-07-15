@@ -25,7 +25,7 @@ export const GET = handler(async (_req: Request, { params }: { params: { branchI
     },
   });
   if (!branch) return ok({ categories: [] }, { headers: CACHE_HEADERS });
-  // Café's own payment accounts, surfaced so the QR payment screen shows where to pay.
+  // Cafe's own payment accounts, surfaced so the QR payment screen shows where to pay.
   const payment = {
     businessName: branch.tenant.name,
     cbeAccountName: branch.tenant.cbeAccountName,

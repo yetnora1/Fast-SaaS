@@ -242,7 +242,7 @@ model Tenant {
   subEnd      DateTime?    @map("sub_end")
   address     String?
   phone       String?
-  // Café's own customer-facing payment accounts (shown on the QR payment screen).
+  // Cafe's own customer-facing payment accounts (shown on the QR payment screen).
   cbeAccountName   String? @map("cbe_account_name")
   cbeAccountNumber String? @map("cbe_account_number")
   telebirrNumber   String? @map("telebirr_number")

@@ -1346,7 +1346,7 @@ function PaymentModal({
     setReceiptUrl(null);
   };
 
-  // Real accounts the café owner configured (Owner → Payments). No hardcoded values.
+  // Real accounts the cafe owner configured (Owner → Payments). No hardcoded values.
   const businessName = payment?.businessName || "";
   const paymentDetails = {
     TELEBIRR: {
@@ -1460,7 +1460,7 @@ function PaymentModal({
               ) : (
                 <div className="rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-2.5 text-[11px] text-amber-500">
                   {lang === "en"
-                    ? "This café hasn't added this payment option yet. Please use another method or ask the staff."
+                    ? "This cafe hasn't added this payment option yet. Please use another method or ask the staff."
                     : "ይህ ካፌ ይህን የክፍያ አማራጭ እስካሁን አላከለም። እባክዎ ሌላ ዘዴ ይጠቀሙ ወይም ሰራተኞችን ይጠይቁ።"}
                 </div>
               )}

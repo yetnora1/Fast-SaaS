@@ -227,7 +227,7 @@ interface PaymentAccounts {
 }
 
 // Owner-editable customer-facing payment accounts (CBE + Telebirr). These flow
-// to the QR payment screen so customers pay the café's real accounts.
+// to the QR payment screen so customers pay the cafe's real accounts.
 function PaymentAccountsCard() {
   const { t } = useLang();
   const [form, setForm] = useState<PaymentAccounts>({ cbeAccountName: "", cbeAccountNumber: "", telebirrNumber: "" });
