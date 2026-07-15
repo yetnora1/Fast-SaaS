@@ -61,14 +61,14 @@ export default function Home() {
             <span className="h-px w-8 bg-current" /> Addis Ababa · Ethiopia
           </p>
           <h1 className={`${serif.className} max-w-[11ch] text-[3.65rem] font-medium leading-[.91] tracking-[-.055em] text-[#213b36] sm:text-[5.25rem]`}>
-            Keep the café<br />moving. <em className="text-[#a55331]">Naturally.</em>
+            Keep the cafe<br />moving. <em className="text-[#a55331]">Naturally.</em>
           </h1>
           <p className="mt-7 max-w-[35rem] text-base leading-7 text-[#52665f] sm:text-lg sm:leading-8">
             <span className="font-medium text-[#213b36]">ከጠረጴዛ እስከ ሂሳብ.</span> CafeFlow keeps orders, coffee, people and payments in rhythm—so your team can stay with the guests, not the paperwork.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
             <Link href="/register" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#dd6b3d] px-6 py-3 text-sm font-bold text-white shadow-[0_9px_0_#b94f28] transition hover:translate-y-[2px] hover:shadow-[0_7px_0_#b94f28]">
-              Start your café <ArrowRightIcon className="h-4 w-4" />
+              Start your cafe <ArrowRightIcon className="h-4 w-4" />
             </Link>
             <span className="text-sm leading-5 text-[#60736c]">7 days free<br className="sm:hidden" /> · no card needed</span>
           </div>
@@ -79,10 +79,10 @@ export default function Home() {
             <Image src="/images/cafe_interior.jpg" alt="A lively independent cafe interior" fill priority sizes="(max-width: 1024px) 100vw, 52vw" className="object-cover object-center" />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#172f2a]/80 via-[#172f2a]/20 to-transparent px-6 pb-6 pt-24 text-[#f7f1e7] sm:px-8 sm:pb-8">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-[#f4b24d]">A calm service is a good service</p>
-              <p className={`${serif.className} mt-1 max-w-sm text-2xl leading-tight sm:text-3xl`}>Everything your café needs, without changing the way it feels.</p>
+              <p className={`${serif.className} mt-1 max-w-sm text-2xl leading-tight sm:text-3xl`}>Everything your cafe needs, without changing the way it feels.</p>
             </div>
           </div>
-          <p className="mt-4 border-l-2 border-[#a55331] pl-4 text-sm leading-5 text-[#52665f]">For cafés where a full room, a busy counter and a good cup of coffee all matter.</p>
+          <p className="mt-4 border-l-2 border-[#a55331] pl-4 text-sm leading-5 text-[#52665f]">For cafes where a full room, a busy counter and a good cup of coffee all matter.</p>
         </div>
       </section>
 
@@ -99,7 +99,7 @@ export default function Home() {
       <section id="what-is-included" className="mx-auto grid max-w-[1240px] gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[.8fr_1.2fr] lg:py-28">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#dc6b3d]">Everything in its place</p>
-          <h2 className={`${serif.className} mt-4 max-w-md text-5xl leading-[.95] tracking-[-.05em] sm:text-6xl`}>Built around how a café actually runs.</h2>
+          <h2 className={`${serif.className} mt-4 max-w-md text-5xl leading-[.95] tracking-[-.05em] sm:text-6xl`}>Built around how a cafe actually runs.</h2>
         </div>
         <div className="border-t border-[#d8cdb9]">
           {INCLUDED.map((item, index) => <div key={item} className="grid grid-cols-[2.5rem_1fr] gap-4 border-b border-[#d8cdb9] py-5 sm:grid-cols-[3.5rem_1fr_auto] sm:items-center sm:py-6">
@@ -115,7 +115,7 @@ export default function Home() {
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#f4b24d]">Straightforward pricing</p>
             <h2 className={`${serif.className} mt-5 text-5xl leading-[.95] tracking-[-.05em] sm:text-7xl`}>30,000 birr<br /><em className="text-[#b7d2b9]">for six months.</em></h2>
-            <p className="mt-6 max-w-lg text-base leading-7 text-[#d4e0d3]/80">One price for the whole café. Every tool. Every staff role. No per-order fees waiting at the end of the month.</p>
+            <p className="mt-6 max-w-lg text-base leading-7 text-[#d4e0d3]/80">One price for the whole cafe. Every tool. Every staff role. No per-order fees waiting at the end of the month.</p>
           </div>
           <div className="rounded-sm bg-[#f7f1e7] p-7 text-[#213b36] shadow-[10px_10px_0_#dd6b3d] sm:p-9">
             <p className={`${serif.className} text-3xl leading-none`}>Start with a week on us.</p>
@@ -127,7 +127,7 @@ export default function Home() {
 
       <footer className="mx-auto flex max-w-[1240px] flex-col gap-5 px-5 py-9 text-sm text-[#60736c] sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <Link href="/" className={`${serif.className} text-2xl font-semibold tracking-[-.04em] text-[#213b36]`}>CafeFlow</Link>
-        <p>Made for independent cafés in Ethiopia.</p>
+        <p>Made for independent cafes in Ethiopia.</p>
         <div className="flex gap-5 font-semibold"><Link href="/login" className="hover:text-[#213b36]">Sign in</Link><Link href="/register" className="hover:text-[#213b36]">Start free</Link></div>
       </footer>
     </main>
