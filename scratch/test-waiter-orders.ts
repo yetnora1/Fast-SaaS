@@ -6,7 +6,7 @@ async function run() {
   
   try {
     const orders = await prisma.order.findMany({
-      where: { tenantId, waiterId, status: { notIn: ["COMPLETED", "VOIDED", "REFUNDED"] } },
+      where: { tenantId, waiterId, status: { notIn: ["COMPLETED", "CANCELLED", "DECLINED"] } },
       include: { items: { include: { menuItem: true } }, table: true },
       orderBy: { createdAt: "desc" },
     });
