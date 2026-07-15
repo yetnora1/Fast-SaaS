@@ -139,20 +139,20 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
             <style>
               body {
                 margin: 0;
-                background: #0b0f19;
+                background: #09090b;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
                 min-height: 100vh;
                 font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                color: white;
+                color: #fafafa;
               }
               .card {
-                background: #111827;
+                background: #18181b;
                 padding: 32px;
                 border-radius: 24px;
-                border: 1px solid rgba(255,255,255,0.08);
+                border: 1px solid #27272a;
                 box-shadow: 0 20px 50px rgba(0,0,0,0.6);
                 display: flex;
                 flex-direction: column;
@@ -164,13 +164,11 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
                 font-size: 24px;
                 font-weight: 800;
                 letter-spacing: 0.05em;
-                background: linear-gradient(135deg, #a78bfa, #818cf8);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
+                color: #14b8a6;
                 text-transform: uppercase;
               }
               .sub {
-                color: #9ca3af;
+                color: #a1a1aa;
                 margin: 6px 0 24px 0;
                 font-size: 13px;
                 font-weight: 500;
