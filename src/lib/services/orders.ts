@@ -31,6 +31,10 @@ export async function createOrder(opts: {
   const menuItems = await prisma.menuItem.findMany({ where: { id: { in: menuIds } } });
   const byId = new Map(menuItems.map((m) => [m.id, m]));
 
+  // Determine initial status: QR prepaid orders skip cashier gate
+  const isQrPrepaid = opts.type === "QR" && opts.receiptUrl;
+  const initialStatus = !opts.submit ? "DRAFT" : isQrPrepaid ? "SUBMITTED" : "PENDING_CASHIER";
+
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
@@ -39,8 +43,8 @@ export async function createOrder(opts: {
         tableId: opts.tableId ?? null,
         waiterId: opts.waiterId ?? null,
         type: opts.type ?? "DINE_IN",
-        status: opts.submit ? "SUBMITTED" : "DRAFT",
-        submittedAt: opts.submit ? new Date() : null,
+        status: initialStatus,
+        submittedAt: initialStatus === "SUBMITTED" ? new Date() : null,
         txRef: opts.txRef ?? null,
         receiptUrl: opts.receiptUrl ?? null,
         guestTableNumber: opts.guestTableNumber ?? null,
@@ -73,7 +77,12 @@ export async function createOrder(opts: {
     return created;
   });
 
-  if (opts.submit) await onOrderSubmitted(order.id, opts.branchId);
+  // QR prepaid orders fire directly to KDS; waiter orders wait for cashier
+  if (initialStatus === "SUBMITTED") await onOrderSubmitted(order.id, opts.branchId);
+  // Notify cashier about pending orders
+  if (initialStatus === "PENDING_CASHIER") {
+    await notifyRoleInBranch(order.branchId, "cashier", "order_pending", "New order pending", "A new order is waiting for your approval.");
+  }
   return order;
 }
 
@@ -83,6 +92,49 @@ async function onOrderSubmitted(orderId: string, branchId: string) {
   const hasDrinks = order.items.some((i) => i.station === "BARISTA");
   const hasFood = order.items.some((i) => i.station === "KITCHEN");
   // Allergy-flagged items must surface immediately to kitchen.
+}
+
+/** Cashier approves a PENDING_CASHIER order → fires it to kitchen/barista. */
+export async function cashierApproveOrder(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true } });
+  if (!order) throw new Error("Order not found");
+  if (order.status !== "PENDING_CASHIER") throw new Error(`Order is ${order.status}, not PENDING_CASHIER`);
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { status: "SUBMITTED", submittedAt: new Date() },
+  });
+  await onOrderSubmitted(orderId, order.branchId);
+
+  // Notify waiter their order was approved
+  if (order.waiterId) {
+    const { notifyUser } = await import("./notifications");
+    await notifyUser(order.waiterId, "order_approved", "Order approved", "Your order has been approved by the cashier and sent to preparation.");
+  }
+}
+
+/** Cashier declines a PENDING_CASHIER order with a reason. */
+export async function cashierDeclineOrder(orderId: string, reason: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new Error("Order not found");
+  if (order.status !== "PENDING_CASHIER") throw new Error(`Order is ${order.status}, not PENDING_CASHIER`);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id: orderId },
+      data: { status: "DECLINED", declineReason: reason || "No reason provided" },
+    });
+    // Free the table if one was assigned
+    if (order.tableId) {
+      await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "available" } });
+    }
+  });
+
+  // Notify waiter about the decline
+  if (order.waiterId) {
+    const { notifyUser } = await import("./notifications");
+    await notifyUser(order.waiterId, "order_declined", "Order declined", `Your order was declined: ${reason || "No reason provided"}`);
+  }
 }
 
 export async function addItemsToOrder(orderId: string, items: NewOrderItemInput[]) {

@@ -1,0 +1,41 @@
+
+> cafeflow@0.1.0 dev
+> next dev --port 3010
+
+  ▲ Next.js 14.2.15
+  - Local:        http://localhost:3010
+  - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 2.9s
+ ✓ Compiled /src/middleware in 418ms (155 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 5s (523 modules)
+ GET / 200 in 5142ms
+ ✓ Compiled in 1728ms (261 modules)
+ ✓ Compiled in 864ms (509 modules)
+ ✓ Compiled in 217ms (261 modules)
+ GET / 200 in 189ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 785ms (512 modules)
+ GET /_next/static/css/app/layout.css?v=1783943617489 404 in 1034ms
+ GET /_next/static/chunks/webpack.js?v=1783943617489 404 in 1020ms
+ GET /_next/static/chunks/main-app.js?v=1783943617489 404 in 1021ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 1021ms
+ GET /_next/static/chunks/app/page.js 404 in 1011ms
+ GET /_next/static/chunks/app/layout.js 404 in 940ms
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 820ms (721 modules)
+ GET / 500 in 964ms
+ ✓ Compiled in 826ms (735 modules)
+ GET / 200 in 317ms
+ ✓ Compiled /_not-found in 244ms (724 modules)
+ GET /_next/static/chunks/main-app.js?v=1783945614998 404 in 385ms
+ GET /_next/static/chunks/app/page.js 404 in 197ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 355ms
+ ✓ Compiled in 1690ms (738 modules)
+ ✓ Compiled in 447ms (446 modules)
+ ✓ Compiled in 396ms (446 modules)
+ GET / 200 in 200ms
+ ○ Compiling /register ...
+ ✓ Compiled /register in 1177ms (749 modules)

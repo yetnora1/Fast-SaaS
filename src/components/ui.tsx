@@ -19,7 +19,7 @@ export function Card({
   return (
     <As
       className={cn(
-        "animate-in rounded-2xl border border-brand-border/70 bg-brand-surface p-4 shadow-card",
+        "rounded-xl border border-brand-border bg-brand-surface p-5 shadow-card",
         className,
       )}
     >
@@ -39,10 +39,10 @@ export function PageHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-brand-border/70 pb-5">
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight text-brand-foreground">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-sm text-brand-muted">{subtitle}</p>}
+        <h1 className="font-display text-[1.75rem] font-bold tracking-[-0.02em] text-brand-foreground">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm leading-6 text-brand-muted">{subtitle}</p>}
       </div>
       {children && <div className="flex items-center gap-2">{children}</div>}
     </div>
@@ -75,12 +75,12 @@ export function KPICard({
   tone?: keyof typeof TONE_RING;
 }) {
   return (
-    <Card className="p-4">
+    <Card className="p-5">
       <div className="flex items-start justify-between gap-2">
-        <div className="text-xs font-medium uppercase tracking-wide text-brand-muted">{label}</div>
+        <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-muted">{label}</div>
         {icon && <span className={cn("opacity-80", TONE_RING[tone])}>{icon}</span>}
       </div>
-      <div className="tabular mt-2 text-2xl font-bold leading-none text-brand-foreground">{value}</div>
+      <div className="tabular mt-3 text-[1.75rem] font-bold leading-none tracking-[-0.03em] text-brand-foreground">{value}</div>
       {delta && (
         <div
           className={cn(
@@ -120,12 +120,12 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-medium transition-all duration-150 active:scale-[0.97]",
+        "inline-flex cursor-pointer items-center justify-center gap-2 rounded-md font-semibold transition-all duration-150 active:translate-y-px",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
-        size === "md" ? "touch-target px-4 py-2 text-sm" : "min-h-[40px] px-3 py-1.5 text-sm",
-        variant === "primary" && "bg-brand-accent text-brand-accentFg shadow-card hover:bg-brand-accentHover",
-        variant === "ghost" && "bg-brand-surface2 text-brand-foreground hover:bg-white/10",
-        variant === "danger" && "bg-status-redSolid text-white hover:opacity-90",
+        size === "md" ? "min-h-[48px] min-w-[48px] px-4 py-2 text-sm" : "min-h-[40px] px-3 py-1.5 text-sm",
+        variant === "primary" && "bg-brand-accent text-white hover:bg-brand-accentHover",
+        variant === "ghost" && "border border-brand-border bg-transparent text-brand-foreground hover:bg-brand-surface2",
+        variant === "danger" && "bg-status-redSolid text-white hover:bg-red-700",
         className,
       )}
     >
@@ -140,8 +140,8 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={cn(
-        "touch-target w-full rounded-xl border border-brand-border bg-brand-surface2 px-3 py-2 text-sm text-brand-foreground outline-none transition-colors",
-        "placeholder:text-brand-muted focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/40",
+        "touch-target w-full rounded-lg border border-brand-border bg-brand-surface2 px-3 py-2 text-sm text-brand-foreground outline-none transition-colors",
+        "placeholder:text-brand-muted focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20",
         props.className,
       )}
     />
@@ -153,8 +153,8 @@ export function Select({ className, children, ...props }: React.SelectHTMLAttrib
     <select
       {...props}
       className={cn(
-        "touch-target w-full cursor-pointer rounded-xl border border-brand-border bg-brand-surface2 px-3 py-2 text-sm text-brand-foreground outline-none transition-colors",
-        "focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/40",
+        "touch-target w-full cursor-pointer rounded-lg border border-brand-border bg-brand-surface2 px-3 py-2 text-sm text-brand-foreground outline-none transition-colors",
+        "focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20",
         className,
       )}
     >
@@ -240,6 +240,8 @@ const STATUS_COLORS: Record<string, string> = {
   available: "bg-status-green/15 text-status-greenText",
   occupied: "bg-status-occupied/15 text-status-occupiedText",
   attention: "bg-status-red/15 text-status-redText",
+  PENDING_CASHIER: "bg-status-yellow/15 text-status-yellowText",
+  DECLINED: "bg-status-red/15 text-status-redText",
 };
 
 export function StatusChip({ status }: { status: string }) {

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { api, usePoll } from "@/components/fetcher";
 import { Button, Card, EmptyState, Input } from "@/components/ui";
-import { ReceiptIcon, ArrowRightIcon, CheckCircleIcon, AlertTriangleIcon, ClockIcon } from "@/components/icons";
+import { ReceiptIcon, ArrowRightIcon, CheckCircleIcon, AlertTriangleIcon, ClockIcon, InboxIcon } from "@/components/icons";
 import { useLang } from "@/lib/i18n";
 
 interface QueueOrder { id: string; status: string; table: { number: number } | null }
@@ -17,6 +17,14 @@ interface PendingPayment {
   createdAt: string;
   items: { name: string; qty: number; lineTotal: number }[];
   total: number;
+}
+interface PendingOrder {
+  id: string;
+  status: string;
+  createdAt: string;
+  table: { number: number } | null;
+  waiter: { name: string } | null;
+  items: { id: string; quantity: number; unitPrice: string; menuItem: { name: string; nameAm: string | null; price: string; station: string } }[];
 }
 
 export default function CashierPOS() {
@@ -88,6 +96,7 @@ export default function CashierPOS() {
 
   return (
     <div className="space-y-4">
+      <PendingCashierOrders />
       <PendingPayments />
       <div className="grid md:grid-cols-3 gap-4">
       <Card>
@@ -95,7 +104,7 @@ export default function CashierPOS() {
         <div className="space-y-1">
           {queue.data?.orders.length === 0 && <EmptyState icon={<ReceiptIcon className="h-7 w-7" />}>{t("noBills")}</EmptyState>}
           {queue.data?.orders.map((o) => (
-            <button key={o.id} onClick={() => openBill(o.id)} className="touch-target flex w-full items-center justify-between gap-2 rounded-xl bg-brand-surface2 p-3 text-left transition-colors hover:bg-white/10">
+            <button key={o.id} onClick={() => openBill(o.id)} className="flex w-full items-center justify-between gap-2 rounded-xl border border-brand-border bg-brand-surface2 p-3 text-left transition-all hover:border-brand-accent/40 hover:bg-brand-surface2/80 min-h-[48px]">
               <span>{t("table")} {o.table?.number ?? "—"} · {o.status}</span>
               <ArrowRightIcon className="h-4 w-4 text-brand-muted" />
             </button>
@@ -143,6 +152,124 @@ export default function CashierPOS() {
       </Card>
       </div>
     </div>
+  );
+}
+
+// ── Pending Cashier Approval Orders ──────────────────────────────────
+function PendingCashierOrders() {
+  const { t, tr } = useLang();
+  const { data, reload } = usePoll<{ orders: PendingOrder[] }>("/api/cashier/pending-orders", 3000);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [declineFor, setDeclineFor] = useState<PendingOrder | null>(null);
+  const [reason, setReason] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  const orders = data?.orders ?? [];
+  if (orders.length === 0 && data) return null;
+
+  async function approve(orderId: string) {
+    setBusyId(orderId);
+    setErr(null);
+    try {
+      await api(`/api/cashier/orders/${orderId}/approve`, { method: "POST" });
+      reload();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function decline(orderId: string) {
+    if (!reason.trim()) return;
+    setBusyId(orderId);
+    setErr(null);
+    try {
+      await api(`/api/cashier/orders/${orderId}/decline`, {
+        method: "POST",
+        body: JSON.stringify({ reason: reason.trim() }),
+      });
+      setDeclineFor(null);
+      setReason("");
+      reload();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <Card className="border-brand-accent/30 bg-brand-accent/[0.04]">
+      <div className="mb-3 flex items-center gap-2">
+        <ClockIcon className="h-5 w-5 text-brand-accentText" />
+        <span className="font-display font-bold">{t("pendingCashierOrders")}</span>
+        <span className="tabular rounded-full bg-brand-accent/15 px-2 py-0.5 text-xs font-bold text-brand-accentText">{orders.length}</span>
+      </div>
+
+      {err && <p className="mb-2 text-sm text-status-redText">{err}</p>}
+
+      {!data && (
+        <div className="flex items-center gap-2 text-sm text-brand-muted py-4">
+          <ClockIcon className="h-4 w-4 animate-spin" /> Loading...
+        </div>
+      )}
+
+      {data && orders.length === 0 && (
+        <EmptyState icon={<InboxIcon className="h-7 w-7" />}>{t("noPendingOrders")}</EmptyState>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {orders.map((o) => {
+          const busy = busyId === o.id;
+          const total = o.items.reduce((s, it) => s + Number(it.unitPrice) * it.quantity, 0);
+          return (
+            <div key={o.id} className="flex flex-col gap-2.5 rounded-xl border border-brand-border bg-brand-surface p-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="font-medium">{t("table")} {o.table?.number ?? "—"}</div>
+                  {o.waiter && <div className="text-xs text-brand-muted">{t("waiterLabel")}: {o.waiter.name}</div>}
+                </div>
+                <div className="text-right">
+                  <div className="tabular text-lg font-bold text-brand-accentText">{total.toLocaleString()} ETB</div>
+                  <div className="text-[10px] text-brand-muted uppercase tracking-wider">{t("estimatedTotal")}</div>
+                </div>
+              </div>
+
+              <div className="text-xs text-brand-muted">
+                {o.items.map((it) => `${it.quantity}× ${tr(it.menuItem.name, it.menuItem.nameAm)}`).join(", ")}
+              </div>
+
+              <div className="mt-auto flex gap-2">
+                <Button size="sm" className="flex-1" loading={busy} onClick={() => approve(o.id)}>
+                  <CheckCircleIcon className="h-4 w-4" />{t("approveOrder")}
+                </Button>
+                <Button size="sm" variant="danger" className="flex-1" disabled={busy} onClick={() => { setDeclineFor(o); setReason(""); }}>
+                  <AlertTriangleIcon className="h-4 w-4" />{t("declineOrder")}
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Decline confirm modal */}
+      {declineFor && (
+        <div className="animate-fade fixed inset-0 z-modal flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setDeclineFor(null)}>
+          <div className="animate-in w-full max-w-sm rounded-2xl border border-brand-border bg-brand-surface p-4 shadow-pop" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-1 font-display text-lg font-bold">{t("confirmDeclineOrder")}</div>
+            <p className="mb-3 text-sm text-brand-muted">{t("table")} {declineFor.table?.number ?? "—"}</p>
+            <Input placeholder={t("declineReasonLabel")} value={reason} onChange={(e) => setReason(e.target.value)} />
+            <div className="mt-3 flex gap-2">
+              <Button variant="ghost" className="flex-1" onClick={() => setDeclineFor(null)}>{t("cancel")}</Button>
+              <Button variant="danger" className="flex-1" loading={busyId === declineFor.id} disabled={!reason.trim()} onClick={() => decline(declineFor.id)}>
+                {t("confirmDeclineOrder")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 

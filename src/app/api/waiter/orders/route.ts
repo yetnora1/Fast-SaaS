@@ -25,6 +25,7 @@ export const GET = handler(async () => {
   const orders = await prisma.order.findMany({
     where: { tenantId: me.tenantId, waiterId: me.sub, status: { notIn: ["COMPLETED", "VOIDED", "REFUNDED"] } },
     include: { items: { include: { menuItem: true } }, table: true },
+    // declineReason is selected by default (it's a scalar field)
     orderBy: { createdAt: "desc" },
   });
   return ok({ orders });

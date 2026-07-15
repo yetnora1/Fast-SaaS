@@ -1,58 +1,47 @@
 import type { Config } from "tailwindcss";
 
-// CafeFlow design system — "Real-Time / Operations" palette (ui-ux-pro-max).
-// Deep-slate base + teal accent + green/amber/red status colors, tuned for
-// data-dense, scannable service-floor dashboards (light + dark).
-// Token NAMES are kept stable (brand-*, status-*) so every page adopts the new
-// palette automatically. All accent values are dark enough that white text on
-// them meets WCAG AA (>=4.5:1); AppShell overrides them per module/theme.
+// CafeFlow design system — Clean, modern, hand-crafted palette.
+// Neutral slate base (no tinted backgrounds) + refined teal accent.
+// Designed for data-dense operational dashboards with proper WCAG AA contrast.
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // Brand tokens use RGB-triplet vars (`R G B`) so Tailwind opacity
-        // modifiers (bg-brand-accent/15, border-brand-border/60, …) work.
-        // AppShell sets --theme-*-rgb per module/theme; fallbacks below are the
-        // default dark palette and serve pages without AppShell (landing, QR).
         brand: {
-          bg: "rgb(var(--theme-bg-rgb, 11 15 25) / <alpha-value>)", // dynamic background (#0b0f19)
-          surface: "rgb(var(--theme-surface-rgb, 22 31 48) / <alpha-value>)", // dynamic surface cards (#161f30)
-          surface2: "rgb(var(--theme-surface2-rgb, 34 45 65) / <alpha-value>)", // dynamic inputs (#222d41)
-          header: "rgb(var(--theme-header-rgb, 31 58 61) / <alpha-value>)", // header background (#1F3A3D)
-          accent: "rgb(var(--theme-accent-rgb, 13 125 108) / <alpha-value>)", // primary action (#0d7d6c, white text passes AA)
-          accentHover: "rgb(var(--theme-accent-hover-rgb, 10 101 88) / <alpha-value>)", // hover (#0a6558)
-          accentText: "rgb(var(--theme-accent-text-rgb, 13 125 108) / <alpha-value>)", // accent-as-text: bright on dark, deep on light
-          accentFg: "#ffffff", // white text on accent
-          border: "rgb(var(--theme-border-rgb, 42 56 78) / <alpha-value>)", // dynamic borders (#2a384e)
-          muted: "rgb(var(--theme-muted-rgb, 172 188 191) / <alpha-value>)", // muted text (#ACBCBF)
-          foreground: "rgb(var(--theme-foreground-rgb, 244 252 251) / <alpha-value>)", // foreground text (#F4FCFB)
+          bg: "rgb(var(--theme-bg-rgb, 9 9 11) / <alpha-value>)",             // #09090b zinc-950
+          surface: "rgb(var(--theme-surface-rgb, 24 24 27) / <alpha-value>)",   // #18181b zinc-900
+          surface2: "rgb(var(--theme-surface2-rgb, 39 39 42) / <alpha-value>)", // #27272a zinc-800
+          header: "rgb(var(--theme-header-rgb, 9 9 11) / <alpha-value>)",       // #09090b — same as bg for seamless look
+          accent: "rgb(var(--theme-accent-rgb, 20 184 166) / <alpha-value>)",   // #14b8a6 teal-500
+          accentHover: "rgb(var(--theme-accent-hover-rgb, 13 148 136) / <alpha-value>)", // #0d9488 teal-600
+          accentText: "rgb(var(--theme-accent-text-rgb, 20 184 166) / <alpha-value>)",   // teal-500
+          accentFg: "#ffffff",
+          border: "rgb(var(--theme-border-rgb, 63 63 70) / <alpha-value>)",     // #3f3f46 zinc-700
+          muted: "rgb(var(--theme-muted-rgb, 161 161 170) / <alpha-value>)",    // #a1a1aa zinc-400
+          foreground: "rgb(var(--theme-foreground-rgb, 250 250 250) / <alpha-value>)", // #fafafa zinc-50
         },
-        // status *Text tokens are themed per light/dark by AppShell (bright hue
-        // on dark surfaces, deep hue on light) so status text stays >=4.5:1.
         status: {
-          available: "#05AD98", // Vichy teal (dots/fills — 3:1 UI context)
-          occupied: "#4AB5B5", // Neptune soft teal
-          occupiedText: "rgb(var(--status-occupied-text-rgb, 38 118 118) / <alpha-value>)", // #267676
-          attention: "#EF4444",
-          green: "#05AD98",
-          greenSolid: "#16803C", // solid fills carrying white text (5.02:1)
-          greenText: "rgb(var(--status-green-text-rgb, 13 125 108) / <alpha-value>)", // #0d7d6c
-          yellow: "#F59E0B",
-          yellowText: "rgb(var(--status-yellow-text-rgb, 180 83 9) / <alpha-value>)", // #B45309
-          red: "#EF4444", // dots, borders, /15 tints
-          redSolid: "#DC2626", // solid fills carrying white text (4.83:1)
-          redText: "rgb(var(--status-red-text-rgb, 185 28 28) / <alpha-value>)", // #B91C1C
-          blue: "#0474C4", // Sapphire deep blue
-          blueText: "rgb(var(--status-blue-text-rgb, 4 116 196) / <alpha-value>)", // #0474C4
+          available: "#10b981",      // emerald-500
+          occupied: "#06b6d4",       // cyan-500
+          occupiedText: "rgb(var(--status-occupied-text-rgb, 8 145 178) / <alpha-value>)", // cyan-600
+          attention: "#ef4444",      // red-500
+          green: "#10b981",          // emerald-500
+          greenSolid: "#059669",     // emerald-600
+          greenText: "rgb(var(--status-green-text-rgb, 16 185 129) / <alpha-value>)", // emerald-500
+          yellow: "#f59e0b",         // amber-500
+          yellowText: "rgb(var(--status-yellow-text-rgb, 245 158 11) / <alpha-value>)", // amber-500
+          red: "#ef4444",            // red-500
+          redSolid: "#dc2626",       // red-600
+          redText: "rgb(var(--status-red-text-rgb, 239 68 68) / <alpha-value>)", // red-500
+          blue: "#3b82f6",           // blue-500
+          blueText: "rgb(var(--status-blue-text-rgb, 59 130 246) / <alpha-value>)", // blue-500
         },
       },
       fontFamily: {
-        // Display = Playfair Display (brand/headlines); body = Karla.
         display: ["var(--font-display)", "Georgia", "serif"],
         sans: ["var(--font-sans)", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
       },
-      // Single z-index scale (skill: avoid arbitrary z-[9999]).
       zIndex: {
         banner: "20",
         nav: "30",
@@ -61,8 +50,8 @@ const config: Config = {
         toast: "60",
       },
       boxShadow: {
-        card: "0 1px 2px 0 rgb(0 0 0 / 0.30), 0 1px 3px 0 rgb(0 0 0 / 0.20)",
-        pop: "0 12px 32px -8px rgb(0 0 0 / 0.55)",
+        card: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+        pop: "0 10px 25px -5px rgb(0 0 0 / 0.25), 0 8px 10px -6px rgb(0 0 0 / 0.15)",
       },
       keyframes: {
         "fade-in-up": {

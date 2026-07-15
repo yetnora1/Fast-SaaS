@@ -66,6 +66,8 @@ enum TableShape {
 
 enum OrderStatus {
   DRAFT
+  PENDING_CASHIER
+  DECLINED
   SUBMITTED
   IN_PREPARATION
   PARTIALLY_READY
@@ -455,6 +457,7 @@ model Order {
   txRef         String?     @map("tx_ref")
   receiptUrl    String?     @map("receipt_url")
   guestTableNumber Int?     @map("guest_table_number") // table # typed by a QR customer, even if no CafeTable row matches
+  declineReason String?     @map("decline_reason") @db.Text
   feedbackRating Int?       @map("feedback_rating")
   feedbackComment String?     @db.Text @map("feedback_comment")
   submittedAt   DateTime?   @map("submitted_at")
