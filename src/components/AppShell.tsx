@@ -6,7 +6,7 @@ import { api, usePoll } from "@/components/fetcher";
 import { ClockInOut } from "@/components/ClockInOut";
 import { HeaderClock } from "@/components/HeaderClock";
 import { useLang } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cn, getAvatarUrl } from "@/lib/utils";
 import { BellIcon, GlobeIcon, LogOutIcon, SunIcon, MoonIcon } from "@/components/icons";
 import { CafeStatusFAB } from "@/components/CafeStatusFAB";
 
@@ -158,7 +158,7 @@ export function AppShell({
                 title={user.name}
               >
                 {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                  <img src={getAvatarUrl(user.avatarUrl) || ""} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-brand-accent/20 text-brand-accentText text-sm font-bold">
                     {user.name.charAt(0).toUpperCase()}

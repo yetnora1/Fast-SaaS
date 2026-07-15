@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api, usePoll } from "@/components/fetcher";
 import { Button, Card, Input, Select, RoleBadge, PageHeader, Field, Spinner, Modal } from "@/components/ui";
 import { useLang } from "@/lib/i18n";
+import { getAvatarUrl } from "@/lib/utils";
 import type { Role } from "@prisma/client";
 
 interface Staff {
@@ -347,7 +348,7 @@ export default function StaffPage() {
                       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ring-2 ring-brand-border">
                         {s.avatarUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={s.avatarUrl} alt={s.name} className="h-full w-full object-cover" />
+                          <img src={getAvatarUrl(s.avatarUrl) || ""} alt={s.name} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border font-bold text-brand-accentText">
                             {initials}
@@ -475,7 +476,7 @@ export default function StaffPage() {
               <div className="h-20 w-20 overflow-hidden rounded-full ring-2 ring-brand-border">
                 {selectedStaff.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={selectedStaff.avatarUrl} alt={selectedStaff.name} className="h-full w-full object-cover" />
+                  <img src={getAvatarUrl(selectedStaff.avatarUrl) || ""} alt={selectedStaff.name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-brand-surface2 to-brand-border text-lg font-bold text-brand-accentText">
                     {selectedStaff.name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2)}

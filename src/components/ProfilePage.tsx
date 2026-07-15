@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { api } from "@/components/fetcher";
 import { Button, Card, Input, Select, Field, Spinner, RoleBadge, PageHeader } from "@/components/ui";
 import { useLang } from "@/lib/i18n";
+import { getAvatarUrl } from "@/lib/utils";
 
 interface UserProfile {
   id: string;
@@ -142,7 +143,7 @@ export function ProfilePage() {
                 {profile.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={profile.avatarUrl}
+                    src={getAvatarUrl(profile.avatarUrl) || ""}
                     alt={profile.name}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
