@@ -24,7 +24,7 @@ export const POST = handler(async (req: Request) => {
 
   const order = await prisma.order.findFirst({ where: { id: orderId, tenantId: me.tenantId } });
   if (!order) return fail("Order not found", 404);
-  if (["COMPLETED", "VOIDED", "REFUNDED"].includes(order.status)) {
+  if (["COMPLETED", "CANCELLED", "DECLINED"].includes(order.status)) {
     return fail("This order has already been settled or cancelled", 409);
   }
 

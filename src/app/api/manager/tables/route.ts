@@ -9,7 +9,7 @@ export const GET = handler(async (req: Request) => {
   const tables = await prisma.cafeTable.findMany({
     where: { branchId },
     orderBy: { number: "asc" },
-    include: { orders: { where: { status: { notIn: ["COMPLETED", "VOIDED", "REFUNDED"] } }, select: { id: true, status: true, waiterId: true } } },
+    include: { orders: { where: { status: { notIn: ["COMPLETED", "CANCELLED", "DECLINED"] } }, select: { id: true, status: true, waiterId: true } } },
   });
   const branch = branchId
     ? await prisma.branch.findUnique({ where: { id: branchId }, select: { name: true, tenant: { select: { name: true } } } })

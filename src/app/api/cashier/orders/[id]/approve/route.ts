@@ -7,7 +7,7 @@ import { audit } from "@/lib/audit";
 export const POST = handler(async (_req: Request, { params }: { params: { id: string } }) => {
   const me = await requireTenant("cashier", "cafe_manager", "cafe_owner");
   try {
-    await cashierApproveOrder(params.id);
+    await cashierApproveOrder(params.id, me.sub);
     await audit({ userId: me.sub, tenantId: me.tenantId, action: "cashier.order.approve", entity: "order", entityId: params.id });
     return ok({ approved: true });
   } catch (e) {

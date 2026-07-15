@@ -7,7 +7,7 @@ export const GET = handler(async (req: Request) => {
   const url = new URL(req.url);
   const branchId = url.searchParams.get("branchId") ?? me.branchId ?? undefined;
   const orders = await prisma.order.findMany({
-    where: { tenantId: me.tenantId, ...(branchId ? { branchId } : {}), status: { in: ["BILL_REQUESTED", "PAYMENT_PENDING"] } },
+    where: { tenantId: me.tenantId, ...(branchId ? { branchId } : {}), status: { in: ["BILL_REQUESTED", "PAYMENT_PENDING", "PAYMENT_FAILED"] } },
     include: { table: true, items: true },
     orderBy: { updatedAt: "asc" },
   });

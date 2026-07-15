@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db/client";
 import { vatFromInclusive, round2 } from "@/lib/money";
 import { notifyRoleInBranch } from "./notifications";
 import { getBill } from "./orders";
-import type { PaymentMethod } from "@prisma/client";
+import type { PaymentMethod, OrderStatus } from "@prisma/client";
 
 /**
  * process_order_payment() — atomic equivalent of the PLpgSQL stored procedure.
@@ -41,14 +41,84 @@ export async function processPayment(opts: {
       },
     });
 
+    const attemptCount = await tx.paymentAttempt.count({ where: { orderId: opts.orderId } });
+    const currentAttempt = attemptCount + 1;
+
+    await tx.paymentAttempt.create({
+      data: {
+        orderId: opts.orderId,
+        method: opts.method,
+        status: opts.confirmNow ? "SUCCESS" : "PENDING",
+        providerRef: opts.reference,
+        attemptNumber: currentAttempt,
+      },
+    });
+
+    const nextStatus: OrderStatus = opts.confirmNow ? "COMPLETED" : "PAYMENT_PENDING";
+
+    await tx.order.update({ where: { id: opts.orderId }, data: { status: nextStatus } });
+    
+    await tx.orderStateLog.create({
+      data: {
+        orderId: opts.orderId,
+        fromStatus: order.status,
+        toStatus: nextStatus,
+        actor: opts.cashierId ?? "system",
+        reason: opts.confirmNow ? `Cash payment successful (attempt ${currentAttempt})` : `Digital payment initialized (attempt ${currentAttempt})`,
+      },
+    });
+
     if (opts.confirmNow) {
-      await tx.order.update({ where: { id: opts.orderId }, data: { status: "COMPLETED" } });
       if (order.tableId) await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "available" } });
-    } else {
-      await tx.order.update({ where: { id: opts.orderId }, data: { status: "PAYMENT_PENDING" } });
     }
 
     return { payment, changeDue };
+  });
+}
+
+/** Record payment failure, check retry threshold limits */
+export async function recordPaymentFailure(orderId: string, method: PaymentMethod, reason: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new Error("Order not found");
+
+  return prisma.$transaction(async (tx) => {
+    const attemptCount = await tx.paymentAttempt.count({ where: { orderId } });
+    const currentAttempt = attemptCount + 1;
+
+    await tx.paymentAttempt.create({
+      data: {
+        orderId,
+        method,
+        status: "FAILED",
+        attemptNumber: currentAttempt,
+        reason,
+      },
+    });
+
+    let nextStatus: OrderStatus = "PAYMENT_FAILED";
+    let logReason = `Payment failed (attempt ${currentAttempt}): ${reason}`;
+
+    if (currentAttempt >= 3) {
+      nextStatus = "BILL_REQUESTED";
+      logReason = `Max payment attempts (${currentAttempt}) reached. Falling back to manual cashier billing.`;
+    }
+
+    await tx.order.update({
+      where: { id: orderId },
+      data: { status: nextStatus },
+    });
+
+    await tx.orderStateLog.create({
+      data: {
+        orderId,
+        fromStatus: order.status,
+        toStatus: nextStatus,
+        actor: "system",
+        reason: logReason,
+      },
+    });
+
+    return { nextStatus };
   });
 }
 
@@ -59,8 +129,34 @@ export async function confirmPaymentByReference(reference: string) {
 
   const result = await prisma.$transaction(async (tx) => {
     const p = await tx.payment.update({ where: { id: payment.id }, data: { status: "CONFIRMED", verifiedAt: new Date() } });
-    const order = await tx.order.update({ where: { id: payment.orderId }, data: { status: "COMPLETED" } });
+    const order = await tx.order.findUnique({ where: { id: payment.orderId } });
+    if (!order) throw new Error("Order not found");
+
+    await tx.order.update({ where: { id: payment.orderId }, data: { status: "COMPLETED" } });
     if (order.tableId) await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "available" } });
+    
+    // Log success attempt
+    const attemptCount = await tx.paymentAttempt.count({ where: { orderId: payment.orderId } });
+    await tx.paymentAttempt.create({
+      data: {
+        orderId: payment.orderId,
+        method: payment.method,
+        status: "SUCCESS",
+        providerRef: reference,
+        attemptNumber: attemptCount + 1,
+      },
+    });
+
+    await tx.orderStateLog.create({
+      data: {
+        orderId: payment.orderId,
+        fromStatus: order.status,
+        toStatus: "COMPLETED",
+        actor: "system",
+        reason: "Digital payment confirmed by reference webhook",
+      },
+    });
+
     return { p, order };
   });
 
@@ -85,7 +181,7 @@ export async function approveReceiptPayment(opts: {
   shiftId?: string | null;
 }) {
   const { order, total } = await getBill(opts.orderId);
-  if (["COMPLETED", "VOIDED", "REFUNDED"].includes(order.status)) {
+  if (["COMPLETED", "CANCELLED", "DECLINED"].includes(order.status)) {
     throw new Error("Order is already settled or cancelled");
   }
 
@@ -106,10 +202,19 @@ export async function approveReceiptPayment(opts: {
       },
     });
 
-    // A not-yet-confirmed order (customer paid up-front) is released to the KDS.
     if (order.status === "DRAFT") {
-      await tx.order.update({ where: { id: opts.orderId }, data: { status: "SUBMITTED", submittedAt: new Date() } });
+      await tx.order.update({ where: { id: opts.orderId }, data: { status: "CONFIRMED", submittedAt: new Date() } });
       if (order.tableId) await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "occupied" } });
+      
+      await tx.orderStateLog.create({
+        data: {
+          orderId: opts.orderId,
+          fromStatus: "DRAFT",
+          toStatus: "CONFIRMED",
+          actor: opts.cashierId,
+          reason: "Cashier approved prepaid receipt, order sent to kitchen",
+        },
+      });
     }
 
     return { payment, order };

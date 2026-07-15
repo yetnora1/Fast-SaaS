@@ -25,6 +25,7 @@ interface PendingOrder {
   table: { number: number } | null;
   waiter: { name: string } | null;
   items: { id: string; quantity: number; unitPrice: string; menuItem: { name: string; nameAm: string | null; price: string; station: string } }[];
+  riskFlags?: { id: string; flagType: string }[];
 }
 
 export default function CashierPOS() {
@@ -235,6 +236,16 @@ function PendingCashierOrders() {
                   <div className="text-[10px] text-brand-muted uppercase tracking-wider">{t("estimatedTotal")}</div>
                 </div>
               </div>
+
+              {o.riskFlags && o.riskFlags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-0.5">
+                  {o.riskFlags.map((rf) => (
+                    <span key={rf.id} className="inline-flex items-center rounded-full bg-status-yellow/15 px-2 py-0.5 text-[9px] font-bold text-status-yellowText uppercase tracking-wider">
+                      ⚠️ {rf.flagType.replace(/_/g, " ")}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               <div className="text-xs text-brand-muted">
                 {o.items.map((it) => `${it.quantity}× ${tr(it.menuItem.name, it.menuItem.nameAm)}`).join(", ")}

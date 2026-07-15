@@ -66,18 +66,19 @@ enum TableShape {
 
 enum OrderStatus {
   DRAFT
-  PENDING_CASHIER
-  DECLINED
   SUBMITTED
-  IN_PREPARATION
-  PARTIALLY_READY
+  AUTO_CONFIRMED
+  PENDING_REVIEW
+  CONFIRMED
+  DECLINED
+  PREPARING
   READY
   DELIVERED
   BILL_REQUESTED
   PAYMENT_PENDING
+  PAYMENT_FAILED
   COMPLETED
-  VOIDED
-  REFUNDED
+  CANCELLED
 }
 
 enum OrderType {
@@ -471,11 +472,58 @@ model Order {
   items    OrderItem[]
   payments Payment[]
   refunds  Refund[]
+  stateLogs       OrderStateLog[]
+  paymentAttempts PaymentAttempt[]
+  riskFlags       RiskFlag[]
 
   @@index([tenantId])
   @@index([branchId])
   @@index([status])
   @@map("orders")
+}
+
+model OrderStateLog {
+  id         String      @id @default(cuid())
+  orderId    String      @map("order_id")
+  fromStatus OrderStatus @map("from_status")
+  toStatus   OrderStatus @map("to_status")
+  actor      String?     // User ID, or "system"
+  reason     String?     @db.Text
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  order      Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_state_logs")
+}
+
+model PaymentAttempt {
+  id            String        @id @default(cuid())
+  orderId       String        @map("order_id")
+  method        PaymentMethod
+  status        String        // "PENDING", "SUCCESS", "FAILED"
+  providerRef   String?       @map("provider_ref")
+  attemptNumber Int           @map("attempt_number")
+  reason        String?       @db.Text
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("payment_attempts")
+}
+
+model RiskFlag {
+  id         String    @id @default(cuid())
+  orderId    String    @map("order_id")
+  flagType   String    @map("flag_type") // "HIGH_VALUE", "LOW_STOCK", "FIRST_TIME_QR"
+  resolvedBy String?   @map("resolved_by")
+  resolvedAt DateTime? @map("resolved_at")
+
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("risk_flags")
 }
 
 model OrderItem {

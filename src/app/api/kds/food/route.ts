@@ -11,7 +11,7 @@ export const GET = handler(async (req: Request) => {
     where: {
       tenantId: me.tenantId,
       ...(branchId ? { branchId } : {}),
-      status: { in: ["SUBMITTED", "IN_PREPARATION", "PARTIALLY_READY", "READY"] },
+      status: { in: ["CONFIRMED", "PREPARING", "READY"] },
       items: { some: { station: "KITCHEN", status: { notIn: ["DELIVERED", "VOIDED"] } } },
     },
     include: { items: { where: { station: "KITCHEN" }, include: { menuItem: true } }, table: true },

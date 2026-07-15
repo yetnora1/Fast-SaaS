@@ -11,12 +11,13 @@ export const GET = handler(async (req: Request) => {
     where: {
       tenantId: me.tenantId,
       ...(branchId ? { branchId } : {}),
-      status: "PENDING_CASHIER",
+      status: "PENDING_REVIEW",
     },
     include: {
       table: true,
       waiter: { select: { name: true } },
       items: { include: { menuItem: { select: { name: true, nameAm: true, price: true, station: true } } } },
+      riskFlags: true,
     },
     orderBy: { createdAt: "asc" },
   });

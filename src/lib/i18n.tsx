@@ -502,22 +502,22 @@ const LABELS: Record<string, string> = {
 const STATUS: Record<string, { en: string; am: string }> = {
   // Order status
   DRAFT: { en: "Draft", am: "ረቂቅ" },
-  PENDING_CASHIER: { en: "Pending cashier", am: "ገንዘብ ተቀባይ ይጠባበቃል" },
-  DECLINED: { en: "Declined", am: "ውድቅ ተደርጓል" },
   SUBMITTED: { en: "Submitted", am: "ቀርቧል" },
-  IN_PREPARATION: { en: "In preparation", am: "በዝግጅት ላይ" },
-  PARTIALLY_READY: { en: "Partially ready", am: "በከፊል ዝግጁ" },
+  AUTO_CONFIRMED: { en: "Auto confirmed", am: "በራስ-ሰር ተረጋግጧል" },
+  PENDING_REVIEW: { en: "Pending review", am: "ግምገማ ይጠባበቃል" },
+  CONFIRMED: { en: "Confirmed", am: "ተረጋግጧል" },
+  DECLINED: { en: "Declined", am: "ውድቅ ተደርጓል" },
+  PREPARING: { en: "Preparing", am: "በማዘጋጀት ላይ" },
   READY: { en: "Ready", am: "ዝግጁ" },
   DELIVERED: { en: "Delivered", am: "ደርሷል" },
   BILL_REQUESTED: { en: "Bill requested", am: "ሂሳብ ተጠይቋል" },
   PAYMENT_PENDING: { en: "Payment pending", am: "ክፍያ በመጠባበቅ ላይ" },
+  PAYMENT_FAILED: { en: "Payment failed", am: "ክፍያ አልተሳካም" },
   COMPLETED: { en: "Completed", am: "ተጠናቅቋል" },
-  VOIDED: { en: "Voided", am: "ተሰርዟል" },
-  REFUNDED: { en: "Refunded", am: "ተመላሽ ተደርጓል" },
+  CANCELLED: { en: "Cancelled", am: "ተሰርዟል" },
   // Order item status
   NEW: { en: "New", am: "አዲስ" },
   ACCEPTED: { en: "Accepted", am: "ተቀብሏል" },
-  PREPARING: { en: "Preparing", am: "በማዘጋጀት ላይ" },
   PLATING: { en: "Plating", am: "በማቅረብ ላይ" },
   // Table status
   available: { en: "Available", am: "ነጻ" },
@@ -533,10 +533,8 @@ const STATUS: Record<string, { en: string; am: string }> = {
   APPROVED: { en: "Approved", am: "ጸድቋል" },
   SENT: { en: "Sent", am: "ተልኳል" },
   RECEIVED: { en: "Received", am: "ተቀብሏል" },
-  CANCELLED: { en: "Cancelled", am: "ተሰርዟል" },
   // Payment / subscription record status
   PENDING: { en: "Pending", am: "በመጠባበቅ ላይ" },
-  CONFIRMED: { en: "Confirmed", am: "ተረጋግጧል" },
   FAILED: { en: "Failed", am: "አልተሳካም" },
   REJECTED: { en: "Rejected", am: "ውድቅ ተደርጓል" },
   // Goods issue status

@@ -31,11 +31,22 @@ export const PATCH = handler(async (_req: Request, { params }: { params: { id: s
         await prisma.order.update({ where: { id: order.id }, data: { heldForBar: true } });
         return ok({ held: true, reason: "Bar not ready" });
       }
-      await prisma.orderItem.updateMany({
-        where: { orderId: order.id, status: { notIn: ["DELIVERED", "VOIDED"] } },
-        data: { status: "READY" },
+      await prisma.$transaction(async (tx) => {
+        await tx.orderItem.updateMany({
+          where: { orderId: order.id, status: { notIn: ["DELIVERED", "VOIDED"] } },
+          data: { status: "READY" },
+        });
+        await tx.order.update({ where: { id: order.id }, data: { status: "READY", heldForBar: false } });
+        await tx.orderStateLog.create({
+          data: {
+            orderId: order.id,
+            fromStatus: order.status,
+            toStatus: "READY",
+            actor: "kitchen",
+            reason: "All items marked ready in KDS",
+          },
+        });
       });
-      await prisma.order.update({ where: { id: order.id }, data: { status: "READY", heldForBar: false } });
       if (order.waiterId) await notifyUser(order.waiterId, "order_ready", "Order ready", "Full order is ready for delivery.");
       return ok({ ready: true });
     }

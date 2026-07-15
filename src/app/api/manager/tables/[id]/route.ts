@@ -36,7 +36,7 @@ export const DELETE = handler(async (_req: Request, { params }: { params: { id: 
     where: { id: params.id },
     include: {
       branch: { select: { tenantId: true } },
-      orders: { where: { status: { notIn: ["COMPLETED", "VOIDED", "REFUNDED"] } }, select: { id: true } },
+      orders: { where: { status: { notIn: ["COMPLETED", "CANCELLED", "DECLINED"] } }, select: { id: true } },
     },
   });
   if (!table || table.branch.tenantId !== me.tenantId) return fail("Not found", 404);

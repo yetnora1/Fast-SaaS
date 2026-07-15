@@ -34,7 +34,7 @@ export default function MyOrders() {
       <PageHeader title={t("myActiveOrders")} />
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {data?.orders.map((o) => (
-          <Card key={o.id} className={`space-y-2 ${o.status === "DECLINED" ? "border-status-red/40" : o.status === "PENDING_CASHIER" ? "border-status-yellow/40" : ""}`}>
+          <Card key={o.id} className={`space-y-2 ${o.status === "DECLINED" ? "border-status-red/40" : o.status === "PENDING_REVIEW" ? "border-status-yellow/40" : ""}`}>
             <div className="flex justify-between">
               <span className="font-medium">{t("table")} {o.table?.number ?? "—"}</span>
               <StatusChip status={o.status} />
@@ -52,7 +52,7 @@ export default function MyOrders() {
             )}
 
             {/* Pending cashier banner */}
-            {o.status === "PENDING_CASHIER" && (
+            {o.status === "PENDING_REVIEW" && (
               <div className="flex items-center gap-2 rounded-lg bg-status-yellow/10 border border-status-yellow/20 p-2">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-pulse rounded-full bg-status-yellow/70" />
@@ -73,7 +73,7 @@ export default function MyOrders() {
 
             {o.status === "DECLINED" ? (
               <Button variant="ghost" className="w-full text-status-redText" onClick={() => dismiss(o.id)}>Dismiss</Button>
-            ) : o.status !== "PENDING_CASHIER" ? (
+            ) : o.status !== "PENDING_REVIEW" ? (
               <Button className="w-full" onClick={() => requestBill(o.id)}>{t("requestBill")}</Button>
             ) : null}
           </Card>

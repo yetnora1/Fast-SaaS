@@ -11,7 +11,7 @@ export const POST = handler(async (req: Request, { params }: { params: { id: str
   const me = await requireTenant("cashier", "cafe_manager", "cafe_owner");
   const body = schema.parse(await req.json());
   try {
-    await cashierDeclineOrder(params.id, body.reason);
+    await cashierDeclineOrder(params.id, body.reason, me.sub);
     await audit({ userId: me.sub, tenantId: me.tenantId, action: "cashier.order.decline", entity: "order", entityId: params.id });
     return ok({ declined: true });
   } catch (e) {

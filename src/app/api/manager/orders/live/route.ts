@@ -5,12 +5,14 @@ import { OrderStatus } from "@prisma/client";
 
 const LIVE: OrderStatus[] = [
   OrderStatus.SUBMITTED,
-  OrderStatus.IN_PREPARATION,
-  OrderStatus.PARTIALLY_READY,
+  OrderStatus.PENDING_REVIEW,
+  OrderStatus.CONFIRMED,
+  OrderStatus.PREPARING,
   OrderStatus.READY,
   OrderStatus.DELIVERED,
   OrderStatus.BILL_REQUESTED,
   OrderStatus.PAYMENT_PENDING,
+  OrderStatus.PAYMENT_FAILED,
 ];
 
 export const GET = handler(async (req: Request) => {

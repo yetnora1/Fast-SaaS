@@ -21,7 +21,7 @@ export const GET = handler(async (req: Request) => {
       tenantId: me.tenantId,
       ...(branchId ? { branchId } : {}),
       receiptUrl: { not: null },
-      status: { notIn: ["COMPLETED", "VOIDED", "REFUNDED"] },
+      status: { notIn: ["COMPLETED", "CANCELLED", "DECLINED"] },
       payments: { none: { status: "CONFIRMED" } },
     },
     include: {

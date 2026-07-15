@@ -14,10 +14,22 @@ export const POST = handler(async (req: Request) => {
   if (!refund) return fail("Refund not found", 404);
   if (!refund.approvedBy) return fail("Refund not approved by manager", 403);
 
-  await prisma.$transaction([
-    prisma.refund.update({ where: { id: refund.id }, data: { executedBy: me.sub } }),
-    prisma.order.update({ where: { id: refund.orderId }, data: { status: "REFUNDED" } }),
-  ]);
+  await prisma.$transaction(async (tx) => {
+    await tx.refund.update({ where: { id: refund.id }, data: { executedBy: me.sub } });
+    const order = await tx.order.findUnique({ where: { id: refund.orderId } });
+    if (order) {
+      await tx.order.update({ where: { id: refund.orderId }, data: { status: "CANCELLED" } });
+      await tx.orderStateLog.create({
+        data: {
+          orderId: refund.orderId,
+          fromStatus: order.status,
+          toStatus: "CANCELLED",
+          actor: me.sub,
+          reason: `Refund executed: ${refund.reason || "Refunded"}`,
+        },
+      });
+    }
+  });
   await audit({ userId: me.sub, tenantId: me.tenantId, action: "cashier.refund.execute", entity: "refund", entityId: refund.id });
   return ok({ executed: true });
 });
