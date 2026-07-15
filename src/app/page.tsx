@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { DM_Sans, Newsreader } from "next/font/google";
 import { ArrowRightIcon } from "@/components/icons";
 
@@ -15,10 +16,10 @@ const sans = DM_Sans({
   display: "swap",
 });
 
-const NOTES = [
-  ["01", "For the room", "QR menus, table orders and a clean handoff to the people making the coffee."],
-  ["02", "For the counter", "Payments, receipts and shift close in one place—without turning service into admin."],
-  ["03", "For the back room", "Stock, purchases and daily sales that make sense when you sit down after closing."],
+const SERVICE_DAY = [
+  ["06:30", "The menu is ready", "Open the day, check stock, brief the team."],
+  ["12:47", "The ticket arrives", "A table order lands with the barista and kitchen at once."],
+  ["21:15", "The till closes clean", "Payments, sales and the day’s work are already accounted for."],
 ];
 
 const INCLUDED = [
@@ -27,15 +28,6 @@ const INCLUDED = [
   "Cashier, receipt and shift-close tools",
   "Stock, purchasing, payroll and owner reporting",
 ];
-
-function CoffeeMark() {
-  return (
-    <svg aria-hidden viewBox="0 0 42 42" className="h-9 w-9 text-[#dd6b3d]">
-      <path d="M8 13h22v13.5a7.5 7.5 0 0 1-7.5 7.5h-7A7.5 7.5 0 0 1 8 26.5V13Z" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path d="M30 17h2.5a4.5 4.5 0 0 1 0 9H30M13 8c0 2 2 2.3 2 4.3M21 8c0 2 2 2.3 2 4.3" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
-    </svg>
-  );
-}
 
 export default function Home() {
   return (
@@ -49,7 +41,7 @@ export default function Home() {
 
       <header className="mx-auto flex max-w-[1240px] items-center justify-between px-5 py-5 sm:px-8 sm:py-7">
         <Link href="/" className="flex items-center gap-2.5" aria-label="CafeFlow home">
-          <CoffeeMark />
+          <Image src="/LOGO.jpg" alt="" width={44} height={44} className="h-11 w-11 object-contain mix-blend-multiply" priority />
           <span className={`${serif.className} text-[1.45rem] font-semibold tracking-[-0.04em]`}>CafeFlow</span>
         </Link>
         <nav className="hidden items-center gap-8 text-sm font-medium text-[#58706a] md:flex" aria-label="Main navigation">
@@ -65,47 +57,39 @@ export default function Home() {
 
       <section className="mx-auto grid max-w-[1240px] gap-10 px-5 pb-20 pt-8 sm:px-8 lg:grid-cols-[.88fr_1.12fr] lg:items-center lg:gap-14 lg:pb-28 lg:pt-14">
         <div className="relative z-10 lg:pb-8">
-          <p className="mb-5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.18em] text-[#dc6b3d]">
-            <span className="h-px w-8 bg-current" /> Made for busy cafés
+          <p className="mb-5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.18em] text-[#a55331]">
+            <span className="h-px w-8 bg-current" /> Addis Ababa · Ethiopia
           </p>
           <h1 className={`${serif.className} max-w-[11ch] text-[3.65rem] font-medium leading-[.91] tracking-[-.055em] text-[#213b36] sm:text-[5.25rem]`}>
-            Less admin.<br />More <em className="text-[#dd6b3d]">coffee.</em>
+            Keep the café<br />moving. <em className="text-[#a55331]">Naturally.</em>
           </h1>
           <p className="mt-7 max-w-[35rem] text-base leading-7 text-[#52665f] sm:text-lg sm:leading-8">
-            CafeFlow is the practical operating system for independent cafés: the floor, the counter, the kitchen and the numbers—all in step with one another.
+            <span className="font-medium text-[#213b36]">ከጠረጴዛ እስከ ሂሳብ.</span> CafeFlow keeps orders, coffee, people and payments in rhythm—so your team can stay with the guests, not the paperwork.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
             <Link href="/register" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#dd6b3d] px-6 py-3 text-sm font-bold text-white shadow-[0_9px_0_#b94f28] transition hover:translate-y-[2px] hover:shadow-[0_7px_0_#b94f28]">
-              Take a look inside <ArrowRightIcon className="h-4 w-4" />
+              Start your café <ArrowRightIcon className="h-4 w-4" />
             </Link>
             <span className="text-sm leading-5 text-[#60736c]">7 days free<br className="sm:hidden" /> · no card needed</span>
           </div>
         </div>
 
         <div className="landing-photo relative mx-auto w-full max-w-[680px] lg:mx-0">
-          <div className="absolute -left-3 top-8 z-10 hidden w-44 rounded-sm bg-[#f4b24d] p-4 text-[#213b36] shadow-[8px_9px_0_rgba(33,59,54,.13)] sm:block">
-            <p className={`${serif.className} text-xl leading-none`}>The morning rush, without the rush.</p>
-            <p className="mt-3 text-[10px] font-bold uppercase tracking-[.15em]">CafeFlow note / 01</p>
-          </div>
           <div className="relative aspect-[1.1/1] overflow-hidden rounded-[2px] bg-[#d9c9ae] shadow-[18px_20px_0_#d8e3d7]">
-            <img src="/images/cafe_interior.jpg" alt="A lively independent cafe interior" className="h-full w-full object-cover object-center" />
+            <Image src="/images/cafe_interior.jpg" alt="A lively independent cafe interior" fill priority sizes="(max-width: 1024px) 100vw, 52vw" className="object-cover object-center" />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#172f2a]/80 via-[#172f2a]/20 to-transparent px-6 pb-6 pt-24 text-[#f7f1e7] sm:px-8 sm:pb-8">
-              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#f4b24d]">One clear rhythm</p>
-              <p className={`${serif.className} mt-1 max-w-sm text-2xl leading-tight sm:text-3xl`}>A good service feels easy because the details are handled.</p>
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-[#f4b24d]">A calm service is a good service</p>
+              <p className={`${serif.className} mt-1 max-w-sm text-2xl leading-tight sm:text-3xl`}>Everything your café needs, without changing the way it feels.</p>
             </div>
           </div>
-          <div className="absolute -bottom-6 right-4 z-10 w-44 rotate-[3deg] border border-[#d7c8b0] bg-[#fffdf8] p-4 shadow-[8px_9px_0_rgba(33,59,54,.13)] sm:right-8 sm:w-52">
-            <div className="flex items-center justify-between border-b border-dashed border-[#d7c8b0] pb-2 text-[10px] font-bold uppercase tracking-[.12em] text-[#60736c]"><span>Table 04</span><span>12:47</span></div>
-            <p className="mt-3 text-xs leading-5 text-[#3d514b]">Order received<br />Kitchen notified<br />Payment tracked</p>
-            <p className="mt-2 text-[10px] font-bold uppercase tracking-[.12em] text-[#dd6b3d]">Quietly handled</p>
-          </div>
+          <p className="mt-4 border-l-2 border-[#a55331] pl-4 text-sm leading-5 text-[#52665f]">For cafés where a full room, a busy counter and a good cup of coffee all matter.</p>
         </div>
       </section>
 
       <section id="how-it-works" className="border-y border-[#d8cdb9] bg-[#e4ece2]">
         <div className="mx-auto grid max-w-[1240px] gap-px overflow-hidden px-5 sm:grid-cols-3 sm:px-8">
-          {NOTES.map(([number, title, body]) => <article key={number} className="relative border-[#cbd8cb] py-10 sm:border-r sm:px-8 sm:last:border-0 lg:px-12 lg:py-14">
-            <span className="text-xs font-bold tracking-[.14em] text-[#dd6b3d]">{number}</span>
+          {SERVICE_DAY.map(([number, title, body]) => <article key={number} className="relative border-[#cbd8cb] py-10 sm:border-r sm:px-8 sm:last:border-0 lg:px-12 lg:py-14">
+            <span className="font-mono text-xs font-bold tracking-[.14em] text-[#a55331]">{number}</span>
             <h2 className={`${serif.className} mt-5 text-3xl leading-none tracking-[-.04em] text-[#213b36]`}>{title}</h2>
             <p className="mt-4 max-w-xs text-sm leading-6 text-[#52665f]">{body}</p>
           </article>)}
