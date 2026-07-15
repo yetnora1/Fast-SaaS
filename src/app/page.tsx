@@ -224,7 +224,7 @@ export default function Home() {
           </h2>
           <p className="mt-5 leading-7 text-[color:var(--soft)]">
             Every part of service — from the moment a guest sits down to the moment the owner reads the
-            day's numbers — is written down in the same place.
+            day&rsquo;s numbers — is written down in the same place.
           </p>
         </div>
         <div className="mt-12 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
