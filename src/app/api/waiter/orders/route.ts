@@ -22,13 +22,17 @@ const schema = z.object({
 
 export const GET = handler(async () => {
   const me = await requireTenant("waiter", "cafe_manager", "cafe_owner");
-  const orders = await prisma.order.findMany({
-    where: { tenantId: me.tenantId, waiterId: me.sub, status: { notIn: ["COMPLETED", "VOIDED", "REFUNDED"] } },
-    include: { items: { include: { menuItem: true } }, table: true },
-    // declineReason is selected by default (it's a scalar field)
-    orderBy: { createdAt: "desc" },
-  });
-  return ok({ orders });
+  try {
+    const orders = await prisma.order.findMany({
+      where: { tenantId: me.tenantId, waiterId: me.sub, status: { notIn: ["COMPLETED", "VOIDED", "REFUNDED"] } },
+      include: { items: { include: { menuItem: true } }, table: true },
+      orderBy: { createdAt: "desc" },
+    });
+    return ok({ orders });
+  } catch (error) {
+    console.error("Waiter orders GET failed:", error);
+    return fail((error as Error).message, 500);
+  }
 });
 
 export const POST = handler(async (req: Request) => {
