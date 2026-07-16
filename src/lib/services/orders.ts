@@ -123,51 +123,32 @@ export async function createOrder(opts: {
       // Notify cashier about pending review
       await notifyRoleInBranch(order.branchId, "cashier", "order_pending", "New order pending review", "An order was flagged for review.");
     } else {
-      // Transition to CONFIRMED (via AUTO_CONFIRMED transient state)
+      // Pay-first flow: risk check passed → hold for cashier payment before firing to stations.
       await prisma.$transaction(async (tx) => {
         await tx.order.update({
           where: { id: order.id },
-          data: { status: "CONFIRMED" },
+          data: { status: "AWAITING_PAYMENT" },
         });
 
-        // Log transient auto confirm state
         await tx.orderStateLog.create({
           data: {
             orderId: order.id,
             fromStatus: "SUBMITTED",
-            toStatus: "AUTO_CONFIRMED",
+            toStatus: "AWAITING_PAYMENT",
             actor: "system",
-            reason: "Auto-confirmed: risk check passed",
-          },
-        });
-
-        await tx.orderStateLog.create({
-          data: {
-            orderId: order.id,
-            fromStatus: "AUTO_CONFIRMED",
-            toStatus: "CONFIRMED",
-            actor: "system",
-            reason: "Confirmed and sent to kitchen",
+            reason: "Risk check passed — awaiting cashier payment",
           },
         });
       });
 
-      await onOrderSubmitted(order.id, opts.branchId);
+      await notifyRoleInBranch(opts.branchId, "cashier", "order_awaiting_payment", "Order awaiting payment", "A new order is waiting for payment at the cashier.");
     }
   }
 
   return order;
 }
 
-async function onOrderSubmitted(orderId: string, branchId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true } });
-  if (!order) return;
-  const hasDrinks = order.items.some((i) => i.station === "BARISTA");
-  const hasFood = order.items.some((i) => i.station === "KITCHEN");
-  // Allergy-flagged items must surface immediately to kitchen.
-}
-
-/** Cashier approves a PENDING_REVIEW order → fires it to kitchen/barista. */
+/** Cashier approves a PENDING_REVIEW order → moves it to the payment queue (pay-first flow). */
 export async function cashierApproveOrder(orderId: string, cashierId?: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true } });
   if (!order) throw new Error("Order not found");
@@ -176,26 +157,24 @@ export async function cashierApproveOrder(orderId: string, cashierId?: string) {
   await prisma.$transaction(async (tx) => {
     await tx.order.update({
       where: { id: orderId },
-      data: { status: "CONFIRMED", submittedAt: new Date() },
+      data: { status: "AWAITING_PAYMENT", submittedAt: new Date() },
     });
-    
+
     await tx.orderStateLog.create({
       data: {
         orderId,
         fromStatus: "PENDING_REVIEW",
-        toStatus: "CONFIRMED",
+        toStatus: "AWAITING_PAYMENT",
         actor: cashierId ?? "cashier",
-        reason: "Cashier approved review",
+        reason: "Cashier approved review — awaiting payment",
       },
     });
   });
 
-  await onOrderSubmitted(orderId, order.branchId);
-
   // Notify waiter their order was approved
   if (order.waiterId) {
     const { notifyUser } = await import("./notifications");
-    await notifyUser(order.waiterId, "order_approved", "Order approved", "Your order has been approved by the cashier and sent to preparation.");
+    await notifyUser(order.waiterId, "order_approved", "Order approved", "Your order was approved. It will be prepared once payment is taken at the cashier.");
   }
 }
 
@@ -290,7 +269,7 @@ export async function addItemsToOrder(orderId: string, items: NewOrderItemInput[
         where: { id: orderId },
         data: { status: "PENDING_REVIEW" },
       });
-      
+
       for (const flag of risk.flags) {
         await tx.riskFlag.create({
           data: {
@@ -312,33 +291,36 @@ export async function addItemsToOrder(orderId: string, items: NewOrderItemInput[
     });
     await notifyRoleInBranch(order.branchId, "cashier", "order_pending", "New items pending review", "New items added to an order were flagged for review.");
   } else {
+    // Already-paid orders: fire the new items straight to the stations — the extra
+    // amount is collected before completion (recompute checks paid-in-full).
+    // Unpaid orders go (back) to the cashier payment queue.
+    const paid = await prisma.payment.findFirst({ where: { orderId, status: "CONFIRMED" } });
+    const target: OrderStatus = paid ? "CONFIRMED" : "AWAITING_PAYMENT";
+
     await prisma.$transaction(async (tx) => {
       await tx.order.update({
         where: { id: orderId },
-        data: { status: "CONFIRMED" },
+        data: { status: target },
       });
 
       await tx.orderStateLog.create({
         data: {
           orderId,
           fromStatus: "SUBMITTED",
-          toStatus: "AUTO_CONFIRMED",
+          toStatus: target,
           actor: "system",
-          reason: "New items auto-confirmed: risk check passed",
-        },
-      });
-
-      await tx.orderStateLog.create({
-        data: {
-          orderId,
-          fromStatus: "AUTO_CONFIRMED",
-          toStatus: "CONFIRMED",
-          actor: "system",
-          reason: "New items confirmed and sent to kitchen",
+          reason: paid
+            ? "New items sent to stations — balance due at cashier"
+            : "New items added — awaiting cashier payment",
         },
       });
     });
-    await onOrderSubmitted(orderId, order.branchId);
+
+    if (paid) {
+      await notifyRoleInBranch(order.branchId, "cashier", "balance_due", "Balance due", "Items were added to a paid order — collect the difference.");
+    } else {
+      await notifyRoleInBranch(order.branchId, "cashier", "order_awaiting_payment", "Order awaiting payment", "An updated order is waiting for payment at the cashier.");
+    }
   }
 }
 
@@ -361,19 +343,59 @@ export async function setItemStatus(itemId: string, status: OrderItemStatus) {
 export async function recomputeOrderStatus(orderId: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true, branch: true, payments: true } });
   if (!order) return;
-  const active = order.items.filter((i) => i.status !== "VOIDED");
-  if (active.length === 0) return;
+  const active = order.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
+
+  // Every remaining item was rejected by the stations → cancel the order.
+  if (active.length === 0) {
+    const rejected = order.items.some((i) => i.status === "REJECTED");
+    if (rejected && !["COMPLETED", "CANCELLED", "DECLINED"].includes(order.status)) {
+      await prisma.$transaction(async (tx) => {
+        await tx.order.update({ where: { id: orderId }, data: { status: "CANCELLED" } });
+        await tx.orderStateLog.create({
+          data: {
+            orderId,
+            fromStatus: order.status,
+            toStatus: "CANCELLED",
+            actor: "system",
+            reason: "All items rejected by kitchen/barista",
+          },
+        });
+        if (order.tableId) {
+          await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "available" } });
+        }
+      });
+      if (order.waiterId) {
+        const { notifyUser } = await import("./notifications");
+        await notifyUser(order.waiterId, "order_cancelled", "Order cancelled", "All items were rejected by the stations.");
+      }
+      if (order.payments.some((p) => p.status === "CONFIRMED")) {
+        await notifyRoleInBranch(order.branchId, "cashier", "refund_needed", "Refund needed", "A paid order was fully rejected — refund the customer.");
+      }
+    }
+    return;
+  }
 
   const allReady = active.every((i) => i.status === "READY" || i.status === "DELIVERED");
   const allDelivered = active.every((i) => i.status === "DELIVERED");
   const anyReady = active.some((i) => i.status === "READY" || i.status === "DELIVERED");
   const anyPrep = active.some((i) => ["ACCEPTED", "PREPARING", "PLATING"].includes(i.status));
 
-  const prepaid = order.payments.some((p) => p.status === "CONFIRMED");
+  // Paid in full? Compare confirmed payments against the live total of active
+  // items, so items added after payment keep the order open until settled.
+  const paidTotal = order.payments
+    .filter((p) => p.status === "CONFIRMED")
+    .reduce((s, p) => s + Number(p.amount), 0);
+  const orderTotal = active.reduce((s, i) => {
+    const extras = Array.isArray(i.modifiersJson)
+      ? (i.modifiersJson as any[]).reduce((a, m) => a + (Number(m.extraPrice) || 0), 0)
+      : 0;
+    return s + lineTotal(i.unitPrice, i.quantity, extras);
+  }, 0);
+  const prepaid = paidTotal >= orderTotal - 0.01;
 
   let next: OrderStatus = order.status;
   if (allDelivered && prepaid) next = "COMPLETED";
-  else if (allDelivered) next = "DELIVERED";
+  else if (allDelivered) next = "BILL_REQUESTED"; // delivered with balance due → cashier queue
   else if (allReady) next = "READY";
   else if (anyReady || anyPrep) next = "PREPARING";
 

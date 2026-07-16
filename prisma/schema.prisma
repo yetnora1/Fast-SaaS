@@ -69,6 +69,7 @@ enum OrderStatus {
   SUBMITTED
   AUTO_CONFIRMED
   PENDING_REVIEW
+  AWAITING_PAYMENT
   CONFIRMED
   DECLINED
   PREPARING
@@ -95,6 +96,7 @@ enum OrderItemStatus {
   READY
   DELIVERED
   VOIDED
+  REJECTED
 }
 
 enum KdsStation {

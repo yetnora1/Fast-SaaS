@@ -29,7 +29,7 @@ interface PendingOrder {
 }
 
 export default function CashierPOS() {
-  const { t } = useLang();
+  const { t, statusLabel } = useLang();
   const queue = usePoll<{ orders: QueueOrder[] }>("/api/cashier/bill-queue", 4000);
   const [bill, setBill] = useState<Bill | null>(null);
   const [method, setMethod] = useState<"CASH" | "TELEBIRR" | "CBE_BIRR">("CASH");
@@ -106,7 +106,7 @@ export default function CashierPOS() {
           {queue.data?.orders.length === 0 && <EmptyState icon={<ReceiptIcon className="h-7 w-7" />}>{t("noBills")}</EmptyState>}
           {queue.data?.orders.map((o) => (
             <button key={o.id} onClick={() => openBill(o.id)} className="flex w-full items-center justify-between gap-2 rounded-xl border border-brand-border bg-brand-surface2 p-3 text-left transition-all hover:border-brand-accent/40 hover:bg-brand-surface2/80 min-h-[48px]">
-              <span>{t("table")} {o.table?.number ?? "—"} · {o.status}</span>
+              <span>{t("table")} {o.table?.number ?? "—"} · {statusLabel(o.status)}</span>
               <ArrowRightIcon className="h-4 w-4 text-brand-muted" />
             </button>
           ))}

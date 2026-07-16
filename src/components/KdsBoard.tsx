@@ -17,7 +17,7 @@ function laneFor(o: Order): (typeof LANES)[number] {
 }
 
 export function KdsBoard({ endpoint, station }: { endpoint: string; station: "BARISTA" | "KITCHEN" }) {
-  const { t, tr } = useLang();
+  const { t, tr, statusLabel } = useLang();
   const { data, reload } = usePoll<{ orders: Order[] }>(endpoint, 3000);
 
   async function itemAction(id: string, action: string) {
@@ -67,9 +67,16 @@ export function KdsBoard({ endpoint, station }: { endpoint: string; station: "BA
                           {it.notes && <span className="flex items-center gap-1 text-xs text-status-yellowText"><NoteIcon className="h-3.5 w-3.5" /> {it.notes}</span>}
                         </span>
                         <span className="flex gap-1">
-                          {it.status === "NEW" || it.status === "ACCEPTED" ? (
+                          {it.status === "NEW" && (
+                            <>
+                              <Button variant="ghost" onClick={() => itemAction(it.id, "accept")}>{t("accept")}</Button>
+                              <Button variant="danger" onClick={() => itemAction(it.id, "reject")}>{t("reject")}</Button>
+                            </>
+                          )}
+                          {it.status === "ACCEPTED" && (
                             <Button variant="ghost" onClick={() => itemAction(it.id, "start")}>{t("start")}</Button>
-                          ) : null}
+                          )}
+                          {it.status === "REJECTED" && <span className="text-xs font-bold text-status-redText">{statusLabel("REJECTED")}</span>}
                           {station === "KITCHEN" && it.status === "PREPARING" && (
                             <Button variant="ghost" onClick={() => itemAction(it.id, "plate")}>{t("plate")}</Button>
                           )}

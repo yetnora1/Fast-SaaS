@@ -505,6 +505,7 @@ const STATUS: Record<string, { en: string; am: string }> = {
   SUBMITTED: { en: "Submitted", am: "ቀርቧል" },
   AUTO_CONFIRMED: { en: "Auto confirmed", am: "በራስ-ሰር ተረጋግጧል" },
   PENDING_REVIEW: { en: "Pending review", am: "ግምገማ ይጠባበቃል" },
+  AWAITING_PAYMENT: { en: "Awaiting payment", am: "ክፍያ ይጠበቃል" },
   CONFIRMED: { en: "Confirmed", am: "ተረጋግጧል" },
   DECLINED: { en: "Declined", am: "ውድቅ ተደርጓል" },
   PREPARING: { en: "Preparing", am: "በማዘጋጀት ላይ" },

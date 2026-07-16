@@ -1709,14 +1709,14 @@ function OrderTracker({
   let currentStep = 1;
   const status = order.status;
 
-  if (["SUBMITTED", "IN_PREPARATION", "PARTIALLY_READY"].includes(status)) {
+  if (["CONFIRMED", "PREPARING", "IN_PREPARATION", "PARTIALLY_READY"].includes(status)) {
     currentStep = 2;
   } else if (status === "READY") {
     currentStep = 3;
   } else if (["DELIVERED", "BILL_REQUESTED", "PAYMENT_PENDING", "COMPLETED"].includes(status)) {
     currentStep = 4;
-  } else if (["VOIDED", "REFUNDED"].includes(status)) {
-    currentStep = -1; 
+  } else if (["VOIDED", "REFUNDED", "CANCELLED", "DECLINED"].includes(status)) {
+    currentStep = -1;
   }
 
   const steps = [
@@ -1724,8 +1724,8 @@ function OrderTracker({
       num: 1,
       titleEn: "Awaiting",
       titleAm: "በመጠባበቅ ላይ",
-      descEn: "Confirming reference",
-      descAm: "ትዕዛዝ ማረጋገጥ",
+      descEn: "Accepting & confirming payment",
+      descAm: "ትዕዛዝና ክፍያ ማረጋገጥ",
     },
     {
       num: 2,
@@ -1867,6 +1867,10 @@ function OrderTracker({
                 itemStatusColor = "text-red-500 bg-red-500/10 border border-red-500/20";
                 statusLabelEn = "Cancelled";
                 statusLabelAm = "ተሰርዟል";
+              } else if (it.status === "REJECTED") {
+                itemStatusColor = "text-red-500 bg-red-500/10 border border-red-500/20";
+                statusLabelEn = "Unavailable";
+                statusLabelAm = "አይገኝም";
               }
 
               return (

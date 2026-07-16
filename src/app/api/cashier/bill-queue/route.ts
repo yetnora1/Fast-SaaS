@@ -7,7 +7,16 @@ export const GET = handler(async (req: Request) => {
   const url = new URL(req.url);
   const branchId = url.searchParams.get("branchId") ?? me.branchId ?? undefined;
   const orders = await prisma.order.findMany({
-    where: { tenantId: me.tenantId, ...(branchId ? { branchId } : {}), status: { in: ["BILL_REQUESTED", "PAYMENT_PENDING", "PAYMENT_FAILED"] } },
+    where: {
+      tenantId: me.tenantId,
+      ...(branchId ? { branchId } : {}),
+      OR: [
+        { status: { in: ["BILL_REQUESTED", "PAYMENT_PENDING", "PAYMENT_FAILED"] } },
+        // Pay-first queue. Receipt-carrying QR orders are excluded — they are
+        // settled in the cashier's receipt-review panel instead.
+        { status: "AWAITING_PAYMENT", receiptUrl: null },
+      ],
+    },
     include: { table: true, items: true },
     orderBy: { updatedAt: "asc" },
   });

@@ -20,7 +20,7 @@ export async function processPayment(opts: {
   confirmNow?: boolean; // cash = true; telebirr/cbe confirmed via webhook
 }) {
   return prisma.$transaction(async (tx) => {
-    const order = await tx.order.findUnique({ where: { id: opts.orderId } });
+    const order = await tx.order.findUnique({ where: { id: opts.orderId }, include: { items: true } });
     if (!order) throw new Error("Order not found");
 
     const changeDue =
@@ -54,22 +54,38 @@ export async function processPayment(opts: {
       },
     });
 
-    const nextStatus: OrderStatus = opts.confirmNow ? "COMPLETED" : "PAYMENT_PENDING";
+    // Pay-first flow: a confirmed payment fires the order to the stations
+    // (CONFIRMED → KDS). Orders already fully delivered complete instead.
+    const activeItems = order.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
+    const allDelivered = activeItems.length > 0 && activeItems.every((i) => i.status === "DELIVERED");
+    const PRE_KITCHEN: OrderStatus[] = ["DRAFT", "SUBMITTED", "PENDING_REVIEW", "AWAITING_PAYMENT", "PAYMENT_PENDING", "PAYMENT_FAILED", "BILL_REQUESTED"];
 
-    await tx.order.update({ where: { id: opts.orderId }, data: { status: nextStatus } });
-    
-    await tx.orderStateLog.create({
-      data: {
-        orderId: opts.orderId,
-        fromStatus: order.status,
-        toStatus: nextStatus,
-        actor: opts.cashierId ?? "system",
-        reason: opts.confirmNow ? `Cash payment successful (attempt ${currentAttempt})` : `Digital payment initialized (attempt ${currentAttempt})`,
-      },
-    });
+    let nextStatus: OrderStatus;
+    if (!opts.confirmNow) nextStatus = "PAYMENT_PENDING";
+    else if (allDelivered) nextStatus = "COMPLETED";
+    else if (PRE_KITCHEN.includes(order.status)) nextStatus = "CONFIRMED";
+    else nextStatus = order.status; // paid mid-preparation — keep the kitchen state
 
-    if (opts.confirmNow) {
-      if (order.tableId) await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "available" } });
+    if (nextStatus !== order.status) {
+      await tx.order.update({ where: { id: opts.orderId }, data: { status: nextStatus } });
+
+      await tx.orderStateLog.create({
+        data: {
+          orderId: opts.orderId,
+          fromStatus: order.status,
+          toStatus: nextStatus,
+          actor: opts.cashierId ?? "system",
+          reason: !opts.confirmNow
+            ? `Digital payment initialized (attempt ${currentAttempt})`
+            : nextStatus === "CONFIRMED"
+              ? `Payment received (attempt ${currentAttempt}) — order fired to kitchen/barista`
+              : `Payment successful (attempt ${currentAttempt})`,
+        },
+      });
+    }
+
+    if (nextStatus === "COMPLETED" && order.tableId) {
+      await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "available" } });
     }
 
     return { payment, changeDue };
@@ -129,12 +145,20 @@ export async function confirmPaymentByReference(reference: string) {
 
   const result = await prisma.$transaction(async (tx) => {
     const p = await tx.payment.update({ where: { id: payment.id }, data: { status: "CONFIRMED", verifiedAt: new Date() } });
-    const order = await tx.order.findUnique({ where: { id: payment.orderId } });
+    const order = await tx.order.findUnique({ where: { id: payment.orderId }, include: { items: true } });
     if (!order) throw new Error("Order not found");
 
-    await tx.order.update({ where: { id: payment.orderId }, data: { status: "COMPLETED" } });
-    if (order.tableId) await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "available" } });
-    
+    // Pay-first flow: payment fires the order to the stations unless it is
+    // already fully delivered, in which case it completes.
+    const activeItems = order.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
+    const allDelivered = activeItems.length > 0 && activeItems.every((i) => i.status === "DELIVERED");
+    const nextStatus: OrderStatus = allDelivered ? "COMPLETED" : "CONFIRMED";
+
+    await tx.order.update({ where: { id: payment.orderId }, data: { status: nextStatus } });
+    if (nextStatus === "COMPLETED" && order.tableId) {
+      await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "available" } });
+    }
+
     // Log success attempt
     const attemptCount = await tx.paymentAttempt.count({ where: { orderId: payment.orderId } });
     await tx.paymentAttempt.create({
@@ -151,16 +175,23 @@ export async function confirmPaymentByReference(reference: string) {
       data: {
         orderId: payment.orderId,
         fromStatus: order.status,
-        toStatus: "COMPLETED",
+        toStatus: nextStatus,
         actor: "system",
-        reason: "Digital payment confirmed by reference webhook",
+        reason: nextStatus === "CONFIRMED"
+          ? "Digital payment confirmed — order fired to kitchen/barista"
+          : "Digital payment confirmed by reference webhook",
       },
     });
 
-    return { p, order };
+    return { p, order, nextStatus };
   });
 
-  await notifyRoleInBranch(result.order.branchId, "waiter", "payment_complete", "Payment received", "Table is now free.");
+  if (result.nextStatus === "COMPLETED") {
+    await notifyRoleInBranch(result.order.branchId, "waiter", "payment_complete", "Payment received", "Table is now free.");
+  } else if (result.order.waiterId) {
+    const { notifyUser } = await import("./notifications");
+    await notifyUser(result.order.waiterId, "order_paid", "Order paid", "Payment received — order sent to preparation.");
+  }
   return result;
 }
 
@@ -202,14 +233,14 @@ export async function approveReceiptPayment(opts: {
       },
     });
 
-    if (order.status === "DRAFT") {
+    if (["DRAFT", "SUBMITTED", "AWAITING_PAYMENT", "PENDING_REVIEW"].includes(order.status)) {
       await tx.order.update({ where: { id: opts.orderId }, data: { status: "CONFIRMED", submittedAt: new Date() } });
       if (order.tableId) await tx.cafeTable.update({ where: { id: order.tableId }, data: { status: "occupied" } });
-      
+
       await tx.orderStateLog.create({
         data: {
           orderId: opts.orderId,
-          fromStatus: "DRAFT",
+          fromStatus: order.status,
           toStatus: "CONFIRMED",
           actor: opts.cashierId,
           reason: "Cashier approved prepaid receipt, order sent to kitchen",
