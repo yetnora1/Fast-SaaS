@@ -133,7 +133,8 @@ export default function CashierPOS() {
             </div>
 
             <div className="flex gap-2">
-              {(["CASH", "TELEBIRR", "CBE_BIRR"] as const).map((m) => (
+              {/* CBE_BIRR is hidden for now — backend support remains for history/receipt flows */}
+              {(["CASH", "TELEBIRR"] as const).map((m) => (
                 <Button key={m} variant={method === m ? "primary" : "ghost"} onClick={() => setMethod(m)}>{m}</Button>
               ))}
             </div>

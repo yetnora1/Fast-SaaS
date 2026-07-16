@@ -1435,12 +1435,13 @@ function PaymentModal({
 
         {/* Channels */}
         <div className="p-4 space-y-4 text-left overflow-y-auto flex-grow">
-          <div className="grid grid-cols-2 gap-2">
+          {/* CBE Transfer is hidden for now — Telebirr is the only visible channel */}
+          <div className="grid grid-cols-1 gap-2">
             <button
               onClick={() => { setActiveChannel("TELEBIRR"); setTxRef(""); }}
               className={`p-3 rounded-2xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
-                activeChannel === "TELEBIRR" 
-                  ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)]" 
+                activeChannel === "TELEBIRR"
+                  ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)]"
                   : theme === "dark"
                   ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
@@ -1448,19 +1449,6 @@ function PaymentModal({
             >
               <span className="text-lg">📱</span>
               Telebirr
-            </button>
-            <button
-              onClick={() => { setActiveChannel("CBE_BIRR"); setTxRef(""); }}
-              className={`p-3 rounded-2xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
-                activeChannel === "CBE_BIRR" 
-                  ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)]" 
-                  : theme === "dark"
-                  ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
-                  : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <span className="text-lg">🏦</span>
-              CBE Transfer
             </button>
           </div>
 
