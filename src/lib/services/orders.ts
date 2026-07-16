@@ -341,7 +341,7 @@ export async function setItemStatus(itemId: string, status: OrderItemStatus) {
 
 /** Derive order status from its items (PREPARING / READY / DELIVERED). */
 export async function recomputeOrderStatus(orderId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true, branch: true, payments: true } });
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true, branch: true, payments: true, table: true } });
   if (!order) return;
   const active = order.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
 
@@ -419,7 +419,13 @@ export async function recomputeOrderStatus(orderId: string) {
 
     if (next === "READY" && order.waiterId) {
       const { notifyUser } = await import("./notifications");
-      await notifyUser(order.waiterId, "order_ready", "Order ready", `Order for table is ready for delivery.`);
+      const tableNo = order.table?.number ?? order.guestTableNumber;
+      await notifyUser(
+        order.waiterId,
+        "order_ready",
+        "Order ready",
+        tableNo != null ? `Order for table ${tableNo} is ready for delivery.` : "Takeaway order is ready for delivery.",
+      );
     }
   }
 }

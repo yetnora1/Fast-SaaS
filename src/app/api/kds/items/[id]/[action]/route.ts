@@ -27,16 +27,18 @@ export const PATCH = handler(async (_req: Request, { params }: { params: { id: s
   // paid at the cashier, so both the waiter and the cashier are alerted; the
   // cashier settles the difference (refund/replacement).
   if (params.action === "reject") {
-    const item = await prisma.orderItem.findUnique({ where: { id: params.id }, include: { order: true, menuItem: true } });
+    const item = await prisma.orderItem.findUnique({ where: { id: params.id }, include: { order: { include: { table: true } }, menuItem: true } });
     if (!item) return fail("Not found", 404);
     if (["DELIVERED", "VOIDED", "REJECTED"].includes(item.status)) return fail(`Item is already ${item.status}`, 409);
 
     const orderId = await setItemStatus(params.id, "REJECTED");
 
+    const tableNo = item.order.table?.number ?? item.order.guestTableNumber;
+    const tableRef = tableNo != null ? `table ${tableNo}` : "a takeaway order";
     if (item.order.waiterId) {
-      await notifyUser(item.order.waiterId, "item_rejected", "Item rejected", `"${item.menuItem.name}" was rejected by the station — inform the customer.`);
+      await notifyUser(item.order.waiterId, "item_rejected", "Item rejected", `"${item.menuItem.name}" for ${tableRef} was rejected by the station — inform the customer.`);
     }
-    await notifyRoleInBranch(item.order.branchId, "cashier", "item_rejected", "Item rejected", `"${item.menuItem.name}" was rejected after payment — adjust or refund.`);
+    await notifyRoleInBranch(item.order.branchId, "cashier", "item_rejected", "Item rejected", `"${item.menuItem.name}" for ${tableRef} was rejected after payment — adjust or refund.`);
     return ok({ orderId, status: "REJECTED" });
   }
 

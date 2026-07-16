@@ -7,7 +7,7 @@ import { notifyUser } from "@/lib/services/notifications";
 // Order-level KDS actions: accept | ready | hold | ack-allergy | sync-status
 export const PATCH = handler(async (_req: Request, { params }: { params: { id: string; action: string } }) => {
   await requireTenant("barista", "kitchen", "cafe_manager", "cafe_owner");
-  const order = await prisma.order.findUnique({ where: { id: params.id }, include: { items: true } });
+  const order = await prisma.order.findUnique({ where: { id: params.id }, include: { items: true, table: true } });
   if (!order) return fail("Order not found", 404);
 
   switch (params.action) {
@@ -47,7 +47,15 @@ export const PATCH = handler(async (_req: Request, { params }: { params: { id: s
           },
         });
       });
-      if (order.waiterId) await notifyUser(order.waiterId, "order_ready", "Order ready", "Full order is ready for delivery.");
+      if (order.waiterId) {
+        const tableNo = order.table?.number ?? order.guestTableNumber;
+        await notifyUser(
+          order.waiterId,
+          "order_ready",
+          "Order ready",
+          tableNo != null ? `Full order for table ${tableNo} is ready for delivery.` : "Full takeaway order is ready for delivery.",
+        );
+      }
       return ok({ ready: true });
     }
     default:
