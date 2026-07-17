@@ -282,13 +282,9 @@ function QrOrder() {
     setSelectedItem(item);
   }, []);
 
-  // Place Order Checkout
+  // Place Order Checkout. Pay-last flow: the receipt is optional — customers
+  // may prepay by transfer, or simply order and settle at the cashier after.
   const handlePlaceOrder = async (receiptUrl?: string) => {
-    if (!receiptUrl) {
-      alert(lang === "en" ? "Please upload your payment receipt" : "እባክዎን የክፍያ ደረሰኝዎን ይስቀሉ");
-      return;
-    }
-    
     setIsSubmitting(true);
     const items = Object.values(cart).map((c) => ({
       menuItemId: c.menuItemId,
@@ -1345,6 +1341,7 @@ function PaymentModal({
   onSubmit: (receiptUrl?: string) => void;
 }) {
   const { branchId } = useParams<{ branchId: string }>();
+  const [payMode, setPayMode] = useState<"CASHIER" | "TRANSFER">("CASHIER");
   const [activeChannel, setActiveChannel] = useState<"TELEBIRR" | "CBE_BIRR">("TELEBIRR");
   const [copied, setCopied] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
@@ -1426,7 +1423,7 @@ function PaymentModal({
           theme === "dark" ? "border-slate-800" : "border-slate-100"
         }`}>
           <h3 className="font-display text-base font-bold">
-            {lang === "en" ? "Complete Your Payment" : "ክፍያውን ያጠናቁ"}
+            {lang === "en" ? "How would you like to pay?" : "እንዴት መክፈል ይፈልጋሉ?"}
           </h3>
           <button onClick={onClose} className="h-8 w-8 rounded-lg hover:bg-slate-800/10 flex items-center justify-center text-slate-400 hover:text-slate-200">
             ✕
@@ -1435,12 +1432,25 @@ function PaymentModal({
 
         {/* Channels */}
         <div className="p-4 space-y-4 text-left overflow-y-auto flex-grow">
-          {/* CBE Transfer is hidden for now — Telebirr is the only visible channel */}
-          <div className="grid grid-cols-1 gap-2">
+          {/* Pay-last flow: settle at the cashier after the meal (default), or prepay by Telebirr transfer. */}
+          <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={() => { setActiveChannel("TELEBIRR"); setTxRef(""); }}
+              onClick={() => setPayMode("CASHIER")}
               className={`p-3 rounded-2xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
-                activeChannel === "TELEBIRR"
+                payMode === "CASHIER"
+                  ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)]"
+                  : theme === "dark"
+                  ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                  : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span className="text-lg">💵</span>
+              {lang === "en" ? "Pay at Cashier" : "በካሸር ይክፈሉ"}
+            </button>
+            <button
+              onClick={() => { setPayMode("TRANSFER"); setActiveChannel("TELEBIRR"); setTxRef(""); }}
+              className={`p-3 rounded-2xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
+                payMode === "TRANSFER"
                   ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)]"
                   : theme === "dark"
                   ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
@@ -1448,10 +1458,26 @@ function PaymentModal({
               }`}
             >
               <span className="text-lg">📱</span>
-              Telebirr
+              {lang === "en" ? "Pay Now — Telebirr" : "አሁን ይክፈሉ — ቴሌብር"}
             </button>
           </div>
 
+          {payMode === "CASHIER" && (
+            <div className={`border p-4 rounded-2xl space-y-2 ${
+              theme === "dark" ? "bg-slate-950/40 border-slate-800" : "bg-slate-50/50 border-slate-200"
+            }`}>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {lang === "en"
+                  ? "Your order goes straight to preparation. Pay with Cash or Telebirr at the cashier after your meal."
+                  : "ትዕዛዝዎ በቀጥታ ወደ ዝግጅት ይሄዳል። ከምግብዎ በኋላ በካሸር ዘንድ በጥሬ ገንዘብ ወይም በቴሌብር ይክፈሉ።"}
+              </p>
+              <div className="text-[10px] text-slate-400">
+                {lang === "en" ? "Total to Pay" : "የሚከፈለው ጠቅላላ"}: <span className="text-[color:var(--qr-accent,#c87a53)] font-bold font-mono text-xs">{total.toLocaleString()} ETB</span>
+              </div>
+            </div>
+          )}
+
+          {payMode === "TRANSFER" && (<>
           {/* Payment instructions */}
           <div className={`border p-4 rounded-2xl space-y-3 ${
             theme === "dark" ? "bg-slate-950/40 border-slate-800" : "bg-slate-50/50 border-slate-200"
@@ -1563,11 +1589,12 @@ function PaymentModal({
               )}
             </div>
             <span className="text-[10px] text-slate-400 leading-tight block">
-              {lang === "en" 
+              {lang === "en"
                 ? "Upload a screenshot or photo of your payment confirmation from the bank app."
                 : "ከባንክ መተግበሪያዎ የክፍያ ማረጋገጫ ስክሪንሾት ወይም ፎቶ ይስቀሉ።"}
             </span>
           </div>
+          </>)}
         </div>
 
         {/* Place Order CTA */}
@@ -1575,8 +1602,8 @@ function PaymentModal({
           theme === "dark" ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
         }`}>
           <button
-            onClick={() => onSubmit(receiptUrl || undefined)}
-            disabled={isSubmitting || !receiptUrl || uploading}
+            onClick={() => onSubmit(payMode === "TRANSFER" ? receiptUrl || undefined : undefined)}
+            disabled={isSubmitting || uploading || (payMode === "TRANSFER" && !receiptUrl)}
             className="w-full bg-[color:var(--qr-accent,#c87a53)] text-white hover:bg-[color:var(--qr-accent-hover,#b3663d)] h-11 rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
@@ -1586,7 +1613,9 @@ function PaymentModal({
               </>
             ) : (
               <>
-                {lang === "en" ? "Confirm & Place Order" : "ክፍያ አረጋግጥ & እዘዝ"}
+                {payMode === "TRANSFER"
+                  ? (lang === "en" ? "Confirm & Place Order" : "ክፍያ አረጋግጥ & እዘዝ")
+                  : (lang === "en" ? "Place Order — Pay Later" : "እዘዝ — በኋላ ይክፈሉ")}
               </>
             )}
           </button>
@@ -1712,8 +1741,8 @@ function OrderTracker({
       num: 1,
       titleEn: "Awaiting",
       titleAm: "በመጠባበቅ ላይ",
-      descEn: "Accepting & confirming payment",
-      descAm: "ትዕዛዝና ክፍያ ማረጋገጥ",
+      descEn: "Waiter confirming your order",
+      descAm: "አስተናጋጅ ትዕዛዝዎን በማረጋገጥ ላይ",
     },
     {
       num: 2,

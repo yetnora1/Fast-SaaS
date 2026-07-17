@@ -11,9 +11,12 @@ export const GET = handler(async (req: Request) => {
       tenantId: me.tenantId,
       ...(branchId ? { branchId } : {}),
       OR: [
+        // Pay-last queue: orders arrive here when the bill is requested after
+        // delivery (or a digital payment is pending/failed).
         { status: { in: ["BILL_REQUESTED", "PAYMENT_PENDING", "PAYMENT_FAILED"] } },
-        // Pay-first queue. Receipt-carrying QR orders are excluded — they are
-        // settled in the cashier's receipt-review panel instead.
+        // Legacy pay-first orders still parked at AWAITING_PAYMENT drain here.
+        // Receipt-carrying QR orders are excluded — they are settled in the
+        // cashier's receipt-review panel instead.
         { status: "AWAITING_PAYMENT", receiptUrl: null },
       ],
     },

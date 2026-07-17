@@ -123,32 +123,31 @@ export async function createOrder(opts: {
       // Notify cashier about pending review
       await notifyRoleInBranch(order.branchId, "cashier", "order_pending", "New order pending review", "An order was flagged for review.");
     } else {
-      // Pay-first flow: risk check passed → hold for cashier payment before firing to stations.
+      // Pay-last flow: risk check passed → fire straight to the stations.
+      // Payment is settled at the cashier after delivery (bill request).
       await prisma.$transaction(async (tx) => {
         await tx.order.update({
           where: { id: order.id },
-          data: { status: "AWAITING_PAYMENT" },
+          data: { status: "CONFIRMED" },
         });
 
         await tx.orderStateLog.create({
           data: {
             orderId: order.id,
             fromStatus: "SUBMITTED",
-            toStatus: "AWAITING_PAYMENT",
+            toStatus: "CONFIRMED",
             actor: "system",
-            reason: "Risk check passed — awaiting cashier payment",
+            reason: "Risk check passed — fired to kitchen/barista",
           },
         });
       });
-
-      await notifyRoleInBranch(opts.branchId, "cashier", "order_awaiting_payment", "Order awaiting payment", "A new order is waiting for payment at the cashier.");
     }
   }
 
   return order;
 }
 
-/** Cashier approves a PENDING_REVIEW order → moves it to the payment queue (pay-first flow). */
+/** Cashier approves a PENDING_REVIEW (risk-flagged) order → fires it to the stations. */
 export async function cashierApproveOrder(orderId: string, cashierId?: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true } });
   if (!order) throw new Error("Order not found");
@@ -157,16 +156,16 @@ export async function cashierApproveOrder(orderId: string, cashierId?: string) {
   await prisma.$transaction(async (tx) => {
     await tx.order.update({
       where: { id: orderId },
-      data: { status: "AWAITING_PAYMENT", submittedAt: new Date() },
+      data: { status: "CONFIRMED", submittedAt: new Date() },
     });
 
     await tx.orderStateLog.create({
       data: {
         orderId,
         fromStatus: "PENDING_REVIEW",
-        toStatus: "AWAITING_PAYMENT",
+        toStatus: "CONFIRMED",
         actor: cashierId ?? "cashier",
-        reason: "Cashier approved review — awaiting payment",
+        reason: "Cashier approved review — fired to kitchen/barista",
       },
     });
   });
@@ -174,7 +173,7 @@ export async function cashierApproveOrder(orderId: string, cashierId?: string) {
   // Notify waiter their order was approved
   if (order.waiterId) {
     const { notifyUser } = await import("./notifications");
-    await notifyUser(order.waiterId, "order_approved", "Order approved", "Your order was approved. It will be prepared once payment is taken at the cashier.");
+    await notifyUser(order.waiterId, "order_approved", "Order approved", "Your order was approved and sent to preparation.");
   }
 }
 
@@ -291,36 +290,24 @@ export async function addItemsToOrder(orderId: string, items: NewOrderItemInput[
     });
     await notifyRoleInBranch(order.branchId, "cashier", "order_pending", "New items pending review", "New items added to an order were flagged for review.");
   } else {
-    // Already-paid orders: fire the new items straight to the stations — the extra
-    // amount is collected before completion (recompute checks paid-in-full).
-    // Unpaid orders go (back) to the cashier payment queue.
-    const paid = await prisma.payment.findFirst({ where: { orderId, status: "CONFIRMED" } });
-    const target: OrderStatus = paid ? "CONFIRMED" : "AWAITING_PAYMENT";
-
+    // Pay-last flow: new items fire straight to the stations. The full bill
+    // (including these items) is settled at the cashier after delivery.
     await prisma.$transaction(async (tx) => {
       await tx.order.update({
         where: { id: orderId },
-        data: { status: target },
+        data: { status: "CONFIRMED" },
       });
 
       await tx.orderStateLog.create({
         data: {
           orderId,
           fromStatus: "SUBMITTED",
-          toStatus: target,
+          toStatus: "CONFIRMED",
           actor: "system",
-          reason: paid
-            ? "New items sent to stations — balance due at cashier"
-            : "New items added — awaiting cashier payment",
+          reason: "New items fired to kitchen/barista — bill settled at completion",
         },
       });
     });
-
-    if (paid) {
-      await notifyRoleInBranch(order.branchId, "cashier", "balance_due", "Balance due", "Items were added to a paid order — collect the difference.");
-    } else {
-      await notifyRoleInBranch(order.branchId, "cashier", "order_awaiting_payment", "Order awaiting payment", "An updated order is waiting for payment at the cashier.");
-    }
   }
 }
 
@@ -482,11 +469,11 @@ export async function voidOrder(orderId: string, reason: string, managerId: stri
   });
 }
 
-/** Compute the itemized bill with Ethiopian VAT breakdown. */
+/** Compute the itemized bill with Ethiopian VAT breakdown. Rejected items are not billed. */
 export async function getBill(orderId: string) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: { include: { menuItem: true }, where: { status: { not: "VOIDED" } } }, table: true },
+    include: { items: { include: { menuItem: true }, where: { status: { notIn: ["VOIDED", "REJECTED"] } } }, table: true },
   });
   if (!order) throw new Error("Order not found");
 

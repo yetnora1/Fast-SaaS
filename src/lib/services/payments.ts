@@ -54,17 +54,16 @@ export async function processPayment(opts: {
       },
     });
 
-    // Pay-first flow: a confirmed payment fires the order to the stations
-    // (CONFIRMED → KDS). Orders already fully delivered complete instead.
+    // Pay-last flow: payment settles the bill at the end. A confirmed payment
+    // completes a fully delivered order; paying earlier just records the payment
+    // and the order completes on final delivery (see recomputeOrderStatus).
     const activeItems = order.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
     const allDelivered = activeItems.length > 0 && activeItems.every((i) => i.status === "DELIVERED");
-    const PRE_KITCHEN: OrderStatus[] = ["DRAFT", "SUBMITTED", "PENDING_REVIEW", "AWAITING_PAYMENT", "PAYMENT_PENDING", "PAYMENT_FAILED", "BILL_REQUESTED"];
 
     let nextStatus: OrderStatus;
     if (!opts.confirmNow) nextStatus = "PAYMENT_PENDING";
     else if (allDelivered) nextStatus = "COMPLETED";
-    else if (PRE_KITCHEN.includes(order.status)) nextStatus = "CONFIRMED";
-    else nextStatus = order.status; // paid mid-preparation — keep the kitchen state
+    else nextStatus = order.status; // paid before full delivery — keep the kitchen state
 
     if (nextStatus !== order.status) {
       await tx.order.update({ where: { id: opts.orderId }, data: { status: nextStatus } });
@@ -77,9 +76,7 @@ export async function processPayment(opts: {
           actor: opts.cashierId ?? "system",
           reason: !opts.confirmNow
             ? `Digital payment initialized (attempt ${currentAttempt})`
-            : nextStatus === "CONFIRMED"
-              ? `Payment received (attempt ${currentAttempt}) — order fired to kitchen/barista`
-              : `Payment successful (attempt ${currentAttempt})`,
+            : `Payment successful (attempt ${currentAttempt})`,
         },
       });
     }
@@ -148,11 +145,19 @@ export async function confirmPaymentByReference(reference: string) {
     const order = await tx.order.findUnique({ where: { id: payment.orderId }, include: { items: true } });
     if (!order) throw new Error("Order not found");
 
-    // Pay-first flow: payment fires the order to the stations unless it is
-    // already fully delivered, in which case it completes.
+    // Pay-last flow: a fully delivered order completes; otherwise restore the
+    // item-derived kitchen state (the order was parked in PAYMENT_PENDING while
+    // the digital payment settled).
     const activeItems = order.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
     const allDelivered = activeItems.length > 0 && activeItems.every((i) => i.status === "DELIVERED");
-    const nextStatus: OrderStatus = allDelivered ? "COMPLETED" : "CONFIRMED";
+    let nextStatus: OrderStatus;
+    if (allDelivered) {
+      nextStatus = "COMPLETED";
+    } else {
+      const allReady = activeItems.length > 0 && activeItems.every((i) => i.status === "READY" || i.status === "DELIVERED");
+      const anyStarted = activeItems.some((i) => ["ACCEPTED", "PREPARING", "PLATING", "READY", "DELIVERED"].includes(i.status));
+      nextStatus = allReady ? "READY" : anyStarted ? "PREPARING" : "CONFIRMED";
+    }
 
     await tx.order.update({ where: { id: payment.orderId }, data: { status: nextStatus } });
     if (nextStatus === "COMPLETED" && order.tableId) {
@@ -177,9 +182,7 @@ export async function confirmPaymentByReference(reference: string) {
         fromStatus: order.status,
         toStatus: nextStatus,
         actor: "system",
-        reason: nextStatus === "CONFIRMED"
-          ? "Digital payment confirmed — order fired to kitchen/barista"
-          : "Digital payment confirmed by reference webhook",
+        reason: "Digital payment confirmed by reference webhook",
       },
     });
 
@@ -190,7 +193,7 @@ export async function confirmPaymentByReference(reference: string) {
     await notifyRoleInBranch(result.order.branchId, "waiter", "payment_complete", "Payment received", "Table is now free.");
   } else if (result.order.waiterId) {
     const { notifyUser } = await import("./notifications");
-    await notifyUser(result.order.waiterId, "order_paid", "Order paid", "Payment received — order sent to preparation.");
+    await notifyUser(result.order.waiterId, "order_paid", "Order paid", "Digital payment received — bill settled.");
   }
   return result;
 }
