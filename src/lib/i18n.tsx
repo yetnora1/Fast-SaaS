@@ -202,6 +202,12 @@ const DICT: Record<string, { en: string; am: string }> = {
   accountName: { en: "Account name", am: "የሂሳብ ስም" },
   accountNumber: { en: "Account number", am: "የሂሳብ ቁጥር" },
   telebirrPhone: { en: "Telebirr phone number", am: "የቴሌብር ስልክ ቁጥር" },
+  telebirrQr: { en: "Telebirr receiving QR", am: "የቴሌብር መቀበያ QR" },
+  telebirrQrHint: { en: "Customers scan this to pay you directly in the Telebirr app.", am: "ደንበኞች በቴሌብር መተግበሪያ በቀጥታ እንዲከፍሉዎ ይህን ይቃኛሉ።" },
+  uploadQrImage: { en: "Upload QR image", am: "የQR ምስል ይስቀሉ" },
+  replaceQrImage: { en: "Replace QR image", am: "የQR ምስል ይቀይሩ" },
+  removeQrImage: { en: "Remove", am: "አስወግድ" },
+  scanToPayTelebirr: { en: "Scan to pay with Telebirr", am: "በቴሌብር ለመክፈል ይቃኙ" },
   savePaymentAccounts: { en: "Save payment accounts", am: "የክፍያ አካውንቶች አስቀምጥ" },
   notConfiguredYet: { en: "Not set up yet", am: "እስካሁን አልተዋቀረም" },
   // Store → station goods transfer

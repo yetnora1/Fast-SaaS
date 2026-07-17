@@ -248,6 +248,7 @@ model Tenant {
   cbeAccountName   String? @map("cbe_account_name")
   cbeAccountNumber String? @map("cbe_account_number")
   telebirrNumber   String? @map("telebirr_number")
+  telebirrQrUrl    String? @map("telebirr_qr_url") // owner's real Telebirr receiving QR image
   branchCount Int          @default(1) @map("branch_count")
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")

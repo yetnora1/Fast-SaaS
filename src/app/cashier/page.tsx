@@ -28,9 +28,12 @@ interface PendingOrder {
   riskFlags?: { id: string; flagType: string }[];
 }
 
+interface TelebirrDetails { businessName: string | null; telebirrNumber: string | null; telebirrQrUrl: string | null }
+
 export default function CashierPOS() {
   const { t, statusLabel } = useLang();
   const queue = usePoll<{ orders: QueueOrder[] }>("/api/cashier/bill-queue", 4000);
+  const telebirr = usePoll<TelebirrDetails>("/api/cashier/payment-details", 0);
   const [bill, setBill] = useState<Bill | null>(null);
   const [method, setMethod] = useState<"CASH" | "TELEBIRR" | "CBE_BIRR">("CASH");
   const [tendered, setTendered] = useState("");
@@ -58,9 +61,12 @@ export default function CashierPOS() {
         setMsg(`Paid. Change due: ${res.changeDue?.toLocaleString() ?? 0} ETB`);
         await printReceipt(bill.orderId);
       } else if (method === "TELEBIRR") {
+        // Customer usually scans the cafe's QR — their phone is optional, so
+        // fall back to the cafe's own Telebirr number for the payment record.
+        const payerPhone = phone.trim() || telebirr.data?.telebirrNumber || "";
         const res = await api<{ reference: string }>("/api/cashier/payments/telebirr/init", {
           method: "POST",
-          body: JSON.stringify({ orderId: bill.orderId, phone }),
+          body: JSON.stringify({ orderId: bill.orderId, phone: payerPhone }),
         });
         setPending({ reference: res.reference, orderId: bill.orderId });
         setMsg(`Telebirr request sent. Ref: ${res.reference}. Confirm below once the customer pays (demo).`);
@@ -139,7 +145,28 @@ export default function CashierPOS() {
               ))}
             </div>
             {method === "CASH" && <Input type="number" placeholder={t("amountTendered")} value={tendered} onChange={(e) => setTendered(e.target.value)} />}
-            {method === "TELEBIRR" && <Input placeholder={t("customerPhone")} value={phone} onChange={(e) => setPhone(e.target.value)} />}
+            {method === "TELEBIRR" && (
+              <div className="space-y-2">
+                {/* The cafe's real Telebirr receiving details — customer scans and pays directly. */}
+                <div className="flex items-center gap-4 rounded-xl border border-brand-border bg-brand-surface2/60 p-3">
+                  {telebirr.data?.telebirrQrUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={telebirr.data.telebirrQrUrl} alt="Telebirr QR" className="h-36 w-36 shrink-0 rounded-lg border border-brand-border bg-white object-contain p-1" />
+                  ) : (
+                    <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-lg border border-dashed border-brand-border p-2 text-center text-xs text-brand-muted">
+                      {t("notConfiguredYet")}
+                    </div>
+                  )}
+                  <div className="space-y-1 text-sm">
+                    <div className="font-semibold">{t("scanToPayTelebirr")}</div>
+                    {telebirr.data?.businessName && <div className="text-brand-muted">{telebirr.data.businessName}</div>}
+                    {telebirr.data?.telebirrNumber && <div className="font-mono text-base font-bold tracking-wider">{telebirr.data.telebirrNumber}</div>}
+                    <div className="tabular text-lg font-bold text-brand-accentText">{bill.total.toLocaleString()} ETB</div>
+                  </div>
+                </div>
+                <Input placeholder={`${t("customerPhone")} (optional)`} value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </div>
+            )}
             <Button className="w-full" onClick={pay}>{t("processPayment")}</Button>
             {pending && (
               <div className="animate-fade rounded-lg border border-status-yellow/40 bg-status-yellow/10 p-3 space-y-2">

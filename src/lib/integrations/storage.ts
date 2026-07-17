@@ -110,6 +110,19 @@ export async function storeMenuImage(file: File): Promise<{ url: string }> {
   return { url };
 }
 
+/** The cafe's real Telebirr receiving QR code image (shown to payers at the cashier / QR checkout). */
+export async function storeTelebirrQr(file: File): Promise<{ url: string }> {
+  const url = await saveFile({
+    file,
+    primaryDir: "public/uploads/payment",
+    fallbackDir: "payment",
+    namePrefix: "telebirr_qr",
+    allowedTypes: IMAGE_TYPES,
+    maxSize: IMAGE_MAX,
+  });
+  return { url };
+}
+
 export async function storeAvatar(file: File): Promise<{ url: string }> {
   const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
   const url = await saveFile({

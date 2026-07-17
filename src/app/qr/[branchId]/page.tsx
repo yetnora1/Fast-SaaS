@@ -37,6 +37,7 @@ interface PaymentInfo {
   cbeAccountName: string | null;
   cbeAccountNumber: string | null;
   telebirrNumber: string | null;
+  telebirrQrUrl: string | null;
 }
 
 interface CartItem {
@@ -1485,6 +1486,17 @@ function PaymentModal({
             <p className="text-xs text-slate-400 leading-relaxed">
               {lang === "en" ? current.instructionsEn : current.instructionsAm}
             </p>
+
+            {/* Cafe's real Telebirr receiving QR — scan & pay directly */}
+            {activeChannel === "TELEBIRR" && payment?.telebirrQrUrl && (
+              <div className="flex flex-col items-center gap-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={payment.telebirrQrUrl} alt="Telebirr QR" className="h-44 w-44 rounded-xl border border-slate-300 bg-white object-contain p-1.5" />
+                <span className="text-[10px] text-slate-400">
+                  {lang === "en" ? "Scan with the Telebirr app to pay" : "ለመክፈል በቴሌብር መተግበሪያ ይቃኙ"}
+                </span>
+              </div>
+            )}
             
             <div className="border-t pt-3 space-y-2 border-slate-800/40">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{current.label}:</div>

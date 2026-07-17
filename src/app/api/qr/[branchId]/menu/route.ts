@@ -21,7 +21,7 @@ export const GET = handler(async (_req: Request, { params }: { params: { branchI
       id: true,
       name: true,
       tenantId: true,
-      tenant: { select: { name: true, cbeAccountName: true, cbeAccountNumber: true, telebirrNumber: true } },
+      tenant: { select: { name: true, cbeAccountName: true, cbeAccountNumber: true, telebirrNumber: true, telebirrQrUrl: true } },
     },
   });
   if (!branch) return ok({ categories: [] }, { headers: CACHE_HEADERS });
@@ -31,6 +31,7 @@ export const GET = handler(async (_req: Request, { params }: { params: { branchI
     cbeAccountName: branch.tenant.cbeAccountName,
     cbeAccountNumber: branch.tenant.cbeAccountNumber,
     telebirrNumber: branch.tenant.telebirrNumber,
+    telebirrQrUrl: branch.tenant.telebirrQrUrl,
   };
   const categories = await prisma.menuCategory.findMany({
     where: { tenantId: branch.tenantId, active: true },
@@ -56,5 +57,5 @@ export const GET = handler(async (_req: Request, { params }: { params: { branchI
       },
     },
   });
-  return ok({ branch, categories }, { headers: CACHE_HEADERS });
+  return ok({ branch, payment, categories }, { headers: CACHE_HEADERS });
 });

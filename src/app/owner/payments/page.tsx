@@ -224,21 +224,23 @@ interface PaymentAccounts {
   cbeAccountName: string | null;
   cbeAccountNumber: string | null;
   telebirrNumber: string | null;
+  telebirrQrUrl: string | null;
 }
 
 // Owner-editable customer-facing payment accounts (CBE + Telebirr). These flow
 // to the QR payment screen so customers pay the cafe's real accounts.
 function PaymentAccountsCard() {
   const { t } = useLang();
-  const [form, setForm] = useState<PaymentAccounts>({ cbeAccountName: "", cbeAccountNumber: "", telebirrNumber: "" });
+  const [form, setForm] = useState<PaymentAccounts>({ cbeAccountName: "", cbeAccountNumber: "", telebirrNumber: "", telebirrQrUrl: null });
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState(false);
+  const [uploadingQr, setUploadingQr] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     api<PaymentAccounts>("/api/owner/payment-details")
-      .then((d) => setForm({ cbeAccountName: d.cbeAccountName ?? "", cbeAccountNumber: d.cbeAccountNumber ?? "", telebirrNumber: d.telebirrNumber ?? "" }))
+      .then((d) => setForm({ cbeAccountName: d.cbeAccountName ?? "", cbeAccountNumber: d.cbeAccountNumber ?? "", telebirrNumber: d.telebirrNumber ?? "", telebirrQrUrl: d.telebirrQrUrl ?? null }))
       .catch((e) => setErr((e as Error).message))
       .finally(() => setLoaded(true));
   }, []);
@@ -247,6 +249,27 @@ function PaymentAccountsCard() {
     setForm((f) => ({ ...f, [k]: e.target.value }));
     setSavedAt(false);
   };
+
+  async function uploadQr(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadingQr(true);
+    setErr(null);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await fetch("/api/owner/payment-details/qr-upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || json.ok === false) throw new Error(json.error ?? "Upload failed");
+      setForm((f) => ({ ...f, telebirrQrUrl: json.data.url }));
+      setSavedAt(false);
+    } catch (er) {
+      setErr((er as Error).message);
+    } finally {
+      setUploadingQr(false);
+    }
+  }
 
   async function save() {
     setSaving(true);
@@ -286,6 +309,28 @@ function PaymentAccountsCard() {
             <div className="flex items-center gap-2 text-sm font-semibold"><span>📱</span>{t("telebirrLabel")}</div>
             <Field label={t("telebirrPhone")}>
               <Input value={form.telebirrNumber ?? ""} onChange={set("telebirrNumber")} placeholder="0912 345 678" inputMode="tel" />
+            </Field>
+            <Field label={t("telebirrQr")}>
+              <div className="space-y-2">
+                <p className="text-xs text-brand-muted">{t("telebirrQrHint")}</p>
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadQr} className="hidden" id="telebirr-qr-input" />
+                <div className="flex items-start gap-3">
+                  {form.telebirrQrUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={form.telebirrQrUrl} alt="Telebirr QR" className="h-28 w-28 rounded-lg border border-brand-border bg-white object-contain p-1" />
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="telebirr-qr-input" className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-brand-border px-3 py-2 text-xs font-medium text-brand-muted transition-colors hover:border-brand-accent/60 hover:text-brand-accentText">
+                      {uploadingQr ? "…" : form.telebirrQrUrl ? t("replaceQrImage") : t("uploadQrImage")}
+                    </label>
+                    {form.telebirrQrUrl && (
+                      <button type="button" onClick={() => { setForm((f) => ({ ...f, telebirrQrUrl: null })); setSavedAt(false); }} className="text-xs text-status-redText hover:underline">
+                        {t("removeQrImage")}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </Field>
           </div>
         </div>
