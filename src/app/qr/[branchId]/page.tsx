@@ -5,6 +5,11 @@ import { api, usePoll } from "@/components/fetcher";
 import { GlobeIcon, CheckCircleIcon, ClockIcon, AlertTriangleIcon, PlusIcon, ClipboardIcon, ArrowRightIcon } from "@/components/icons";
 import { useLang } from "@/lib/i18n";
 
+// Mirrors lib/money.ts for the client bundle (that module pulls in @prisma/client).
+// Keep in sync with config.vatRate.
+const VAT_RATE = 0.15;
+const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
 interface Modifier {
   id: string;
   itemId: string;
@@ -399,9 +404,12 @@ function QrOrder() {
 
   const cartValues = useMemo(() => Object.values(cart), [cart]);
   const cartCount = useMemo(() => cartValues.reduce((sum, item) => sum + item.qty, 0), [cartValues]);
-  const cartSubtotal = useMemo(() => cartValues.reduce((sum, item) => sum + (item.price * item.qty), 0), [cartValues]);
-  const vat = useMemo(() => cartSubtotal * 0.15, [cartSubtotal]);
-  const cartTotal = useMemo(() => cartSubtotal + vat, [cartSubtotal, vat]);
+  // Menu prices are VAT-inclusive (see lib/money.ts) — the line sum IS what the
+  // customer pays, and VAT is broken out of it, exactly as the cashier's bill and
+  // the ERCA receipt do. Never add VAT on top here or the quote won't match the bill.
+  const cartTotal = useMemo(() => round2(cartValues.reduce((sum, item) => sum + item.price * item.qty, 0)), [cartValues]);
+  const cartSubtotal = useMemo(() => round2(cartTotal / (1 + VAT_RATE)), [cartTotal]);
+  const vat = useMemo(() => round2(cartTotal - cartSubtotal), [cartTotal, cartSubtotal]);
 
   // Kiosk Success view
   if (kioskSuccessOrderId) {
@@ -1291,7 +1299,7 @@ function CartDrawer({
 
             <div className="space-y-2 text-xs border-b pb-3.5 text-slate-400 border-slate-800/40">
               <div className="flex justify-between">
-                <span>{lang === "en" ? "Subtotal" : "ንዑስ ድምር"}</span>
+                <span>{lang === "en" ? "Subtotal (net)" : "ንዑስ ድምር (ከታክስ በፊት)"}</span>
                 <span className="font-mono font-bold text-slate-200">{subtotal.toLocaleString()} ETB</span>
               </div>
               <div className="flex justify-between">
