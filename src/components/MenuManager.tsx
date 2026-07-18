@@ -33,8 +33,22 @@ export function MenuManager() {
   const [busy, setBusy] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [edit, setEdit] = useState<Partial<MenuItem>>({});
+  const [searchQuery, setSearchQuery] = useState("");
   const addFile = useRef<HTMLInputElement>(null);
   const editFile = useRef<HTMLInputElement>(null);
+
+  const filteredCategories = (data?.categories ?? []).map((c) => {
+    const matchedItems = c.items.filter((it) => {
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        it.name.toLowerCase().includes(q) ||
+        (it.nameAm && it.nameAm.toLowerCase().includes(q)) ||
+        (it.description && it.description.toLowerCase().includes(q))
+      );
+    });
+    return { ...c, items: matchedItems };
+  }).filter((c) => c.items.length > 0 || !searchQuery);
 
   async function addCategory() {
     if (!catName) return;
@@ -209,8 +223,20 @@ export function MenuManager() {
         <Button onClick={addItem} loading={busy} disabled={!item.categoryId || !item.name || !item.price}>{t("addItemBtn")}</Button>
       </Card>
 
+      {/* Search menu items */}
+      <div className="flex gap-2 max-w-md">
+        <Input
+          placeholder="🔍 Search menu items..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <Button variant="ghost" onClick={() => setSearchQuery("")}>Clear</Button>
+        )}
+      </div>
+
       {/* Existing categories + items */}
-      {data?.categories.map((c) => (
+      {filteredCategories.map((c) => (
         <Card key={c.id}>
           <div className="mb-2 flex items-center justify-between">
             <span className="font-medium">{tr(c.name, c.nameAm)}</span>
