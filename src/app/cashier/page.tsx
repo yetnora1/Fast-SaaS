@@ -138,13 +138,13 @@ export default function CashierPOS() {
 
   async function printViaBluetooth(escposBase64: string) {
     // Web Bluetooth API — pair with thermal printer and send ESC/POS
-    const nav = navigator as Navigator & { bluetooth?: { requestDevice(opts: unknown): Promise<BluetoothDevice> } };
+    const nav = navigator as Navigator & { bluetooth?: { requestDevice(opts: unknown): Promise<any> } };
     if (!nav.bluetooth) throw new Error("Bluetooth not supported in this browser");
 
     const device = await nav.bluetooth.requestDevice({
       filters: [{ services: ["000018f0-0000-1000-8000-00805f9b34fb"] }],
       optionalServices: ["000018f0-0000-1000-8000-00805f9b34fb"],
-    }) as BluetoothDevice & { gatt?: { connect(): Promise<BluetoothRemoteGATTServer> } };
+    }) as any;
 
     if (!device.gatt) throw new Error("GATT not available");
     const server = await device.gatt.connect();

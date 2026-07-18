@@ -197,9 +197,11 @@ async function printViaUsb(
   const buffer = buildEscPos(data);
 
   try {
-    // escpos is an optional dependency — only used when USB printing is configured
-    const escpos = await import("escpos").catch(() => null);
-    const escposUsb = await import("escpos-usb").catch(() => null);
+    // escpos is an optional dependency — bypass Webpack bundle validation by using dynamic variables
+    const pkgName1 = "escpos";
+    const pkgName2 = "escpos-usb";
+    const escpos = await import(pkgName1).catch(() => null);
+    const escposUsb = await import(pkgName2).catch(() => null);
 
     if (!escpos || !escposUsb) {
       return {
