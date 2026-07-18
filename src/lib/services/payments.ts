@@ -57,12 +57,15 @@ export async function processPayment(opts: {
     // Pay-last flow: payment settles the bill at the end. A confirmed payment
     // completes a fully delivered order; paying earlier just records the payment
     // and the order completes on final delivery (see recomputeOrderStatus).
+    // Once the bill is requested the service is done — items still at READY are
+    // effectively served, so a confirmed payment at that stage always completes.
+    const billStage = ["BILL_REQUESTED", "PAYMENT_PENDING", "PAYMENT_FAILED"].includes(order.status);
     const activeItems = order.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
-    const allDelivered = activeItems.length > 0 && activeItems.every((i) => i.status === "DELIVERED");
+    const allDelivered = activeItems.length > 0 && activeItems.every((i) => i.status === "DELIVERED" || i.status === "READY");
 
     let nextStatus: OrderStatus;
     if (!opts.confirmNow) nextStatus = "PAYMENT_PENDING";
-    else if (allDelivered) nextStatus = "COMPLETED";
+    else if (billStage || allDelivered) nextStatus = "COMPLETED";
     else nextStatus = order.status; // paid before full delivery — keep the kitchen state
 
     if (nextStatus !== order.status) {
@@ -148,10 +151,11 @@ export async function confirmPaymentByReference(reference: string) {
     // Pay-last flow: a fully delivered order completes; otherwise restore the
     // item-derived kitchen state (the order was parked in PAYMENT_PENDING while
     // the digital payment settled).
+    const billStage = ["BILL_REQUESTED", "PAYMENT_PENDING", "PAYMENT_FAILED"].includes(order.status);
     const activeItems = order.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
-    const allDelivered = activeItems.length > 0 && activeItems.every((i) => i.status === "DELIVERED");
+    const allDelivered = activeItems.length > 0 && activeItems.every((i) => i.status === "DELIVERED" || i.status === "READY");
     let nextStatus: OrderStatus;
-    if (allDelivered) {
+    if (billStage || allDelivered) {
       nextStatus = "COMPLETED";
     } else {
       const allReady = activeItems.length > 0 && activeItems.every((i) => i.status === "READY" || i.status === "DELIVERED");
