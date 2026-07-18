@@ -98,7 +98,65 @@ export default function CashierPOS() {
   async function printReceipt(orderId: string) {
     const r = await api<{ text: string }>(`/api/cashier/receipts/${orderId}`);
     setReceipt(r.text);
-    await api(`/api/cashier/receipts/${orderId}/print`, { method: "POST" });
+
+    const printResult = await api<{
+      printed: boolean;
+      method: string;
+      text: string;
+      escpos: string;
+      printerType: string;
+      error?: string;
+    }>(`/api/cashier/receipts/${orderId}/print`, { method: "POST" });
+
+    if (printResult.printerType === "browser") {
+      // Browser print: open a styled print window
+      const win = window.open("", "_blank", "width=400,height=600");
+      if (win) {
+        win.document.write(`<html><head><title>Receipt</title><style>
+          body { font-family: monospace; font-size: 12px; padding: 10px; margin: 0; white-space: pre-wrap; }
+          @media print { body { margin: 0; padding: 5px; } }
+        </style></head><body>${printResult.text}</body></html>`);
+        win.document.close();
+        win.focus();
+        win.print();
+        setTimeout(() => win.close(), 1000);
+      }
+    } else if (printResult.printerType === "bluetooth" && printResult.escpos) {
+      // Bluetooth: send ESC/POS bytes via Web Bluetooth
+      try {
+        await printViaBluetooth(printResult.escpos);
+        setMsg("Printed via Bluetooth ✓");
+      } catch (e) {
+        setMsg(`Bluetooth print failed: ${(e as Error).message}`);
+      }
+    } else if (printResult.printed) {
+      setMsg(`Printed via ${printResult.method} ✓`);
+    } else if (printResult.error) {
+      setMsg(`Print error: ${printResult.error}`);
+    }
+  }
+
+  async function printViaBluetooth(escposBase64: string) {
+    // Web Bluetooth API — pair with thermal printer and send ESC/POS
+    const nav = navigator as Navigator & { bluetooth?: { requestDevice(opts: unknown): Promise<BluetoothDevice> } };
+    if (!nav.bluetooth) throw new Error("Bluetooth not supported in this browser");
+
+    const device = await nav.bluetooth.requestDevice({
+      filters: [{ services: ["000018f0-0000-1000-8000-00805f9b34fb"] }],
+      optionalServices: ["000018f0-0000-1000-8000-00805f9b34fb"],
+    }) as BluetoothDevice & { gatt?: { connect(): Promise<BluetoothRemoteGATTServer> } };
+
+    if (!device.gatt) throw new Error("GATT not available");
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService("000018f0-0000-1000-8000-00805f9b34fb");
+    const char = await service.getCharacteristic("00002af1-0000-1000-8000-00805f9b34fb");
+
+    const bytes = Uint8Array.from(atob(escposBase64), c => c.charCodeAt(0));
+    // Send in 20-byte chunks (BLE MTU limit)
+    for (let i = 0; i < bytes.length; i += 20) {
+      await char.writeValue(bytes.slice(i, i + 20));
+    }
+    server.disconnect();
   }
 
   return (
