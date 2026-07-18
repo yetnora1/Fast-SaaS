@@ -150,18 +150,30 @@ export function MenuManager() {
       <Card className="space-y-3">
         <div className="font-medium">{t("addMenuItem")}</div>
         <div className="grid gap-2 md:grid-cols-3">
-          <Select value={item.categoryId} onChange={(e) => setItem({ ...item, categoryId: e.target.value })}>
-            <option value="">{t("selectCategory")}</option>
-            {data?.categories.map((c) => <option key={c.id} value={c.id}>{tr(c.name, c.nameAm)}</option>)}
-          </Select>
-          <Input placeholder={t("nameEn")} value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} />
-          <Input placeholder={t("nameAmPlaceholder")} value={item.nameAm} onChange={(e) => setItem({ ...item, nameAm: e.target.value })} />
-          <Input placeholder={t("priceEtb")} type="number" value={item.price} onChange={(e) => setItem({ ...item, price: e.target.value })} />
-          <Input placeholder="Cost (ETB)" type="number" value={item.cost} onChange={(e) => setItem({ ...item, cost: e.target.value })} />
-          <Select value={item.station} onChange={(e) => setItem({ ...item, station: e.target.value })}>
-            <option value="KITCHEN">{t("kitchenFood")}</option>
-            <option value="BARISTA">{t("baristaDrink")}</option>
-          </Select>
+          <Field label="Category">
+            <Select value={item.categoryId} onChange={(e) => setItem({ ...item, categoryId: e.target.value })}>
+              <option value="">{t("selectCategory")}</option>
+              {data?.categories.map((c) => <option key={c.id} value={c.id}>{tr(c.name, c.nameAm)}</option>)}
+            </Select>
+          </Field>
+          <Field label={t("nameEn")}>
+            <Input placeholder={t("nameEn")} value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} />
+          </Field>
+          <Field label="Name (Amharic)">
+            <Input placeholder={t("nameAmPlaceholder")} value={item.nameAm} onChange={(e) => setItem({ ...item, nameAm: e.target.value })} />
+          </Field>
+          <Field label="Price (ETB)">
+            <Input placeholder={t("priceEtb")} type="number" value={item.price} onChange={(e) => setItem({ ...item, price: e.target.value })} />
+          </Field>
+          <Field label="Cost (ETB)">
+            <Input placeholder="Cost (ETB)" type="number" value={item.cost} onChange={(e) => setItem({ ...item, cost: e.target.value })} />
+          </Field>
+          <Field label="Station">
+            <Select value={item.station} onChange={(e) => setItem({ ...item, station: e.target.value })}>
+              <option value="KITCHEN">{t("kitchenFood")}</option>
+              <option value="BARISTA">{t("baristaDrink")}</option>
+            </Select>
+          </Field>
         </div>
         <Input placeholder="Description (optional)" value={item.description} onChange={(e) => setItem({ ...item, description: e.target.value })} />
 
@@ -213,14 +225,24 @@ export function MenuManager() {
                 {editId === it.id ? (
                   <div className="space-y-2">
                     <div className="grid gap-1.5 md:grid-cols-2">
-                      <Input value={(edit.name as string) ?? ""} onChange={(e) => setEdit({ ...edit, name: e.target.value })} placeholder={t("nameEn")} />
-                      <Input value={(edit.nameAm as string) ?? ""} onChange={(e) => setEdit({ ...edit, nameAm: e.target.value })} placeholder={t("nameAmPlaceholder")} />
-                      <Input type="number" value={(edit.price as string) ?? ""} onChange={(e) => setEdit({ ...edit, price: e.target.value })} placeholder={t("priceEtb")} />
-                      <Input type="number" value={(edit.cost as string) ?? ""} onChange={(e) => setEdit({ ...edit, cost: e.target.value })} placeholder="Cost (ETB)" />
-                      <Select value={(edit.station as string) ?? "KITCHEN"} onChange={(e) => setEdit({ ...edit, station: e.target.value })}>
-                        <option value="KITCHEN">{t("kitchenFood")}</option>
-                        <option value="BARISTA">{t("baristaDrink")}</option>
-                      </Select>
+                      <Field label={t("nameEn")}>
+                        <Input value={(edit.name as string) ?? ""} onChange={(e) => setEdit({ ...edit, name: e.target.value })} placeholder={t("nameEn")} />
+                      </Field>
+                      <Field label="Name (Amharic)">
+                        <Input value={(edit.nameAm as string) ?? ""} onChange={(e) => setEdit({ ...edit, nameAm: e.target.value })} placeholder={t("nameAmPlaceholder")} />
+                      </Field>
+                      <Field label="Price (ETB)">
+                        <Input type="number" value={(edit.price as string) ?? ""} onChange={(e) => setEdit({ ...edit, price: e.target.value })} placeholder={t("priceEtb")} />
+                      </Field>
+                      <Field label="Cost (ETB)">
+                        <Input type="number" value={(edit.cost as string) ?? ""} onChange={(e) => setEdit({ ...edit, cost: e.target.value })} placeholder="Cost (ETB)" />
+                      </Field>
+                      <Field label="Station">
+                        <Select value={(edit.station as string) ?? "KITCHEN"} onChange={(e) => setEdit({ ...edit, station: e.target.value })}>
+                          <option value="KITCHEN">{t("kitchenFood")}</option>
+                          <option value="BARISTA">{t("baristaDrink")}</option>
+                        </Select>
+                      </Field>
                     </div>
                     <div className="flex items-center gap-2">
                       {edit.imageUrl ? (
