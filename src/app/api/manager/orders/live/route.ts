@@ -9,10 +9,6 @@ const LIVE: OrderStatus[] = [
   OrderStatus.CONFIRMED,
   OrderStatus.PREPARING,
   OrderStatus.READY,
-  OrderStatus.DELIVERED,
-  OrderStatus.BILL_REQUESTED,
-  OrderStatus.PAYMENT_PENDING,
-  OrderStatus.PAYMENT_FAILED,
 ];
 
 export const GET = handler(async (req: Request) => {
