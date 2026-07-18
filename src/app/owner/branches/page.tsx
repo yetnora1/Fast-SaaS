@@ -13,7 +13,6 @@ export default function BranchesPage() {
   const { data, reload } = usePoll<{ branches: Branch[] }>("/api/owner/branches", 0);
   const [form, setForm] = useState({ name: "", address: "" });
   const [viewingBranch, setViewingBranch] = useState<{ id: string; name: string } | null>(null);
-  const [tab, setTab] = useState<"qr" | "printer">("qr");
 
   async function add() {
     await api("/api/owner/branches", { method: "POST", body: JSON.stringify(form) });
@@ -34,7 +33,7 @@ export default function BranchesPage() {
           <div
             key={b.id}
             className="cursor-pointer transition-all active:scale-[0.99]"
-            onClick={() => { setViewingBranch({ id: b.id, name: b.name }); setTab("qr"); }}
+            onClick={() => setViewingBranch({ id: b.id, name: b.name })}
           >
             <Card className="hover:border-brand-accent/50 transition-colors h-full">
               <div className="font-display font-bold">{b.name}</div>
@@ -51,21 +50,8 @@ export default function BranchesPage() {
           <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-brand-border bg-brand-surface text-brand-foreground shadow-pop">
             <div className="flex items-center justify-between border-b border-brand-border/70 px-6 py-4">
               <div>
-                <h3 className="font-display text-lg font-bold text-brand-accentText">{viewingBranch.name} — Settings</h3>
-                <div className="flex gap-3 mt-2">
-                  <button
-                    onClick={() => setTab("qr")}
-                    className={`text-xs font-medium pb-1 border-b-2 transition-colors ${tab === "qr" ? "border-brand-accent text-brand-accentText" : "border-transparent text-brand-muted hover:text-brand-foreground"}`}
-                  >
-                    Table QR Codes
-                  </button>
-                  <button
-                    onClick={() => setTab("printer")}
-                    className={`text-xs font-medium pb-1 border-b-2 transition-colors ${tab === "printer" ? "border-brand-accent text-brand-accentText" : "border-transparent text-brand-muted hover:text-brand-foreground"}`}
-                  >
-                    🖨️ Printer
-                  </button>
-                </div>
+                <h3 className="font-display text-lg font-bold text-brand-accentText">{viewingBranch.name} — Printer Settings</h3>
+                <p className="text-xs text-brand-muted">Configure the receipt printer connection for this branch.</p>
               </div>
               <button
                 onClick={() => setViewingBranch(null)}
@@ -76,8 +62,7 @@ export default function BranchesPage() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto">
-              {tab === "qr" && <TableQRCodes branchId={viewingBranch.id} />}
-              {tab === "printer" && <PrinterSettings branchId={viewingBranch.id} />}
+              <PrinterSettings branchId={viewingBranch.id} />
             </div>
           </div>
         </div>
