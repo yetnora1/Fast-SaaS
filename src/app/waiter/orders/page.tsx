@@ -73,9 +73,13 @@ export default function MyOrders() {
 
             {o.status === "DECLINED" ? (
               <Button variant="ghost" className="w-full text-status-redText" onClick={() => dismiss(o.id)}>Dismiss</Button>
-            ) : o.status !== "PENDING_REVIEW" ? (
-              <Button className="w-full" onClick={() => requestBill(o.id)}>{t("requestBill")}</Button>
-            ) : null}
+            ) : (() => {
+              const active = o.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
+              const allServed = active.length > 0 && active.every((i) => i.status === "READY" || i.status === "DELIVERED");
+              if (o.status === "PENDING_REVIEW") return null;
+              if (allServed) return <Button className="w-full" onClick={() => requestBill(o.id)}>{t("requestBill")}</Button>;
+              return null;
+            })()}
           </Card>
         ))}
         {data?.orders.length === 0 && <EmptyState icon={<InboxIcon className="h-7 w-7" />}>{t("noActiveOrders")}</EmptyState>}
