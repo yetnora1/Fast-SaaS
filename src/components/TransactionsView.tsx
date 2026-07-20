@@ -49,8 +49,10 @@ export function TransactionsView() {
   const [role, setRole] = useState<string>("all");
   const [kind, setKind] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<"activity" | "waiters">("activity");
 
-  const url = `/api/transactions?from=${from}&to=${to}`;
+  // Only fetch the ledger while the Activity tab is open.
+  const url = view === "activity" ? `/api/transactions?from=${from}&to=${to}` : null;
   const { data, loading, reload } = usePoll<{ transactions: Txn[]; scope: "branch" | "tenant" }>(url, 0);
   const all = useMemo(() => data?.transactions ?? [], [data]);
 
@@ -81,9 +83,28 @@ export function TransactionsView() {
         title="Transactions"
         subtitle={data?.scope === "branch" ? "Your branch activity" : "All branches"}
       >
-        <Button variant="ghost" size="sm" onClick={() => reload()}>Refresh</Button>
+        {view === "activity" && <Button variant="ghost" size="sm" onClick={() => reload()}>Refresh</Button>}
       </PageHeader>
 
+      {/* View toggle: activity ledger vs per-waiter performance */}
+      <div className="flex w-fit gap-1 rounded-xl border border-brand-border bg-brand-surface2 p-1">
+        {([["activity", "Activity"], ["waiters", "Waiter Performance"]] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setView(key)}
+            className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
+              view === key ? "bg-brand-accent text-white shadow-sm" : "text-brand-muted hover:text-brand-foreground hover:bg-white/5"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {view === "waiters" ? (
+        <WaiterPerformance />
+      ) : (
+      <>
       {/* Summary */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard label="Collected" value={money(summary.collected)} tone="green" />
@@ -180,6 +201,92 @@ export function TransactionsView() {
       )}
 
       <p className="text-xs text-brand-muted">Showing {filtered.length} of {all.length} in range.</p>
+      </>
+      )}
+    </div>
+  );
+}
+
+/* ── Per-waiter performance sub-view ─────────────────────────────── */
+interface WRow { waiterId: string; name: string; orders: number; revenue: number; }
+
+const PERIODS: { key: string; label: string }[] = [
+  { key: "day", label: "Day" },
+  { key: "week", label: "Week" },
+  { key: "month", label: "Month" },
+  { key: "6month", label: "6 Months" },
+  { key: "year", label: "Year" },
+];
+
+function WaiterPerformance() {
+  const [period, setPeriod] = useState("week");
+  const { data, loading } = usePoll<{ rows: WRow[]; scope: "branch" | "tenant" }>(`/api/transactions/waiters?period=${period}`, 0);
+  const rows = data?.rows ?? [];
+  const maxRevenue = Math.max(1, ...rows.map((r) => r.revenue));
+  const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
+  const totalOrders = rows.reduce((s, r) => s + r.orders, 0);
+
+  return (
+    <div className="space-y-4">
+      {/* Period selector */}
+      <div className="flex w-fit flex-wrap gap-1 rounded-xl border border-brand-border bg-brand-surface2 p-1">
+        {PERIODS.map((p) => (
+          <button
+            key={p.key}
+            onClick={() => setPeriod(p.key)}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+              period === p.key ? "bg-brand-accent text-white shadow-sm" : "text-brand-muted hover:text-brand-foreground hover:bg-white/5"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Totals */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <KPICard label="Waiters" value={String(rows.length)} tone="blue" />
+        <KPICard label="Orders" value={String(totalOrders)} tone="accent" />
+        <KPICard label="Revenue" value={money(totalRevenue)} tone="green" />
+      </div>
+
+      {loading && rows.length === 0 ? (
+        <div className="flex h-40 items-center justify-center"><Spinner className="h-8 w-8" /></div>
+      ) : rows.length === 0 ? (
+        <EmptyState icon={<InboxIcon className="h-7 w-7" />}>No waiter activity in this period.</EmptyState>
+      ) : (
+        <Card className="p-0 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-brand-border text-left text-[11px] uppercase tracking-wider text-brand-muted">
+                  <th className="px-4 py-3 font-semibold">#</th>
+                  <th className="px-4 py-3 font-semibold">Waiter</th>
+                  <th className="px-4 py-3 font-semibold text-right">Orders</th>
+                  <th className="px-4 py-3 font-semibold text-right">Revenue</th>
+                  <th className="px-4 py-3 font-semibold text-right">Avg / Order</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-border/50">
+                {rows.map((r, i) => (
+                  <tr key={r.waiterId} className="hover:bg-brand-surface2/40 transition-colors">
+                    <td className="px-4 py-3 tabular text-brand-muted">{i + 1}</td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-brand-foreground">{r.name}</div>
+                      <div className="mt-1 h-1.5 w-full max-w-[160px] overflow-hidden rounded-full bg-brand-border">
+                        <div className="h-full rounded-full bg-brand-accent" style={{ width: `${(r.revenue / maxRevenue) * 100}%` }} />
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right tabular">{r.orders}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right font-mono font-semibold text-status-greenText">{money(r.revenue)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right font-mono text-brand-muted">{money(r.orders > 0 ? r.revenue / r.orders : 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
