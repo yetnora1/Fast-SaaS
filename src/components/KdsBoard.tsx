@@ -92,7 +92,6 @@ export function KdsBoard({ endpoint, station }: { endpoint: string; station: "BA
                   {o.heldForBar && <div className="flex items-center gap-1.5 text-sm text-status-yellowText"><PauseIcon className="h-4 w-4" /> {t("holdForBar")}</div>}
 
                   <div className="flex gap-2">
-                    {station === "KITCHEN" && <Button variant="ghost" className="flex-1" onClick={() => orderAction(o.id, "accept")}>{t("accept")}</Button>}
                     <Button className="flex-1" onClick={() => orderAction(o.id, "ready")}>{t("orderReady")}</Button>
                   </div>
                 </Card>
