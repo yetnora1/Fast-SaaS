@@ -11,7 +11,9 @@ export const POST = handler(async (_req: Request, { params }: { params: { id: st
   await prisma.$transaction(async (tx) => {
     const updated = await tx.order.update({
       where: { id: params.id },
-      data: { status: "CONFIRMED", submittedAt: new Date(), waiterId: me.sub },
+      // Keep the waiter the customer specifically requested; only claim the order
+      // for the confirming waiter when the customer didn't pick anyone.
+      data: { status: "CONFIRMED", submittedAt: new Date(), waiterId: existing.waiterId ?? me.sub },
     });
 
     await tx.orderStateLog.create({

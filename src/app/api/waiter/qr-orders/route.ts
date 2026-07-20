@@ -7,7 +7,8 @@ export const GET = handler(async () => {
   const me = await requireTenant("waiter", "cafe_manager", "cafe_owner");
   const orders = await prisma.order.findMany({
     where: { tenantId: me.tenantId, type: "QR", status: "DRAFT", ...(me.branchId ? { branchId: me.branchId } : {}) },
-    include: { items: { include: { menuItem: true } }, table: true },
+    // waiter = the on-duty waiter the customer requested at checkout, if any.
+    include: { items: { include: { menuItem: true } }, table: true, waiter: { select: { id: true, name: true } } },
     orderBy: { createdAt: "asc" },
   });
   return ok({ orders });

@@ -2,10 +2,12 @@ import { z } from "zod";
 import { handler, ok, fail } from "@/lib/api";
 import { prisma } from "@/lib/db/client";
 import { createOrder } from "@/lib/services/orders";
+import { notifyUser } from "@/lib/services/notifications";
 import { limitPublic } from "@/lib/rate-limit";
 
 const schema = z.object({
   tableNumber: z.number().int().optional(),
+  waiterId: z.string().nullable().optional(),
   txRef: z.string().nullable().optional(),
   receiptUrl: z.string().nullable().optional(),
   items: z
@@ -35,10 +37,30 @@ export const POST = handler(async (req: Request, { params }: { params: { branchI
     tableId = table?.id;
   }
 
+  // Only honor a customer's waiter pick if that waiter is genuinely ON DUTY at
+  // this branch right now — never trust the client's id (the on-duty list can go
+  // stale between load and checkout). A stale/invalid pick just falls back to the
+  // normal "any waiter confirms" flow instead of failing the order.
+  let waiterId: string | undefined;
+  if (body.waiterId) {
+    const onDuty = await prisma.user.findFirst({
+      where: {
+        id: body.waiterId,
+        branchId: branch.id,
+        role: "waiter",
+        active: true,
+        attendance: { some: { clockOut: null } },
+      },
+      select: { id: true },
+    });
+    waiterId = onDuty?.id;
+  }
+
   const order = await createOrder({
     tenantId: branch.tenantId,
     branchId: branch.id,
     tableId,
+    waiterId,
     type: "QR",
     items: body.items,
     submit: false, // stays DRAFT until waiter confirms
@@ -46,5 +68,12 @@ export const POST = handler(async (req: Request, { params }: { params: { branchI
     receiptUrl: body.receiptUrl,
     guestTableNumber: body.tableNumber ?? null, // keep the number even if no CafeTable matches
   });
+
+  // The customer asked for this specific waiter — let them know an order is waiting.
+  if (waiterId) {
+    const tableLabel = body.tableNumber != null ? ` (Table ${body.tableNumber})` : "";
+    await notifyUser(waiterId, "qr_order_assigned", "New order for you", `A customer requested you for a new QR order${tableLabel}.`);
+  }
+
   return ok({ orderId: order.id, status: order.status });
 });

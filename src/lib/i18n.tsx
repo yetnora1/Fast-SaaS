@@ -105,6 +105,7 @@ const DICT: Record<string, { en: string; am: string }> = {
   incomingQr: { en: "Incoming QR Self-Orders", am: "የሚገቡ QR ራስ-ትዕዛዞች" },
   noPendingQr: { en: "No pending QR orders.", am: "ምንም QR ትዕዛዝ የለም።" },
   confirmFireKds: { en: "Confirm → fire to KDS", am: "አረጋግጥ → ወደ KDS ላክ" },
+  requested: { en: "Requested", am: "የተጠየቀ" },
   // Owner dashboard
   todaysOverview: { en: "Today's Overview", am: "የዛሬ ማጠቃለያ" },
   live: { en: "Live", am: "ቀጥታ" },

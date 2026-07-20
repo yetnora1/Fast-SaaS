@@ -4,7 +4,7 @@ import { Button, Card, EmptyState, PageHeader, LiveDot } from "@/components/ui";
 import { InboxIcon } from "@/components/icons";
 import { useLang } from "@/lib/i18n";
 
-interface Order { id: string; table: { number: number } | null; items: { id: string; menuItem: { name: string; nameAm?: string | null }; quantity: number }[] }
+interface Order { id: string; table: { number: number } | null; waiter: { id: string; name: string } | null; items: { id: string; menuItem: { name: string; nameAm?: string | null }; quantity: number }[] }
 
 export default function QROrders() {
   const { t, tr } = useLang();
@@ -25,6 +25,11 @@ export default function QROrders() {
         {data?.orders.map((o) => (
           <Card key={o.id} className="space-y-2">
             <div className="font-medium">{t("table")} {o.table?.number ?? "—"}</div>
+            {o.waiter && (
+              <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
+                {t("requested")}: {o.waiter.name}
+              </div>
+            )}
             <ul className="text-sm">
               {o.items.map((it) => <li key={it.id}>{it.quantity}× {tr(it.menuItem.name, it.menuItem.nameAm)}</li>)}
             </ul>

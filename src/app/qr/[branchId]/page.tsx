@@ -45,6 +45,13 @@ interface PaymentInfo {
   telebirrQrUrl: string | null;
 }
 
+// A waiter currently clocked in at this branch — the only ones a customer may pick.
+interface Waiter {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
 interface CartItem {
   id: string; // unique hash: menuItemId + selected modifiers
   menuItemId: string;
@@ -121,6 +128,9 @@ function QrOrder() {
 
   // States
   const { data: liveMenu } = usePoll<{ branch: { name: string; tenantId: string }; payment?: PaymentInfo; categories: Category[] }>(`/api/qr/${branchId}/menu`, 0);
+  // On-duty waiters, polled live so the pick list reflects who's clocked in right now.
+  const { data: waitersData } = usePoll<{ waiters: Waiter[] }>(`/api/qr/${branchId}/waiters`, 15000);
+  const onDutyWaiters = useMemo(() => waitersData?.waiters ?? [], [waitersData]);
   // Last menu seen on this device — paints instantly on revisit and keeps the
   // page usable while the live fetch is still crawling over a weak connection.
   const [cachedMenu, setCachedMenu] = useState<typeof liveMenu>(null);
@@ -156,6 +166,8 @@ function QrOrder() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [tableNumber, setTableNumber] = useState(tableParam || "");
+  // "" = no specific waiter chosen (any available waiter will pick the order up).
+  const [selectedWaiterId, setSelectedWaiterId] = useState("");
   const [txRef, setTxRef] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isClickScrolling = useRef(false);
@@ -304,6 +316,8 @@ function QrOrder() {
         method: "POST",
         body: JSON.stringify({
           tableNumber: tableNumber ? Number(tableNumber) : undefined,
+          // Only send a waiter still shown as on duty; the server re-checks anyway.
+          waiterId: selectedWaiterId && onDutyWaiters.some((w) => w.id === selectedWaiterId) ? selectedWaiterId : undefined,
           items,
           txRef: txRef || undefined,
           receiptUrl
@@ -828,6 +842,9 @@ function QrOrder() {
           total={cartTotal}
           tableNumber={tableNumber}
           setTableNumber={setTableNumber}
+          waiters={onDutyWaiters}
+          selectedWaiterId={selectedWaiterId}
+          setSelectedWaiterId={setSelectedWaiterId}
           onClose={() => setIsCartOpen(false)}
           onUpdateQty={updateQty}
           onProceed={() => {
@@ -1166,6 +1183,9 @@ function CartDrawer({
   total,
   tableNumber,
   setTableNumber,
+  waiters,
+  selectedWaiterId,
+  setSelectedWaiterId,
   onClose,
   onUpdateQty,
   onProceed
@@ -1179,6 +1199,9 @@ function CartDrawer({
   total: number;
   tableNumber: string;
   setTableNumber: (val: string) => void;
+  waiters: Waiter[];
+  selectedWaiterId: string;
+  setSelectedWaiterId: (val: string) => void;
   onClose: () => void;
   onUpdateQty: (id: string, delta: number) => void;
   onProceed: () => void;
@@ -1296,6 +1319,47 @@ function CartDrawer({
                 }`}
               />
             </div>
+
+            {/* Waiter picker — only waiters clocked in at this branch right now.
+                Hidden entirely when nobody is on duty, so checkout is never blocked. */}
+            {waiters.length > 0 && (
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-bold text-slate-400 block">
+                  {lang === "en" ? "Choose Your Waiter" : "አስተናጋጅ ይምረጡ"}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWaiterId("")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                      selectedWaiterId === ""
+                        ? "bg-[color:var(--qr-accent,#c87a53)] text-white scale-105"
+                        : theme === "dark"
+                        ? "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
+                        : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200"
+                    }`}
+                  >
+                    {lang === "en" ? "Any available" : "ማንኛውም ነፃ"}
+                  </button>
+                  {waiters.map((w) => (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => setSelectedWaiterId(w.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        selectedWaiterId === w.id
+                          ? "bg-[color:var(--qr-accent,#c87a53)] text-white scale-105"
+                          : theme === "dark"
+                          ? "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
+                          : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200"
+                      }`}
+                    >
+                      {w.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2 text-xs border-b pb-3.5 text-slate-400 border-slate-800/40">
               <div className="flex justify-between">
