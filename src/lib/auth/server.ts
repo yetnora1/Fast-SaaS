@@ -52,11 +52,34 @@ export async function clearSession() {
   cookies().delete(COOKIE_NAME);
 }
 
+/**
+ * Look up the login user, retrying through transient DB connectivity blips (the
+ * shared Postgres instance occasionally refuses/drops connections) so they don't
+ * surface to the user as a 500 on the login screen.
+ */
+async function findLoginUser(id: string) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await prisma.user.findFirst({ where: { OR: [{ email: id }, { username: id }] } });
+    } catch (e) {
+      const name = (e as { name?: string })?.name ?? "";
+      const code = (e as { code?: string })?.code ?? "";
+      const transient =
+        name === "PrismaClientInitializationError" ||
+        name === "PrismaClientRustPanicError" ||
+        code === "P1001" || // can't reach database server
+        code === "P1017"; // server has closed the connection
+      if (!transient || attempt >= 2) throw e;
+      await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
+    }
+  }
+}
+
 /** Email/username + password login. Returns claims on success, null on failure. */
 export async function loginWithPassword(identifier: string, password: string): Promise<SessionClaims | null> {
   const id = identifier.toLowerCase().trim();
   // Accept either the account email or the user's self-chosen username.
-  const user = await prisma.user.findFirst({ where: { OR: [{ email: id }, { username: id }] } });
+  const user = await findLoginUser(id);
   if (!user || !user.active || !user.passwordHash) return null;
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return null;

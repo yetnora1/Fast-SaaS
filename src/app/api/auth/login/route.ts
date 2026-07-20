@@ -17,6 +17,12 @@ export const POST = handler(async (req: Request) => {
   const body = schema.parse(await req.json());
   const session = await loginWithPassword((body.identifier ?? body.email)!, body.password);
   if (!session) return fail("Invalid credentials", 401);
-  await audit({ tenantId: session.tenantId, userId: session.sub, action: "auth.login", ip: clientIp(req) });
+  // The session cookie is already set — never let an audit-log write failure
+  // (e.g. a transient DB blip) turn a successful login into a 500.
+  try {
+    await audit({ tenantId: session.tenantId, userId: session.sub, action: "auth.login", ip: clientIp(req) });
+  } catch (e) {
+    console.error("login audit failed (non-fatal):", e);
+  }
   return ok({ role: session.role, home: ROLE_HOME[session.role], name: session.name });
 });
