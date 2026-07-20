@@ -8,6 +8,12 @@ export const POST = handler(async (_req: Request, { params }: { params: { id: st
   const existing = await prisma.order.findUnique({ where: { id: params.id } });
   if (!existing) return fail("Order not found", 404);
 
+  // The customer requested a specific waiter — only that waiter may accept it.
+  // (Managers/owners can still confirm on their behalf.)
+  if (me.role === "waiter" && existing.waiterId && existing.waiterId !== me.sub) {
+    return fail("This order was assigned to another waiter", 403);
+  }
+
   await prisma.$transaction(async (tx) => {
     const updated = await tx.order.update({
       where: { id: params.id },
