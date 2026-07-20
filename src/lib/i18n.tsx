@@ -84,6 +84,9 @@ const DICT: Record<string, { en: string; am: string }> = {
   // Common
   name: { en: "Name", am: "ስም" },
   email: { en: "Email", am: "ኢሜይል" },
+  username: { en: "Username", am: "የተጠቃሚ ስም" },
+  usernameHint: { en: "Used to sign in — letters, numbers, . _ -", am: "ለመግቢያ ይጠቅማል — ፊደላት፣ ቁጥሮች፣ . _ -" },
+  emailOrUsername: { en: "Email or username", am: "ኢሜይል ወይም የተጠቃሚ ስም" },
   phone: { en: "Phone", am: "ስልክ" },
   address: { en: "Address", am: "አድራሻ" },
   password: { en: "Password", am: "የይለፍ ቃል" },

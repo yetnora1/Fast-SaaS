@@ -52,9 +52,11 @@ export async function clearSession() {
   cookies().delete(COOKIE_NAME);
 }
 
-/** Email + password login. Returns claims on success, null on failure. */
-export async function loginWithPassword(email: string, password: string): Promise<SessionClaims | null> {
-  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
+/** Email/username + password login. Returns claims on success, null on failure. */
+export async function loginWithPassword(identifier: string, password: string): Promise<SessionClaims | null> {
+  const id = identifier.toLowerCase().trim();
+  // Accept either the account email or the user's self-chosen username.
+  const user = await prisma.user.findFirst({ where: { OR: [{ email: id }, { username: id }] } });
   if (!user || !user.active || !user.passwordHash) return null;
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return null;

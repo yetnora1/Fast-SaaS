@@ -9,6 +9,7 @@ interface UserProfile {
   id: string;
   name: string;
   email: string;
+  username: string | null;
   role: string;
   phone: string | null;
   age: number | null;
@@ -54,6 +55,7 @@ export function ProfilePage() {
         method: "PATCH",
         body: JSON.stringify({
           name: profile.name,
+          username: profile.username,
           phone: profile.phone,
           age: profile.age ? Number(profile.age) : null,
           bio: profile.bio,
@@ -220,6 +222,19 @@ export function ProfilePage() {
                   placeholder="+251..."
                   value={profile.phone || ""}
                   onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                />
+              </Field>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("username")} hint={t("usernameHint")}>
+                <Input
+                  type="text"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  placeholder="e.g. john_doe"
+                  value={profile.username || ""}
+                  onChange={(e) => setProfile({ ...profile, username: e.target.value })}
                 />
               </Field>
             </div>

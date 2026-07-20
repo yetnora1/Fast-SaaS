@@ -291,6 +291,7 @@ model User {
   tenantId     String?  @map("tenant_id") // null for platform-level saas_owner
   name         String
   email        String
+  username     String?  // self-chosen login handle; globally unique, stored lowercased
   passwordHash String?  @map("password_hash")
   role         Role
   branchId     String?  @map("branch_id")
@@ -322,6 +323,7 @@ model User {
   payrollRecords   PayrollRecord[]  @relation("PayrollUser")
 
   @@unique([email])
+  @@unique([username])
   @@index([tenantId])
   @@index([role])
   @@map("users")

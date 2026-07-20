@@ -32,7 +32,7 @@ function LoginForm() {
     try {
       const res = pinMode
         ? await api<{ home: string }>("/api/auth/login/pin", { method: "POST", body: JSON.stringify({ branchId, pin }) })
-        : await api<{ home: string }>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+        : await api<{ home: string }>("/api/auth/login", { method: "POST", body: JSON.stringify({ identifier: email, password }) });
       router.push(params.get("next") ?? res.home);
     } catch (e) {
       setError((e as Error).message);
@@ -56,7 +56,7 @@ function LoginForm() {
             </>
           ) : (
             <>
-              <Input type="email" placeholder={t("email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input type="text" autoCapitalize="none" autoCorrect="off" placeholder={t("emailOrUsername")} value={email} onChange={(e) => setEmail(e.target.value)} required />
               <Input type="password" placeholder={t("password")} value={password} onChange={(e) => setPassword(e.target.value)} required />
             </>
           )}
