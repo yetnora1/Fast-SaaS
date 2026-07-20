@@ -244,6 +244,7 @@ export default function StaffPage() {
                   type="password"
                   placeholder="Min 4 characters"
                   required
+                  minLength={4}
                   value={newStaff.password}
                   onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
                 />

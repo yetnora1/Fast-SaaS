@@ -23,7 +23,14 @@ export function handler<T extends (...args: any[]) => Promise<Response>>(fn: T):
         return fail(e.code, e.code === "UNAUTHENTICATED" ? 401 : 403);
       }
       if (e instanceof ZodError) {
-        return fail("Validation failed", 422, { issues: e.flatten() });
+        // Surface the first specific issue (e.g. "Password must be at least 4
+        // characters") instead of an opaque "Validation failed", so the client's
+        // error toast tells the user exactly which field to fix. Full breakdown
+        // stays in `issues` for callers that want field-level detail.
+        const flat = e.flatten();
+        const firstField = Object.values(flat.fieldErrors).find((m) => m && m.length > 0)?.[0];
+        const message = firstField ?? flat.formErrors[0] ?? "Validation failed";
+        return fail(message, 422, { issues: flat });
       }
       console.error("[api] unhandled", e);
       return fail("Internal server error", 500);
