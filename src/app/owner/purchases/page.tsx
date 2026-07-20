@@ -62,7 +62,7 @@ export default function PurchaserPage() {
   const { t, lang } = useLang();
   const [tab, setTab] = useState<Tab>("orders");
   const { data, reload } = usePoll<{ purchaseOrders: PO[] }>("/api/store/purchase-orders", 6000);
-  const { data: suppData } = usePoll<{ suppliers: Supplier[] }>("/api/store/suppliers", 30000);
+  const { data: suppData, reload: reloadSuppliers } = usePoll<{ suppliers: Supplier[] }>("/api/store/suppliers", 30000);
   const { data: invData } = usePoll<{ items: InvItem[] }>("/api/store/inventory", 30000);
 
   const pos = useMemo(() => data?.purchaseOrders ?? [], [data?.purchaseOrders]);
@@ -141,7 +141,7 @@ export default function PurchaserPage() {
 
       {/* Tab Content */}
       {tab === "orders" && <OrdersList pos={pos} reload={reload} lang={lang} />}
-      {tab === "new" && <NewPurchaseForm suppliers={suppliers} invItems={invItems} reload={reload} lang={lang} onDone={() => setTab("orders")} />}
+      {tab === "new" && <NewPurchaseForm suppliers={suppliers} invItems={invItems} reload={reload} reloadSuppliers={reloadSuppliers} lang={lang} onDone={() => setTab("orders")} />}
       {tab === "credits" && <CreditsList credits={creditOrders} reload={reload} lang={lang} />}
       {tab === "report" && <PurchaseReport pos={pos} lang={lang} />}
     </div>
@@ -237,12 +237,14 @@ function NewPurchaseForm({
   suppliers,
   invItems,
   reload,
+  reloadSuppliers,
   lang,
   onDone,
 }: {
   suppliers: Supplier[];
   invItems: InvItem[];
   reload: () => void;
+  reloadSuppliers: () => Promise<void> | void;
   lang: string;
   onDone: () => void;
 }) {
@@ -252,6 +254,36 @@ function NewPurchaseForm({
   const [creditPercent, setCreditPercent] = useState(50);
   const [lines, setLines] = useState<LineItem[]>([{ inventoryItemId: "", quantity: 0, unitCost: 0 }]);
   const [busy, setBusy] = useState(false);
+
+  // Inline "add new supplier" — lets you register a supplier without leaving the form.
+  const [showAddSupplier, setShowAddSupplier] = useState(false);
+  const [newSupplier, setNewSupplier] = useState({ name: "", phone: "", contact: "" });
+  const [savingSupplier, setSavingSupplier] = useState(false);
+
+  async function createSupplier(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newSupplier.name.trim();
+    if (!name) return;
+    setSavingSupplier(true);
+    try {
+      const created = await api<{ id: string; name: string }>("/api/store/suppliers", {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          phone: newSupplier.phone.trim() || undefined,
+          contact: newSupplier.contact.trim() || undefined,
+        }),
+      });
+      await reloadSuppliers();
+      setSupplierId(created.id); // auto-select the supplier just created
+      setShowAddSupplier(false);
+      setNewSupplier({ name: "", phone: "", contact: "" });
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSavingSupplier(false);
+    }
+  }
 
   const total = lines.reduce((s, l) => s + l.quantity * l.unitCost, 0);
   const paidAmount = isCredit ? Math.round((total * (100 - creditPercent)) * 100) / 100 / 100 : total;
@@ -303,11 +335,18 @@ function NewPurchaseForm({
       <form onSubmit={submit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={lang === "am" ? "አቅራቢ" : "Supplier"}>
-            <Select value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
+            <Select
+              value={supplierId}
+              onChange={(e) => {
+                if (e.target.value === "__add_new__") setShowAddSupplier(true);
+                else setSupplierId(e.target.value);
+              }}
+            >
               <option value="">{lang === "am" ? "— ምረጥ —" : "— Select —"}</option>
               {suppliers.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
+              <option value="__add_new__">{lang === "am" ? "➕ አዲስ አቅራቢ ጨምር…" : "➕ Add new supplier…"}</option>
             </Select>
           </Field>
           <Field label={lang === "am" ? "ማስታወሻ" : "Notes"}>
@@ -442,6 +481,46 @@ function NewPurchaseForm({
           </Button>
         </div>
       </form>
+
+      {/* Add-new-supplier modal */}
+      <Modal
+        open={showAddSupplier}
+        onClose={() => setShowAddSupplier(false)}
+        title={lang === "am" ? "አዲስ አቅራቢ" : "New Supplier"}
+      >
+        <form onSubmit={createSupplier} className="space-y-3">
+          <Field label={lang === "am" ? "ስም" : "Name"}>
+            <Input
+              autoFocus
+              placeholder={lang === "am" ? "የአቅራቢ ስም" : "Supplier name"}
+              value={newSupplier.name}
+              onChange={(e) => setNewSupplier((s) => ({ ...s, name: e.target.value }))}
+            />
+          </Field>
+          <Field label={lang === "am" ? "ስልክ" : "Phone"}>
+            <Input
+              placeholder={lang === "am" ? "አማራጭ" : "Optional"}
+              value={newSupplier.phone}
+              onChange={(e) => setNewSupplier((s) => ({ ...s, phone: e.target.value }))}
+            />
+          </Field>
+          <Field label={lang === "am" ? "የመገናኛ ሰው" : "Contact Person"}>
+            <Input
+              placeholder={lang === "am" ? "አማራጭ" : "Optional"}
+              value={newSupplier.contact}
+              onChange={(e) => setNewSupplier((s) => ({ ...s, contact: e.target.value }))}
+            />
+          </Field>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="ghost" onClick={() => setShowAddSupplier(false)}>
+              {lang === "am" ? "ሰርዝ" : "Cancel"}
+            </Button>
+            <Button type="submit" loading={savingSupplier} disabled={!newSupplier.name.trim()}>
+              {lang === "am" ? "አስቀምጥ" : "Save Supplier"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </Card>
   );
 }
