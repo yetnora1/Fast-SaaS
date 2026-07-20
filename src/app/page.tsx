@@ -50,7 +50,7 @@ export default function Home() {
           <a className="transition-colors hover:text-[#213b36]" href="#pricing">Pricing</a>
         </nav>
         <div className="flex items-center gap-4 text-sm font-semibold">
-          <Link href="/login" className="hidden text-[#46625b] transition-colors hover:text-[#213b36] sm:block">Sign in</Link>
+          <Link href="/login" className="text-[#46625b] transition-colors hover:text-[#213b36]">Sign in</Link>
           <Link href="/register" className="rounded-full bg-[#213b36] px-4 py-3 text-[#f7f1e7] transition hover:-translate-y-0.5 hover:bg-[#2c514a] sm:px-5">Start free</Link>
         </div>
       </header>
