@@ -5,7 +5,7 @@ import { InboxIcon, AlertTriangleIcon } from "@/components/icons";
 import { useLang } from "@/lib/i18n";
 
 interface OItem { id: string; menuItem: { name: string; nameAm?: string | null }; status: string }
-interface Order { id: string; status: string; declineReason?: string | null; table: { number: number } | null; items: OItem[] }
+interface Order { id: string; status: string; declineReason?: string | null; table: { number: number } | null; items: OItem[]; payments?: { status: string }[] }
 
 export default function MyOrders() {
   const { t, tr, statusLabel } = useLang();
@@ -76,8 +76,9 @@ export default function MyOrders() {
             ) : (() => {
               const active = o.items.filter((i) => i.status !== "VOIDED" && i.status !== "REJECTED");
               const allServed = active.length > 0 && active.every((i) => i.status === "READY" || i.status === "DELIVERED");
+              const isPaid = o.payments?.some((p) => p.status === "CONFIRMED");
               if (o.status === "PENDING_REVIEW") return null;
-              if (allServed) return <Button className="w-full" onClick={() => requestBill(o.id)}>{t("requestBill")}</Button>;
+              if (allServed && !isPaid) return <Button className="w-full" onClick={() => requestBill(o.id)}>{t("requestBill")}</Button>;
               return null;
             })()}
           </Card>

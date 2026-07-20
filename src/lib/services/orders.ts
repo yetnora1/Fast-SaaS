@@ -425,8 +425,16 @@ export async function barSyncReady(orderId: string): Promise<boolean> {
 }
 
 export async function requestBill(orderId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { payments: true },
+  });
   if (!order) throw new Error("Order not found");
+
+  const isPaid = order.payments.some((p) => p.status === "CONFIRMED");
+  if (isPaid) {
+    throw new Error("Order is already paid; cannot request bill");
+  }
   
   await prisma.$transaction(async (tx) => {
     await tx.order.update({ where: { id: orderId }, data: { status: "BILL_REQUESTED" } });

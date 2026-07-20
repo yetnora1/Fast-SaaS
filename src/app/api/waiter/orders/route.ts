@@ -25,7 +25,7 @@ export const GET = handler(async () => {
   try {
     const orders = await prisma.order.findMany({
       where: { tenantId: me.tenantId, waiterId: me.sub, status: { notIn: ["COMPLETED", "CANCELLED", "DECLINED", "BILL_REQUESTED", "PAYMENT_PENDING", "PAYMENT_FAILED"] } },
-      include: { items: { include: { menuItem: true } }, table: true },
+      include: { items: { include: { menuItem: true } }, table: true, payments: true },
       orderBy: { createdAt: "desc" },
     });
     return ok({ orders });
