@@ -54,11 +54,17 @@ export default function CashierPOS() {
     setMsg(null);
     try {
       if (method === "CASH") {
-        const res = await api<{ changeDue: number }>("/api/cashier/payments", {
+        // Cash must be exact — anything other than the bill total is rejected.
+        const entered = Number(tendered);
+        if (!tendered.trim() || Number.isNaN(entered) || Math.abs(entered - bill.total) > 0.01) {
+          setMsg(`Re-enter the exact amount: ${bill.total.toLocaleString()} ETB`);
+          return;
+        }
+        await api<{ changeDue: number }>("/api/cashier/payments", {
           method: "POST",
-          body: JSON.stringify({ orderId: bill.orderId, method: "CASH", amount: bill.total, tendered: Number(tendered) }),
+          body: JSON.stringify({ orderId: bill.orderId, method: "CASH", amount: bill.total, tendered: entered }),
         });
-        setMsg(`Paid. Change due: ${res.changeDue?.toLocaleString() ?? 0} ETB`);
+        setMsg("Payment received ✓");
         await printReceipt(bill.orderId);
       } else if (method === "TELEBIRR") {
         // Customer usually scans the cafe's QR — their phone is optional, so
@@ -202,7 +208,12 @@ export default function CashierPOS() {
                 <Button key={m} variant={method === m ? "primary" : "ghost"} onClick={() => setMethod(m)}>{m}</Button>
               ))}
             </div>
-            {method === "CASH" && <Input type="number" placeholder={t("amountTendered")} value={tendered} onChange={(e) => setTendered(e.target.value)} />}
+            {method === "CASH" && (
+              <div className="space-y-1">
+                <Input type="number" placeholder={t("amountTendered")} value={tendered} onChange={(e) => setTendered(e.target.value)} />
+                <p className="text-xs text-brand-muted">Enter the exact amount: <span className="font-semibold text-brand-foreground">{bill.total.toLocaleString()} ETB</span></p>
+              </div>
+            )}
             {method === "TELEBIRR" && (
               <div className="space-y-2">
                 {/* The cafe's real Telebirr receiving details — customer scans and pays directly. */}

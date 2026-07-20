@@ -47,6 +47,11 @@ export const POST = handler(async (req: Request) => {
       return ok({ split: true, results });
     }
 
+    // Cash must be the exact bill amount — no overpayment, underpayment or change.
+    if (body.method === "CASH" && (body.tendered == null || Math.abs(body.tendered - total) > 0.01)) {
+      return fail(`Re-enter the exact amount: ${total.toFixed(2)} ETB`, 422);
+    }
+
     const amount = body.amount ?? total;
     const result = await processPayment({
       orderId: body.orderId,
