@@ -11,6 +11,7 @@ export default async function ManagerLayout({ children }: { children: React.Reac
       nav={[
         { href: "/manager/dashboard", label: "Dashboard" },
         { href: "/manager/orders", label: "Live Orders" },
+        { href: "/manager/transactions", label: "Transactions" },
         { href: "/manager/menu", label: "Menu" },
         // { href: "/manager/shift", label: "Shift" },
         { href: "/manager/inventory", label: "Inventory" },

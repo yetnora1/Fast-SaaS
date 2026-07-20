@@ -489,6 +489,7 @@ const LABELS: Record<string, string> = {
   Schedule: "መርሐ ግብር",
   Suppliers: "አቅራቢዎች",
   Payments: "ክፍያዎች",
+  Transactions: "ግብይቶች",
   "Issue Goods": "ዕቃ አውጣ",
   Receiving: "ርክክብ",
   Attendance: "መገኘት",
