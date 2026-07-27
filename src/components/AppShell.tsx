@@ -6,6 +6,8 @@ import { api, usePoll, clearApiCache } from "@/components/fetcher";
 import { ClockInOut } from "@/components/ClockInOut";
 import { HeaderClock } from "@/components/HeaderClock";
 import { useLang } from "@/lib/i18n";
+import { ROLE_LABEL } from "@/lib/auth/roles";
+import type { Role } from "@prisma/client";
 import { cn, getAvatarUrl } from "@/lib/utils";
 import { BellIcon, GlobeIcon, LogOutIcon, SunIcon, MoonIcon } from "@/components/icons";
 import { CafeStatusFAB } from "@/components/CafeStatusFAB";
@@ -180,9 +182,22 @@ export function AppShell({
                 <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-brand-header" />
               </Link>
             )}
-            <span className="hidden text-sm font-medium text-white/70 sm:inline leading-tight">
-              {displayName}
-            </span>
+            {/* Greeting: who is signed in and in what capacity. On a shared POS
+                tablet the role is the useful half — it says which till you are
+                standing at, not just whose account is open. */}
+            <div className="hidden leading-tight sm:block">
+              {user ? (
+                <>
+                  <div className="text-[11px] font-medium text-white/60">{t("welcomeBack")}</div>
+                  <div className="text-sm font-semibold text-white">
+                    {user.name}
+                    <span className="ml-1.5 font-normal text-white/70">· {navLabel(ROLE_LABEL[user.role as Role])}</span>
+                  </div>
+                </>
+              ) : (
+                <span className="text-sm font-medium text-white/70">{displayName}</span>
+              )}
+            </div>
           </div>
 
           {/* Center Brand */}
@@ -267,6 +282,17 @@ export function AppShell({
         {/* Mobile Drawer */}
         {isMenuOpen && (
           <div className="absolute top-full left-0 right-0 z-modal max-h-[calc(100vh-100%)] overflow-y-auto border-b border-brand-border bg-brand-surface/98 backdrop-blur-xl p-4 shadow-pop md:hidden animate-fade">
+            {/* The header greeting is desktop-only, so repeat it here — otherwise
+                a phone or POS tablet never shows who is signed in. */}
+            {user && (
+              <div className="mb-3 border-b border-brand-border/60 pb-3">
+                <div className="text-[11px] font-medium text-brand-muted">{t("welcomeBack")}</div>
+                <div className="text-sm font-semibold text-brand-foreground">
+                  {user.name}
+                  <span className="ml-1.5 font-normal text-brand-accentText">· {navLabel(ROLE_LABEL[user.role as Role])}</span>
+                </div>
+              </div>
+            )}
             <nav className="flex flex-col gap-0.5">
               {nav.map((n) => (
                 <Link

@@ -350,6 +350,7 @@ const DICT: Record<string, { en: string; am: string }> = {
   sendForApproval: { en: "Send for Approval", am: "ለማጽደቅ ላክ" },
   // Notifications
   noNotifications: { en: "No notifications.", am: "ማሳወቂያ የለም።" },
+  welcomeBack: { en: "Welcome back", am: "እንኳን ደህና ተመለሱ" },
   openConversation: { en: "Open conversation", am: "ውይይቱን ክፈት" },
   // Modals / actions
   cancel: { en: "Cancel", am: "ሰርዝ" },
@@ -499,6 +500,9 @@ const LABELS: Record<string, string> = {
   Attendance: "መገኘት",
   // SaaS admin nav + title
   "SaaS Admin": "SaaS አስተዳዳሪ",
+  // ROLE_LABEL says "SaaS Owner" while the nav title says "SaaS Admin"; the
+  // greeting renders the former, so both need a translation.
+  "SaaS Owner": "SaaS ባለቤት",
   Tenants: "ተከራዮች",
   Approvals: "ማጽደቆች",
   Config: "ውቅር",
