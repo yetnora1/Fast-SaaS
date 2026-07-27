@@ -11,6 +11,7 @@ import {
   ReceiptIcon,
 } from "@/components/icons";
 import { useLang } from "@/lib/i18n";
+import { SupportSummaryCard } from "@/components/SupportSummaryCard";
 
 interface SubscriptionActivity {
   id: string;
@@ -110,6 +111,10 @@ export default function SaasDashboard() {
           delta={`${data.expiringSoon} ${t("expiring30")}`}
         />
       </div>
+
+      {/* Support — sits directly under the KPIs because it is the only row on
+          this dashboard that needs a reply, not just a read. */}
+      <SupportSummaryCard side="platform" />
 
       {/* Row 2: Platform Operational Activity */}
       <div className="space-y-3">

@@ -350,6 +350,7 @@ const DICT: Record<string, { en: string; am: string }> = {
   sendForApproval: { en: "Send for Approval", am: "ለማጽደቅ ላክ" },
   // Notifications
   noNotifications: { en: "No notifications.", am: "ማሳወቂያ የለም።" },
+  openConversation: { en: "Open conversation", am: "ውይይቱን ክፈት" },
   // Modals / actions
   cancel: { en: "Cancel", am: "ሰርዝ" },
   confirm: { en: "Confirm", am: "አረጋግጥ" },

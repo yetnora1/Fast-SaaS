@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { api, usePoll } from "@/components/fetcher";
 import { Button, Card, EmptyState, Input, Select, Field, Modal, PageHeader, Spinner } from "@/components/ui";
 import { MessageCircleIcon, StoreIcon, PlusIcon, CheckCircleIcon, ClockIcon, AlertTriangleIcon } from "@/components/icons";
@@ -95,11 +96,31 @@ function timeAgo(iso: string) {
 export function SupportCenter({ side }: { side: "cafe" | "platform" }) {
   const { navLabel } = useLang();
   const isPlatform = side === "platform";
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [statusFilter, setStatusFilter] = useState<Status | "ALL">("ALL");
   const [tenantFilter, setTenantFilter] = useState("");
-  const [openId, setOpenId] = useState<string | null>(null);
+  // `?thread=<id>` is the deep link used by notifications and the dashboard
+  // card, so both land inside the conversation rather than on the inbox.
+  const [openId, setOpenId] = useState<string | null>(searchParams.get("thread"));
   const [composeOpen, setComposeOpen] = useState(false);
+
+  // Follow the URL when it changes underneath us (a second notification click
+  // while the page is already open would otherwise do nothing).
+  const linkedId = searchParams.get("thread");
+  const [lastLinked, setLastLinked] = useState(linkedId);
+  if (linkedId !== lastLinked) {
+    setLastLinked(linkedId);
+    setOpenId(linkedId);
+  }
+
+  function closeThread() {
+    setOpenId(null);
+    // Drop ?thread= so a refresh or back-navigation doesn't reopen it.
+    if (searchParams.get("thread")) router.replace(pathname, { scroll: false });
+  }
 
   const query = new URLSearchParams();
   if (statusFilter !== "ALL") query.set("status", statusFilter);
@@ -186,7 +207,7 @@ export function SupportCenter({ side }: { side: "cafe" | "platform" }) {
         <ThreadModal
           threadId={openId}
           isPlatform={isPlatform}
-          onClose={() => { setOpenId(null); reload(); }}
+          onClose={() => { closeThread(); reload(); }}
           onChanged={reload}
         />
       )}

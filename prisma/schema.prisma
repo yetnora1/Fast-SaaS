@@ -904,6 +904,10 @@ model Notification {
   type      String
   title     String
   body      String   @db.Text
+  // Where clicking the notification should take the user, e.g. straight into
+  // the support conversation it came from. Nullable: older notifications and
+  // purely informational ones have nowhere to go.
+  link      String?
   read      Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
 

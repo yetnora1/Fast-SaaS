@@ -40,10 +40,17 @@ export const POST = handler(async (req: Request, { params }: { params: { id: str
     }),
   ]);
 
+  // Each side gets a link into its own view of the same conversation.
   if (fromPlatform) {
-    await notifyTenantOwner(thread.tenantId, "support", `Reply from CafeFlow support`, body.slice(0, 200));
+    await notifyTenantOwner(
+      thread.tenantId, "support", "Reply from CafeFlow support",
+      body.slice(0, 200), `/owner/support?thread=${thread.id}`,
+    );
   } else {
-    await notifySaasOwners("support", `${thread.tenant.name}: ${thread.subject}`, body.slice(0, 200));
+    await notifySaasOwners(
+      "support", `${thread.tenant.name}: ${thread.subject}`,
+      body.slice(0, 200), `/saas-admin/support?thread=${thread.id}`,
+    );
   }
 
   return ok({ message }, { status: 201 });

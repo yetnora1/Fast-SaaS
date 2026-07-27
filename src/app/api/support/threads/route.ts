@@ -16,6 +16,9 @@ export const GET = handler(async (req: Request) => {
   const url = new URL(req.url);
   const status = url.searchParams.get("status");
   const tenantId = url.searchParams.get("tenantId");
+  // Dashboard widgets ask for a handful; the inbox omits it and takes all.
+  const limitParam = Number(url.searchParams.get("limit"));
+  const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 100) : undefined;
 
   const scope = threadScope(me);
   const threads = await prisma.supportThread.findMany({
@@ -27,6 +30,7 @@ export const GET = handler(async (req: Request) => {
       ...(me.role === "saas_owner" && tenantId ? { tenantId } : {}),
     },
     orderBy: { lastMessageAt: "desc" },
+    ...(limit ? { take: limit } : {}),
     relationLoadStrategy: "join",
     select: {
       id: true, subject: true, category: true, status: true,
@@ -89,10 +93,13 @@ export const POST = handler(async (req: Request) => {
     include: { tenant: { select: { name: true } } },
   });
 
+  // The link drops the platform owner straight into this conversation rather
+  // than the inbox, so a notification is one click from a reply.
   await notifySaasOwners(
     "support",
     `New support message from ${thread.tenant.name}`,
     `${input.subject} — ${input.body.slice(0, 160)}`,
+    `/saas-admin/support?thread=${thread.id}`,
   );
 
   return ok({ thread: { id: thread.id } }, { status: 201 });

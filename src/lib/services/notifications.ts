@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db/client";
 import { sendEmail } from "@/lib/integrations/email";
 import type { Role } from "@prisma/client";
 
-export async function notifyUser(userId: string, type: string, title: string, body: string) {
-  const n = await prisma.notification.create({ data: { userId, type, title, body } });
+/** `link` is where clicking the notification should land, if anywhere. */
+export async function notifyUser(userId: string, type: string, title: string, body: string, link?: string) {
+  const n = await prisma.notification.create({ data: { userId, type, title, body, link } });
   return n;
 }
 
@@ -14,15 +15,15 @@ export async function notifyRoleInBranch(branchId: string, role: Role, type: str
 }
 
 /** Notify every active platform (SaaS) owner — used for cross-tenant events. */
-export async function notifySaasOwners(type: string, title: string, body: string) {
+export async function notifySaasOwners(type: string, title: string, body: string, link?: string) {
   const owners = await prisma.user.findMany({ where: { role: "saas_owner", active: true }, select: { id: true } });
-  await Promise.all(owners.map((u) => notifyUser(u.id, type, title, body)));
+  await Promise.all(owners.map((u) => notifyUser(u.id, type, title, body, link)));
 }
 
-export async function notifyTenantOwner(tenantId: string, type: string, title: string, body: string) {
+export async function notifyTenantOwner(tenantId: string, type: string, title: string, body: string, link?: string) {
   const owner = await prisma.user.findFirst({ where: { tenantId, role: "cafe_owner", active: true } });
   if (owner) {
-    await notifyUser(owner.id, type, title, body);
+    await notifyUser(owner.id, type, title, body, link);
     await sendEmail({ to: owner.email, subject: title, html: `<p>${body}</p>` });
   }
 }
