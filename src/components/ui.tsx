@@ -192,7 +192,7 @@ export function Field({
 export function Spinner({ className }: { className?: string }) {
   return (
     <span
-      className={cn("inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-brand-accent", className)}
+      className={cn("inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-border border-t-brand-accent", className)}
       role="status"
       aria-label="Loading"
     />
@@ -250,7 +250,7 @@ export function StatusChip({ status }: { status: string }) {
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium",
-        STATUS_COLORS[status] ?? "bg-white/10 text-slate-300",
+        STATUS_COLORS[status] ?? "bg-brand-surface2 text-brand-muted",
       )}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -308,7 +308,7 @@ export function Modal({
           <h2 className="font-display text-lg font-bold">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-brand-muted transition-colors hover:bg-white/10 hover:text-white"
+            className="rounded-lg px-2 py-1 text-brand-muted transition-colors hover:bg-brand-surface2 hover:text-brand-foreground"
             aria-label="Close"
           >
             ✕

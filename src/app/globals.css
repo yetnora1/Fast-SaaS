@@ -2,8 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── telebirr × WeChat theme tokens ──────────────────────────────────
+   Declared on :root so EVERY page gets them — including the ones that
+   render outside AppShell (landing, login, register, QR menu, subscription
+   gate, SaaS admin login). AppShell re-writes the same names on <html> when
+   the user flips the theme toggle; the values below are the same palette. */
 :root {
   color-scheme: light;
+
+  --theme-bg: #ededed;          /* WeChat page gray */
+  --theme-surface: #ffffff;     /* card */
+  --theme-surface2: #f7f7f7;    /* inset / hover */
+  --theme-header: #00873f;      /* telebirr green chrome */
+  --theme-header-to: #006b36;   /* telebirr chrome gradient end */
+  --theme-border: #e5e5e5;      /* WeChat separator */
+  --theme-muted: #888888;       /* secondary text */
+  --theme-foreground: #191919;  /* primary text */
+  --theme-accent: #07c160;      /* WeChat brand green */
+  --theme-accent-hover: #06ad56;/* WeChat pressed */
+  --theme-accent-text: #03733a; /* AA-safe green text on light */
+
+  --theme-bg-rgb: 237 237 237;
+  --theme-surface-rgb: 255 255 255;
+  --theme-surface2-rgb: 247 247 247;
+  --theme-header-rgb: 0 135 63;
+  --theme-border-rgb: 229 229 229;
+  --theme-muted-rgb: 136 136 136;
+  --theme-foreground-rgb: 25 25 25;
+  --theme-accent-rgb: 7 193 96;
+  --theme-accent-hover-rgb: 6 173 86;
+  --theme-accent-text-rgb: 3 115 58;
+
+  --status-green-text: #03733a;
+  --status-yellow-text: #96560e;
+  --status-red-text: #c5302e;
+  --status-blue-text: #576b95;
+  --status-occupied-text: #0e7c8c;
+  --status-green-text-rgb: 3 115 58;
+  --status-yellow-text-rgb: 150 86 14;
+  --status-red-text-rgb: 197 48 46;
+  --status-blue-text-rgb: 87 107 149;
+  --status-occupied-text-rgb: 14 124 140;
+
+  --chart-1: #06ad56;
+  --chart-2: #576b95;
+  --chart-3: #e8871f;
+  --chart-4: #6c5fa8;
+  --chart-5: #0e9aad;
+  --chart-6: #e64340;
+
+  --scrollbar-thumb: #d9d9d9;
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --theme-bg: #111111;          /* WeChat dark page */
+  --theme-surface: #1a1a1a;     /* dark card */
+  --theme-surface2: #242424;
+  --theme-header: #00602f;      /* telebirr green, dark chrome */
+  --theme-header-to: #004a24;
+  --theme-border: #2e2e2e;
+  --theme-muted: #888888;
+  --theme-foreground: #e3e3e3;
+  --theme-accent: #07c160;
+  --theme-accent-hover: #06ad56;
+  --theme-accent-text: #07c160;
+
+  --theme-bg-rgb: 17 17 17;
+  --theme-surface-rgb: 26 26 26;
+  --theme-surface2-rgb: 36 36 36;
+  --theme-header-rgb: 0 96 47;
+  --theme-border-rgb: 46 46 46;
+  --theme-muted-rgb: 136 136 136;
+  --theme-foreground-rgb: 227 227 227;
+  --theme-accent-rgb: 7 193 96;
+  --theme-accent-hover-rgb: 6 173 86;
+  --theme-accent-text-rgb: 7 193 96;
+
+  --status-green-text: #07c160;
+  --status-yellow-text: #fbb04f;
+  --status-red-text: #fa6a69;
+  --status-blue-text: #97a6c6;
+  --status-occupied-text: #57c7d8;
+  --status-green-text-rgb: 7 193 96;
+  --status-yellow-text-rgb: 251 176 79;
+  --status-red-text-rgb: 250 106 105;
+  --status-blue-text-rgb: 151 166 198;
+  --status-occupied-text-rgb: 87 199 216;
+
+  --chart-1: #07c160;
+  --chart-2: #8fa3ce;
+  --chart-3: #fa9d3b;
+  --chart-4: #9c8bdd;
+  --chart-5: #38c6d9;
+  --chart-6: #fa6a69;
+
+  --scrollbar-thumb: #3a3a3a;
 }
 
 html {
@@ -14,6 +109,11 @@ body {
   @apply bg-brand-bg font-sans text-brand-foreground antialiased;
   font-feature-settings: "cv05", "ss01";
   text-rendering: optimizeLegibility;
+}
+
+/* telebirr's chrome is a green gradient bar, not a flat fill. */
+header.bg-brand-header {
+  background-image: linear-gradient(120deg, var(--theme-header, #00873f) 0%, var(--theme-header-to, #006b36) 100%);
 }
 
 /* Display face for headings. */
@@ -58,8 +158,11 @@ body {
 .skeleton::after {
   content: "";
   @apply absolute inset-0 -translate-x-full;
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.04), transparent);
+  background: linear-gradient(90deg, transparent, rgb(0 0 0 / 0.04), transparent);
   animation: shimmer 1.5s infinite;
+}
+html.dark .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.05), transparent);
 }
 @keyframes shimmer {
   100% { transform: translateX(100%); }
@@ -82,17 +185,18 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgb(63 63 70) transparent;
+  scrollbar-color: var(--scrollbar-thumb, #d9d9d9) transparent;
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb {
-  @apply rounded-full bg-zinc-700;
+  border-radius: 9999px;
+  background-color: var(--scrollbar-thumb, #d9d9d9);
   border: 1px solid transparent;
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-zinc-600;
+  background-color: var(--theme-muted, #888888);
   background-clip: content-box;
 }
 

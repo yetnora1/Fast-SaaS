@@ -139,20 +139,20 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
             <style>
               body {
                 margin: 0;
-                background: #09090b;
+                background: #111111;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
                 min-height: 100vh;
                 font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                color: #fafafa;
+                color: #E3E3E3;
               }
               .card {
-                background: #18181b;
+                background: #1A1A1A;
                 padding: 32px;
                 border-radius: 24px;
-                border: 1px solid #27272a;
+                border: 1px solid #2E2E2E;
                 box-shadow: 0 20px 50px rgba(0,0,0,0.6);
                 display: flex;
                 flex-direction: column;
@@ -164,11 +164,11 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
                 font-size: 24px;
                 font-weight: 800;
                 letter-spacing: 0.05em;
-                color: #14b8a6;
+                color: #07C160;
                 text-transform: uppercase;
               }
               .sub {
-                color: #a1a1aa;
+                color: #888888;
                 margin: 6px 0 24px 0;
                 font-size: 13px;
                 font-weight: 500;
@@ -340,7 +340,7 @@ export function TableQRCodes({ branchId }: { branchId?: string }) {
                   <span className="text-xl">☕</span>
                 </div>
                 <h1 className="text-2xl font-black tracking-tight text-slate-900">{cafeName}</h1>
-                <div className="h-[2px] w-16 bg-[#c87a53] my-2" />
+                <div className="h-[2px] w-16 bg-[#07C160] my-2" />
                 <h2 className="text-4xl font-extrabold text-slate-800 uppercase tracking-tight mt-1">TABLE {table.number}</h2>
               </div>
 

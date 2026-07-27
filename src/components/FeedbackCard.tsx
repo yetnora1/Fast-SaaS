@@ -82,7 +82,7 @@ export function FeedbackCard({ station }: { station?: "BARISTA" | "KITCHEN" | "A
                     className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
                       width: `${pct}%`,
-                      background: star >= 4 ? "var(--status-green-text, #0d7d6c)" : star === 3 ? "var(--status-yellow-text, #B45309)" : "var(--status-red-text, #B91C1C)",
+                      background: star >= 4 ? "var(--status-green-text, #03733A)" : star === 3 ? "var(--status-yellow-text, #96560E)" : "var(--status-red-text, #C5302E)",
                     }}
                   />
                 </div>

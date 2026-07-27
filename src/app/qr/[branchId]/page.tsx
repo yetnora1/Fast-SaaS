@@ -93,12 +93,13 @@ function getCategoryEmoji(name: string): string {
   return "🍽️";
 }
 
-// Copper accent, themed per mode: dark keeps warm #c87a53 (6.1:1 on slate-950);
-// light uses deeper #a85a32 so white-on-copper buttons and copper text meet AA (>=4.5:1).
+// Brand green, themed per mode: dark uses WeChat's #07C160 (7.9:1 on #111111);
+// light uses telebirr's deeper #03733A so white-on-green buttons and green text
+// both meet AA (>=4.5:1) against the WeChat page gray.
 function qrAccentVars(theme: "light" | "dark") {
   return {
-    "--qr-accent": theme === "dark" ? "#c87a53" : "#a85a32",
-    "--qr-accent-hover": theme === "dark" ? "#b3663d" : "#8f4826",
+    "--qr-accent": theme === "dark" ? "#07C160" : "#03733A",
+    "--qr-accent-hover": theme === "dark" ? "#06AD56" : "#025C2E",
   } as React.CSSProperties;
 }
 
@@ -107,7 +108,7 @@ export default function QrOrderPage() {
     <Suspense fallback={
       <main className="flex min-h-dvh items-center justify-center bg-slate-950 text-white">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[color:var(--qr-accent,#c87a53)] border-t-transparent" />
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[color:var(--qr-accent,#07C160)] border-t-transparent" />
           <span className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Loading Menu...</span>
         </div>
       </main>
@@ -181,6 +182,14 @@ function QrOrder() {
       }
     }
   }, []);
+
+  // Keep <html> in sync with the customer's own toggle so the `dark:` variants
+  // used on this page track the menu's theme, not the staff dashboard's.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    root.style.colorScheme = theme;
+  }, [theme]);
 
   useEffect(() => {
     const savedView = localStorage.getItem(`cafeflow_menu_view_${branchId}`);
@@ -445,17 +454,17 @@ function QrOrder() {
   if (activeOrderId) {
     return (
       <main style={qrAccentVars(theme)} className={`min-h-dvh transition-colors duration-300 ${
-        theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-[#faf9f6] text-slate-800"
+        theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-[#EDEDED] text-slate-800"
       }`}>
         {/* Simple tracker header */}
         <header className={`sticky top-0 z-nav border-b backdrop-blur-md px-4 py-3 flex items-center justify-between transition-colors duration-300 ${
-          theme === "dark" ? "bg-slate-950/80 border-slate-900" : "bg-[#faf9f6]/80 border-slate-200"
+          theme === "dark" ? "bg-slate-950/80 border-slate-900" : "bg-[#EDEDED]/80 border-slate-200"
         }`}>
           <h1 className="font-display text-lg font-bold">
             {data?.branch?.name ?? "ZAD Cafe"} {tableParam && `· ${t("table")} ${tableParam}`}
           </h1>
           <div className="flex items-center gap-2">
-            <button onClick={toggle} className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1 bg-[#c87a53]/10 text-[color:var(--qr-accent,#c87a53)] border border-[#c87a53]/20">
+            <button onClick={toggle} className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1 bg-[#07C160]/10 text-[color:var(--qr-accent,#07C160)] border border-[#07C160]/20">
               <GlobeIcon className="h-4 w-4" />
               {lang === "en" ? "አማ" : "EN"}
             </button>
@@ -489,16 +498,16 @@ function QrOrder() {
 
   return (
     <div style={qrAccentVars(theme)} className={`min-h-dvh pb-20 relative ${
-      theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-[#faf9f6] text-slate-800"
+      theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-[#EDEDED] text-slate-800"
     }`}>
       {/* Sticky Header Navigation */}
       <header className={`sticky top-0 z-nav border-b ${
-        theme === "dark" ? "bg-slate-950/95 border-slate-900/80" : "bg-[#faf9f6]/95 border-slate-200/80"
+        theme === "dark" ? "bg-slate-950/95 border-slate-900/80" : "bg-[#EDEDED]/95 border-slate-200/80"
       }`}>
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-1.5 cursor-pointer">
-            <span className="text-[color:var(--qr-accent,#c87a53)] text-xl font-black">☕</span>
+            <span className="text-[color:var(--qr-accent,#07C160)] text-xl font-black">☕</span>
             <span className="font-display text-lg font-bold uppercase tracking-wider">
               {data?.branch?.name || "ZAD CAFE"}
             </span>
@@ -507,7 +516,7 @@ function QrOrder() {
           {/* Toolbar */}
           <div className="flex items-center gap-2.5">
             {/* Lang */}
-            <button onClick={toggle} className="h-9 px-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 bg-[#c87a53]/10 text-[color:var(--qr-accent,#c87a53)] hover:bg-[#c87a53]/20 transition-colors border border-[#c87a53]/15">
+            <button onClick={toggle} className="h-9 px-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 bg-[#07C160]/10 text-[color:var(--qr-accent,#07C160)] hover:bg-[#07C160]/20 transition-colors border border-[#07C160]/15">
               <GlobeIcon className="h-4 w-4" />
               {lang === "en" ? "አማርኛ" : "English"}
             </button>
@@ -531,7 +540,7 @@ function QrOrder() {
             {cartCount > 0 && (
               <button 
                 onClick={() => setIsCartOpen(true)}
-                className="h-9 px-3.5 bg-[color:var(--qr-accent,#c87a53)] text-white hover:bg-[color:var(--qr-accent-hover,#b3663d)] rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-[background-color,transform]"
+                className="h-9 px-3.5 bg-[color:var(--qr-accent,#07C160)] text-white hover:bg-[color:var(--qr-accent-hover,#06AD56)] rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-[background-color,transform]"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-4 w-4"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
                 <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]">{cartCount}</span>
@@ -545,7 +554,7 @@ function QrOrder() {
       <div className="max-w-6xl mx-auto px-4 pt-6 text-left">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <span className="text-[10px] uppercase tracking-widest font-extrabold text-[color:var(--qr-accent,#c87a53)]">
+            <span className="text-[10px] uppercase tracking-widest font-extrabold text-[color:var(--qr-accent,#07C160)]">
               {lang === "en" ? "Self-Service Ordering" : "ራስ-አገልግሎት ማዘዣ"}
             </span>
             <h1 className="font-display text-2xl sm:text-3.5xl font-extrabold tracking-tight mt-1">
@@ -553,7 +562,7 @@ function QrOrder() {
             </h1>
           </div>
           {tableParam && (
-            <div className="bg-[#c87a53]/10 text-[color:var(--qr-accent,#c87a53)] border border-[#c87a53]/25 px-3.5 py-1.5 rounded-xl font-bold text-xs font-mono shrink-0">
+            <div className="bg-[#07C160]/10 text-[color:var(--qr-accent,#07C160)] border border-[#07C160]/25 px-3.5 py-1.5 rounded-xl font-bold text-xs font-mono shrink-0">
               {lang === "en" ? `Table ${tableParam}` : `ጠረጴዛ ${tableParam}`}
             </div>
           )}
@@ -564,7 +573,7 @@ function QrOrder() {
       <section className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Dynamic Search & Input Container */}
         <div className="relative group max-w-xl mx-auto">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[color:var(--qr-accent,#c87a53)] transition-colors">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[color:var(--qr-accent,#07C160)] transition-colors">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </div>
           <input 
@@ -576,10 +585,10 @@ function QrOrder() {
               setSearchQuery(e.target.value);
               setShowSearchDropdown(true);
             }}
-            className={`w-full border rounded-2xl py-3.5 pl-11 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-[#c87a53]/40 transition-[border-color] ${
+            className={`w-full border rounded-2xl py-3.5 pl-11 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-[#07C160]/40 transition-[border-color] ${
               theme === "dark"
-                ? "bg-slate-900/90 border-slate-800 text-white placeholder:text-slate-400 focus:border-[color:var(--qr-accent,#c87a53)] focus:bg-slate-900"
-                : "bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-[color:var(--qr-accent,#c87a53)] focus:bg-white"
+                ? "bg-slate-900/90 border-slate-800 text-white placeholder:text-slate-400 focus:border-[color:var(--qr-accent,#07C160)] focus:bg-slate-900"
+                : "bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-[color:var(--qr-accent,#07C160)] focus:bg-white"
             }`}
           />
           {searchQuery && (
@@ -636,7 +645,7 @@ function QrOrder() {
                             )}
                           </div>
                         </div>
-                        <span className={`font-mono text-xs font-bold shrink-0 pl-2 ${theme === "dark" ? "text-[color:var(--qr-accent,#c87a53)]" : "text-[color:var(--qr-accent,#c87a53)]"}`}>
+                        <span className={`font-mono text-xs font-bold shrink-0 pl-2 ${theme === "dark" ? "text-[color:var(--qr-accent,#07C160)]" : "text-[color:var(--qr-accent,#07C160)]"}`}>
                           {Number(it.price).toLocaleString()} ETB
                         </span>
                       </div>
@@ -662,8 +671,8 @@ function QrOrder() {
               aria-label={lang === "en" ? "Grid view" : "Grid view"}
               aria-pressed={menuView === "grid"}
               title={lang === "en" ? "Grid view" : "Grid view"}
-              className={`h-10 w-10 rounded-xl flex items-center justify-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--qr-accent,#c87a53)] ${
-                menuView === "grid" ? "bg-[color:var(--qr-accent,#c87a53)] text-white shadow-sm" : theme === "dark" ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+              className={`h-10 w-10 rounded-xl flex items-center justify-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--qr-accent,#07C160)] ${
+                menuView === "grid" ? "bg-[color:var(--qr-accent,#07C160)] text-white shadow-sm" : theme === "dark" ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
               }`}
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
@@ -674,8 +683,8 @@ function QrOrder() {
               aria-label={lang === "en" ? "List view" : "List view"}
               aria-pressed={menuView === "list"}
               title={lang === "en" ? "List view" : "List view"}
-              className={`h-10 w-10 rounded-xl flex items-center justify-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--qr-accent,#c87a53)] ${
-                menuView === "list" ? "bg-[color:var(--qr-accent,#c87a53)] text-white shadow-sm" : theme === "dark" ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+              className={`h-10 w-10 rounded-xl flex items-center justify-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--qr-accent,#07C160)] ${
+                menuView === "list" ? "bg-[color:var(--qr-accent,#07C160)] text-white shadow-sm" : theme === "dark" ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
               }`}
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" strokeWidth={3}/></svg>
@@ -685,7 +694,7 @@ function QrOrder() {
 
         {/* Sticky Category Selector Navbar Row */}
         <div className={`sticky top-16 z-40 py-3.5 border-b -mx-4 px-4 overflow-x-auto flex gap-2 no-scrollbar scroll-smooth ${
-          theme === "dark" ? "bg-slate-950/95 border-slate-900/60" : "bg-[#faf9f6]/98 border-slate-200/60"
+          theme === "dark" ? "bg-slate-950/95 border-slate-900/60" : "bg-[#EDEDED]/98 border-slate-200/60"
         }`}>
           <button 
             onClick={() => {
@@ -694,7 +703,7 @@ function QrOrder() {
             }}
             className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-[background-color,color] ${
               activeCategory === "All" 
-                ? "bg-[color:var(--qr-accent,#c87a53)] text-white shadow-md" 
+                ? "bg-[color:var(--qr-accent,#07C160)] text-white shadow-md" 
                 : theme === "dark" 
                 ? "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white" 
                 : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
@@ -710,7 +719,7 @@ function QrOrder() {
             }}
             className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-[background-color,color] flex items-center gap-1.5 ${
               activeCategory === "Favorites" 
-                ? "bg-[#dc2626] text-white shadow-md" 
+                ? "bg-[#E64340] text-white shadow-md" 
                 : theme === "dark" 
                 ? "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white" 
                 : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
@@ -728,7 +737,7 @@ function QrOrder() {
               }}
               className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-[background-color,color] ${
                 activeCategory === c.id 
-                  ? "bg-[color:var(--qr-accent,#c87a53)] text-white shadow-md" 
+                  ? "bg-[color:var(--qr-accent,#07C160)] text-white shadow-md" 
                   : theme === "dark" 
                   ? "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white" 
                   : "bg-white border border-slate-200 text-slate-600 hover:text-slate-900"
@@ -753,7 +762,7 @@ function QrOrder() {
                 className="space-y-4 pt-6 scroll-mt-32 border-t border-slate-800/10 dark:border-slate-800/50 first:border-none first:pt-0"
                 style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 400px' }}
               >
-                <div className="flex items-center gap-2 border-l-4 border-[color:var(--qr-accent,#c87a53)] pl-3 text-left">
+                <div className="flex items-center gap-2 border-l-4 border-[color:var(--qr-accent,#07C160)] pl-3 text-left">
                   <span className="text-lg">{getCategoryEmoji(c.name)}</span>
                   <h3 className="font-display text-base sm:text-lg font-extrabold uppercase tracking-wide">
                     {tr(c.name, c.nameAm)}
@@ -781,7 +790,7 @@ function QrOrder() {
               {(activeCategory !== "All" || searchQuery) && (
                 <button 
                   onClick={() => { setSearchQuery(""); setActiveCategory("All"); }}
-                  className="mt-2 text-xs font-bold text-[color:var(--qr-accent,#c87a53)] border border-[#c87a53]/25 px-3 py-1.5 rounded-xl hover:bg-[#c87a53]/5"
+                  className="mt-2 text-xs font-bold text-[color:var(--qr-accent,#07C160)] border border-[#07C160]/25 px-3 py-1.5 rounded-xl hover:bg-[#07C160]/5"
                 >
                   {lang === "en" ? "Reset filters" : "ሁሉንም አሳይ"}
                 </button>
@@ -793,22 +802,26 @@ function QrOrder() {
 
       {/* Floating Bottom Cart Bar */}
       {cartCount > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 border px-4 py-3 flex items-center justify-between rounded-2xl shadow-xl z-modal animate-in border-[#c87a53]/35 bg-slate-900/98">
+        <div className={`fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 border px-4 py-3 flex items-center justify-between rounded-2xl shadow-xl z-modal animate-in ${
+          theme === "dark" ? "border-[#07C160]/35 bg-slate-900/98" : "border-slate-200 bg-white/98"
+        }`}>
           <div className="flex items-center gap-2">
-            <div className="relative h-9 w-9 rounded-xl bg-[#c87a53]/20 flex items-center justify-center text-[color:var(--qr-accent,#c87a53)]">
+            <div className="relative h-9 w-9 rounded-xl bg-[#07C160]/20 flex items-center justify-center text-[color:var(--qr-accent,#07C160)]">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>
-              <span className="absolute -top-1.5 -right-1.5 bg-[#dc2626] text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center border border-slate-950 shadow-sm font-mono">
+              <span className={`absolute -top-1.5 -right-1.5 bg-[#E64340] text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center border shadow-sm font-mono ${
+                theme === "dark" ? "border-slate-950" : "border-white"
+              }`}>
                 {cartCount}
               </span>
             </div>
             <div className="flex flex-col text-left">
-              <span className="text-[10px] text-slate-400">{lang === "en" ? "Subtotal" : "አጠቃላይ ዋጋ"}</span>
-              <span className="font-mono text-xs font-bold text-white">{(cartTotal).toLocaleString()} ETB</span>
+              <span className="text-[10px] text-slate-500">{lang === "en" ? "Subtotal" : "አጠቃላይ ዋጋ"}</span>
+              <span className={`font-mono text-xs font-bold ${theme === "dark" ? "text-white" : "text-slate-950"}`}>{(cartTotal).toLocaleString()} ETB</span>
             </div>
           </div>
           <button 
             onClick={() => setIsCartOpen(true)}
-            className="bg-[color:var(--qr-accent,#c87a53)] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1 shadow-md hover:bg-[color:var(--qr-accent-hover,#b3663d)] active:scale-95 transition-[background-color,transform]"
+            className="bg-[color:var(--qr-accent,#07C160)] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1 shadow-md hover:bg-[color:var(--qr-accent-hover,#06AD56)] active:scale-95 transition-[background-color,transform]"
           >
             {lang === "en" ? "View Cart" : "ትዕዛዝ እይ / ክፈል"}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-3.5 w-3.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -1013,7 +1026,7 @@ function ItemDetailModal({
           </button>
           
           <div className="absolute bottom-4 left-4 right-4 text-left">
-            <span className="text-[10px] uppercase tracking-widest text-[color:var(--qr-accent,#c87a53)] font-extrabold bg-[#c87a53]/15 border border-[#c87a53]/25 px-2.5 py-0.5 rounded-full inline-block">
+            <span className="text-[10px] uppercase tracking-widest text-[color:var(--qr-accent,#07C160)] font-extrabold bg-[#07C160]/15 border border-[#07C160]/25 px-2.5 py-0.5 rounded-full inline-block">
               {isDrink ? (lang === "en" ? "Beverage" : "መጠጥ") : (lang === "en" ? "Gourmet Dish" : "ምግብ")}
             </span>
             <h2 className="font-display text-xl sm:text-2xl font-bold text-white mt-1.5 leading-tight">
@@ -1025,7 +1038,7 @@ function ItemDetailModal({
         {/* Scrollable details */}
         <div className="p-5 space-y-5 overflow-y-auto flex-grow text-left">
           <div className="flex items-baseline justify-between gap-3">
-            <div className="font-mono text-[color:var(--qr-accent,#c87a53)] text-base font-bold">
+            <div className="font-mono text-[color:var(--qr-accent,#07C160)] text-base font-bold">
               {finalUnitPrice.toLocaleString()} ETB
             </div>
           </div>
@@ -1049,7 +1062,7 @@ function ItemDetailModal({
                         onClick={() => selectOption(groupName, opt.option)}
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                           selectedMods[groupName] === opt.option 
-                            ? "bg-[color:var(--qr-accent,#c87a53)] text-white scale-105" 
+                            ? "bg-[color:var(--qr-accent,#07C160)] text-white scale-105" 
                             : theme === "dark" 
                             ? "bg-slate-950 text-slate-400 hover:text-white border border-slate-800" 
                             : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200"
@@ -1072,7 +1085,7 @@ function ItemDetailModal({
                         onClick={() => selectOption(groupName, opt.option)}
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                           selectedMods[groupName] === opt.option 
-                            ? "bg-[color:var(--qr-accent,#c87a53)] text-white scale-105" 
+                            ? "bg-[color:var(--qr-accent,#07C160)] text-white scale-105" 
                             : theme === "dark" 
                             ? "bg-slate-950 text-slate-400 hover:text-white border border-slate-800" 
                             : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200"
@@ -1096,7 +1109,7 @@ function ItemDetailModal({
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder={lang === "en" ? "e.g., No sugar, extra hot, etc." : "ምሳሌ፡ ስኳር አይቀላቀል፣ በጣም ሙቅ ይሁን..."}
                 rows={2}
-                className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[color:var(--qr-accent,#c87a53)] ${
+                className={`w-full border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[color:var(--qr-accent,#07C160)] ${
                   theme === "dark" ? "bg-slate-950 border-slate-800 text-white" : "bg-slate-50 border-slate-200 text-slate-900"
                 }`}
               />
@@ -1114,7 +1127,7 @@ function ItemDetailModal({
                   <div 
                     key={comp.id}
                     onClick={() => onSwitchItem(comp)}
-                    className={`flex items-center gap-2 p-2 rounded-xl shrink-0 cursor-pointer border hover:border-[#c87a53]/85 transition-colors w-44 text-left ${
+                    className={`flex items-center gap-2 p-2 rounded-xl shrink-0 cursor-pointer border hover:border-[#07C160]/85 transition-colors w-44 text-left ${
                       theme === "dark" ? "bg-slate-950 border-slate-800/60" : "bg-slate-50 border-slate-200/80"
                     }`}
                   >
@@ -1127,7 +1140,7 @@ function ItemDetailModal({
                     />
                     <div className="flex-grow min-w-0">
                       <div className={`text-[10px] font-semibold truncate ${theme === "dark" ? "text-white" : "text-slate-900"}`}>{tr(comp.name, comp.nameAm)}</div>
-                      <div className="text-[10px] text-[color:var(--qr-accent,#c87a53)] font-mono font-bold mt-0.5">{Number(comp.price).toLocaleString()} ETB</div>
+                      <div className="text-[10px] text-[color:var(--qr-accent,#07C160)] font-mono font-bold mt-0.5">{Number(comp.price).toLocaleString()} ETB</div>
                     </div>
                   </div>
                 ))}
@@ -1161,7 +1174,7 @@ function ItemDetailModal({
 
           <button
             onClick={() => onAdd(item, qty, selectedModsList, notes)}
-            className="flex-grow bg-[color:var(--qr-accent,#c87a53)] hover:bg-[color:var(--qr-accent-hover,#b3663d)] text-white h-10 rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+            className="flex-grow bg-[color:var(--qr-accent,#07C160)] hover:bg-[color:var(--qr-accent-hover,#06AD56)] text-white h-10 rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
           >
             <span>{lang === "en" ? "Add to Order" : "ትዕዛዝ ላይ ጨምር"}</span>
             <span className="font-mono bg-black/15 px-2 py-0.5 rounded-lg">({totalPrice.toLocaleString()} ETB)</span>
@@ -1225,7 +1238,7 @@ function CartDrawer({
             <h2 className="font-display text-base font-bold">
               {lang === "en" ? "Review Your Order" : "ትዕዛዝዎን ይገምግሙ"}
             </h2>
-            <span className="bg-[#c87a53]/15 text-[color:var(--qr-accent,#c87a53)] text-xxs font-extrabold px-2 py-0.5 rounded-full font-mono">
+            <span className="bg-[#07C160]/15 text-[color:var(--qr-accent,#07C160)] text-xxs font-extrabold px-2 py-0.5 rounded-full font-mono">
               {itemsList.length} items
             </span>
           </div>
@@ -1259,7 +1272,7 @@ function CartDrawer({
                   {item.selectedModifiers.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {item.selectedModifiers.map((m, idx) => (
-                        <span key={idx} className="bg-[#c87a53]/10 text-[color:var(--qr-accent,#c87a53)] text-[9px] font-semibold px-2 py-0.5 rounded-md">
+                        <span key={idx} className="bg-[#07C160]/10 text-[color:var(--qr-accent,#07C160)] text-[9px] font-semibold px-2 py-0.5 rounded-md">
                           {m.groupName}: {m.option}
                         </span>
                       ))}
@@ -1270,7 +1283,7 @@ function CartDrawer({
                       &ldquo;{item.notes}&rdquo;
                     </p>
                   )}
-                  <div className="font-mono text-xs font-bold text-[color:var(--qr-accent,#c87a53)] pt-0.5">
+                  <div className="font-mono text-xs font-bold text-[color:var(--qr-accent,#07C160)] pt-0.5">
                     {(item.price * item.qty).toLocaleString()} ETB
                   </div>
                 </div>
@@ -1314,7 +1327,7 @@ function CartDrawer({
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value.replace(/\D/g, ""))}
                 placeholder={lang === "en" ? "Enter your table number (e.g. 5)" : "የጠረጴዛ ቁጥርዎን ያስገቡ (ለምሳሌ 5)"}
-                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:outline-none focus:border-[color:var(--qr-accent,#c87a53)] focus:ring-1 focus:ring-[#c87a53]/35 transition-all ${
+                className={`w-full border rounded-xl px-3.5 py-2.5 text-sm font-bold focus:outline-none focus:border-[color:var(--qr-accent,#07C160)] focus:ring-1 focus:ring-[#07C160]/35 transition-all ${
                   theme === "dark" ? "bg-slate-950/40 border-slate-800 text-white" : "bg-slate-50/50 border-slate-200 text-slate-900"
                 }`}
               />
@@ -1333,7 +1346,7 @@ function CartDrawer({
                     onClick={() => setSelectedWaiterId("")}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                       selectedWaiterId === ""
-                        ? "bg-[color:var(--qr-accent,#c87a53)] text-white scale-105"
+                        ? "bg-[color:var(--qr-accent,#07C160)] text-white scale-105"
                         : theme === "dark"
                         ? "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
                         : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200"
@@ -1348,7 +1361,7 @@ function CartDrawer({
                       onClick={() => setSelectedWaiterId(w.id)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                         selectedWaiterId === w.id
-                          ? "bg-[color:var(--qr-accent,#c87a53)] text-white scale-105"
+                          ? "bg-[color:var(--qr-accent,#07C160)] text-white scale-105"
                           : theme === "dark"
                           ? "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
                           : "bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200"
@@ -1372,13 +1385,13 @@ function CartDrawer({
               </div>
               <div className="flex justify-between text-sm font-bold pt-1.5">
                 <span className={theme === "dark" ? "text-white" : "text-slate-900"}>{lang === "en" ? "Grand Total" : "አጠቃላይ ድምር"}</span>
-                <span className="font-mono text-[color:var(--qr-accent,#c87a53)] text-base">{total.toLocaleString()} ETB</span>
+                <span className="font-mono text-[color:var(--qr-accent,#07C160)] text-base">{total.toLocaleString()} ETB</span>
               </div>
             </div>
 
             <button 
               onClick={onProceed}
-              className="w-full bg-[color:var(--qr-accent,#c87a53)] hover:bg-[color:var(--qr-accent-hover,#b3663d)] text-white h-11 rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5"
+              className="w-full bg-[color:var(--qr-accent,#07C160)] hover:bg-[color:var(--qr-accent-hover,#06AD56)] text-white h-11 rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5"
             >
               <span>{lang === "en" ? "Proceed to Payment" : "ወደ ክፍያ ሂድ"}</span>
             </button>
@@ -1511,7 +1524,7 @@ function PaymentModal({
               onClick={() => setPayMode("CASHIER")}
               className={`p-3 rounded-2xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
                 payMode === "CASHIER"
-                  ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)]"
+                  ? "bg-[#07C160]/15 border-[color:var(--qr-accent,#07C160)] text-[color:var(--qr-accent,#07C160)]"
                   : theme === "dark"
                   ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
@@ -1524,7 +1537,7 @@ function PaymentModal({
               onClick={() => { setPayMode("TRANSFER"); setActiveChannel("TELEBIRR"); setTxRef(""); }}
               className={`p-3 rounded-2xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
                 payMode === "TRANSFER"
-                  ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)]"
+                  ? "bg-[#07C160]/15 border-[color:var(--qr-accent,#07C160)] text-[color:var(--qr-accent,#07C160)]"
                   : theme === "dark"
                   ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                   : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
@@ -1545,7 +1558,7 @@ function PaymentModal({
                   : "ትዕዛዝዎ በቀጥታ ወደ ዝግጅት ይሄዳል። ከምግብዎ በኋላ በካሸር ዘንድ በጥሬ ገንዘብ ወይም በቴሌብር ይክፈሉ።"}
               </p>
               <div className="text-[10px] text-slate-400">
-                {lang === "en" ? "Total to Pay" : "የሚከፈለው ጠቅላላ"}: <span className="text-[color:var(--qr-accent,#c87a53)] font-bold font-mono text-xs">{total.toLocaleString()} ETB</span>
+                {lang === "en" ? "Total to Pay" : "የሚከፈለው ጠቅላላ"}: <span className="text-[color:var(--qr-accent,#07C160)] font-bold font-mono text-xs">{total.toLocaleString()} ETB</span>
               </div>
             </div>
           )}
@@ -1581,7 +1594,7 @@ function PaymentModal({
                     <button
                       onClick={handleCopy}
                       className={`h-7 px-3.5 rounded-lg text-xxs font-bold flex items-center gap-1 transition-all ${
-                        copied ? "bg-green-700 text-white" : "bg-[color:var(--qr-accent,#c87a53)] hover:bg-[color:var(--qr-accent-hover,#b3663d)] text-white"
+                        copied ? "bg-green-700 text-white" : "bg-[color:var(--qr-accent,#07C160)] hover:bg-[color:var(--qr-accent-hover,#06AD56)] text-white"
                       }`}
                     >
                       <ClipboardIcon className="h-3 w-3" />
@@ -1602,7 +1615,7 @@ function PaymentModal({
                 </div>
               )}
               <div className="text-[10px] text-slate-400">
-                {lang === "en" ? "Amount to Transfer" : "የሚተላለፈው የገንዘብ መጠን"}: <span className="text-[color:var(--qr-accent,#c87a53)] font-bold font-mono text-xs">{total.toLocaleString()} ETB</span>
+                {lang === "en" ? "Amount to Transfer" : "የሚተላለፈው የገንዘብ መጠን"}: <span className="text-[color:var(--qr-accent,#07C160)] font-bold font-mono text-xs">{total.toLocaleString()} ETB</span>
               </div>
             </div>
           </div>
@@ -1622,7 +1635,7 @@ function PaymentModal({
               />
               <label 
                 htmlFor="receipt-file-input"
-                className={`flex-grow border border-dashed rounded-xl px-4 py-3 text-center cursor-pointer hover:border-[color:var(--qr-accent,#c87a53)] transition-colors flex flex-col items-center justify-center gap-1.5 ${
+                className={`flex-grow border border-dashed rounded-xl px-4 py-3 text-center cursor-pointer hover:border-[color:var(--qr-accent,#07C160)] transition-colors flex flex-col items-center justify-center gap-1.5 ${
                   theme === "dark" 
                     ? "bg-slate-950 border-slate-800 text-slate-400 hover:text-white" 
                     : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
@@ -1642,7 +1655,7 @@ function PaymentModal({
                   </>
                 ) : uploading ? (
                   <>
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-[color:var(--qr-accent,#c87a53)] border-t-transparent" />
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-[color:var(--qr-accent,#07C160)] border-t-transparent" />
                     <span className="text-xs font-semibold">
                       {lang === "en" ? "Uploading..." : "በመጫን ላይ..."}
                     </span>
@@ -1688,7 +1701,7 @@ function PaymentModal({
           <button
             onClick={() => onSubmit(payMode === "TRANSFER" ? receiptUrl || undefined : undefined)}
             disabled={isSubmitting || uploading || (payMode === "TRANSFER" && !receiptUrl)}
-            className="w-full bg-[color:var(--qr-accent,#c87a53)] text-white hover:bg-[color:var(--qr-accent-hover,#b3663d)] h-11 rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[color:var(--qr-accent,#07C160)] text-white hover:bg-[color:var(--qr-accent-hover,#06AD56)] h-11 rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
@@ -1773,7 +1786,7 @@ function OrderTracker({
   if (loading && !order) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
-        <div className="h-9 w-9 animate-spin rounded-full border-4 border-[color:var(--qr-accent,#c87a53)] border-t-transparent" />
+        <div className="h-9 w-9 animate-spin rounded-full border-4 border-[color:var(--qr-accent,#07C160)] border-t-transparent" />
         <span className="text-xs text-slate-400 tracking-wider font-semibold uppercase">
           {lang === "en" ? "Loading order details..." : "የትዕዛዝ ዝርዝር በመጫን ላይ..."}
         </span>
@@ -1799,7 +1812,7 @@ function OrderTracker({
         </div>
         <button 
           onClick={onClear} 
-          className="w-full bg-[color:var(--qr-accent,#c87a53)] hover:bg-[color:var(--qr-accent-hover,#b3663d)] text-white font-bold h-10 rounded-xl text-xs active:scale-95 transition-all shadow-md"
+          className="w-full bg-[color:var(--qr-accent,#07C160)] hover:bg-[color:var(--qr-accent-hover,#06AD56)] text-white font-bold h-10 rounded-xl text-xs active:scale-95 transition-all shadow-md"
         >
           {lang === "en" ? "Return to Menu" : "ወደ ምናሌ ይመለሱ"}
         </button>
@@ -1856,11 +1869,11 @@ function OrderTracker({
       <div className={`p-6 rounded-3xl border relative overflow-hidden transition-all duration-300 ${
         theme === "dark" ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200 shadow-md"
       }`}>
-        <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-[#c87a53]/5 blur-3xl" />
+        <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-[#07C160]/5 blur-3xl" />
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-2 border-slate-800/40">
           <div>
-            <span className="text-[10px] uppercase tracking-wider font-extrabold text-[color:var(--qr-accent,#c87a53)]">
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-[color:var(--qr-accent,#07C160)]">
               {lang === "en" ? "Self-Order Tracker" : "የራስ-ትዕዛዝ መከታተያ"}
             </span>
             <h2 className="font-display text-lg font-bold mt-0.5">
@@ -1868,7 +1881,7 @@ function OrderTracker({
             </h2>
           </div>
           <div className="text-[10px] text-slate-400 tabular sm:text-right">
-            <div>Order ID: <span className="font-mono text-[color:var(--qr-accent,#c87a53)] font-bold">{order.id.slice(-8).toUpperCase()}</span></div>
+            <div>Order ID: <span className="font-mono text-[color:var(--qr-accent,#07C160)] font-bold">{order.id.slice(-8).toUpperCase()}</span></div>
             <div>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
           </div>
         </div>
@@ -1891,7 +1904,7 @@ function OrderTracker({
           <div className="my-8 relative">
             <div className="absolute top-[18px] left-[32px] right-[32px] h-0.5 bg-slate-800 z-0 hidden sm:block" />
             <div
-              className="absolute top-[18px] left-[32px] h-0.5 bg-[color:var(--qr-accent,#c87a53)] transition-all duration-500 ease-out z-0 hidden sm:block"
+              className="absolute top-[18px] left-[32px] h-0.5 bg-[color:var(--qr-accent,#07C160)] transition-all duration-500 ease-out z-0 hidden sm:block"
               style={{ width: `${Math.max(0, ((currentStep - 1) / (steps.length - 1)) * 100)}%` }}
             />
 
@@ -1905,9 +1918,9 @@ function OrderTracker({
                     <div
                       className={`h-9 w-9 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all duration-300 shadow-md ${
                         isActive
-                          ? "bg-[#c87a53]/15 border-[color:var(--qr-accent,#c87a53)] text-[color:var(--qr-accent,#c87a53)] scale-110 ring-4 ring-[#c87a53]/15"
+                          ? "bg-[#07C160]/15 border-[color:var(--qr-accent,#07C160)] text-[color:var(--qr-accent,#07C160)] scale-110 ring-4 ring-[#07C160]/15"
                           : isCompleted
-                          ? "bg-[color:var(--qr-accent,#c87a53)] border-[color:var(--qr-accent,#c87a53)] text-white"
+                          ? "bg-[color:var(--qr-accent,#07C160)] border-[color:var(--qr-accent,#07C160)] text-white"
                           : theme === "dark" 
                           ? "bg-slate-900 border-slate-800 text-slate-500"
                           : "bg-white border-slate-200 text-slate-400"
@@ -1922,7 +1935,7 @@ function OrderTracker({
                     <div className="flex flex-col">
                       <span
                         className={`text-xs sm:text-sm font-bold transition-colors duration-300 ${
-                          isActive ? "text-[color:var(--qr-accent,#c87a53)]" : isCompleted ? (theme === "dark" ? "text-white" : "text-slate-900") : "text-slate-500"
+                          isActive ? "text-[color:var(--qr-accent,#07C160)]" : isCompleted ? (theme === "dark" ? "text-white" : "text-slate-900") : "text-slate-500"
                         }`}
                       >
                         {lang === "en" ? step.titleEn : step.titleAm}
@@ -1953,7 +1966,7 @@ function OrderTracker({
                 statusLabelEn = "Queued";
                 statusLabelAm = "ተሰልፏል";
               } else if (it.status === "PREPARING" || it.status === "ACCEPTED" || it.status === "PLATING") {
-                itemStatusColor = "text-[color:var(--qr-accent,#c87a53)] bg-[#c87a53]/15 border border-[#c87a53]/20";
+                itemStatusColor = "text-[color:var(--qr-accent,#07C160)] bg-[#07C160]/15 border border-[#07C160]/20";
                 statusLabelEn = "Preparing";
                 statusLabelAm = "በዝግጅት ላይ";
               } else if (it.status === "READY") {
@@ -2003,7 +2016,7 @@ function OrderTracker({
             {(order.feedbackRating || localFeedbackSubmitted) ? (
               <div className="text-center py-2 space-y-2 animate-fade">
                 <div className="text-2xl">🌟</div>
-                <h4 className="font-display text-sm font-bold text-[color:var(--qr-accent,#c87a53)]">
+                <h4 className="font-display text-sm font-bold text-[color:var(--qr-accent,#07C160)]">
                   {lang === "en" ? "Thank You for Your Feedback!" : "ለአስተያየትዎ እናመሰግናለን!"}
                 </h4>
                 <div className="flex justify-center gap-1">
@@ -2027,7 +2040,7 @@ function OrderTracker({
             ) : (
               <div className="space-y-4 animate-in">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-display text-xs font-bold uppercase tracking-wide text-[color:var(--qr-accent,#c87a53)]">
+                  <h4 className="font-display text-xs font-bold uppercase tracking-wide text-[color:var(--qr-accent,#07C160)]">
                     {lang === "en" ? "Rate Your Experience" : "ተሞክሮዎን ይገምግሙ"}
                   </h4>
                   <span className="text-[10px] text-slate-500">
@@ -2067,7 +2080,7 @@ function OrderTracker({
                     value={feedbackComment}
                     onChange={(e) => setFeedbackComment(e.target.value)}
                     placeholder={lang === "en" ? "Any thoughts on the food or service? (optional)" : "ስለ ምግቡ ወይም አገልግሎቱ አስተያየት ካለዎት እዚህ ይጻፉ... (ከተፈለገ)"}
-                    className={`w-full border rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-[color:var(--qr-accent,#c87a53)] transition-colors resize-none placeholder:text-slate-500 ${
+                    className={`w-full border rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-[color:var(--qr-accent,#07C160)] transition-colors resize-none placeholder:text-slate-500 ${
                       theme === "dark" ? "bg-slate-900 border-slate-800 text-white focus:bg-slate-900" : "bg-white border-slate-200 text-slate-900 focus:bg-white"
                     }`}
                   />
@@ -2076,7 +2089,7 @@ function OrderTracker({
                       type="button"
                       onClick={handleSubmitFeedback}
                       disabled={feedbackRating === 0 || submittingFeedback}
-                      className="bg-[color:var(--qr-accent,#c87a53)] text-white hover:bg-[color:var(--qr-accent-hover,#b3663d)] disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-xl text-xxs font-bold active:scale-95 transition-all flex items-center gap-1 shadow-sm"
+                      className="bg-[color:var(--qr-accent,#07C160)] text-white hover:bg-[color:var(--qr-accent-hover,#06AD56)] disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-xl text-xxs font-bold active:scale-95 transition-all flex items-center gap-1 shadow-sm"
                     >
                       {submittingFeedback ? (
                         <>
@@ -2105,7 +2118,7 @@ function OrderTracker({
           {(currentStep === 4 || currentStep === -1) && (
             <button 
               onClick={onClear} 
-              className="bg-[color:var(--qr-accent,#c87a53)] hover:bg-[color:var(--qr-accent-hover,#b3663d)] text-white font-bold h-9 px-4 rounded-xl text-xs active:scale-95 transition-all shadow-md whitespace-nowrap"
+              className="bg-[color:var(--qr-accent,#07C160)] hover:bg-[color:var(--qr-accent-hover,#06AD56)] text-white font-bold h-9 px-4 rounded-xl text-xs active:scale-95 transition-all shadow-md whitespace-nowrap"
             >
               {lang === "en" ? "Order More" : "ተጨማሪ እዘዝ / ምናሌ"}
             </button>
@@ -2165,14 +2178,14 @@ const MenuItemCard = memo(function MenuItemCard({
         {/* Heart icon button overlay */}
         <button 
           onClick={handleToggle}
-          className="absolute top-2 left-2 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-950/70 flex items-center justify-center text-white hover:text-[#ef4444] transition-colors scale-95 shadow-md border border-white/10"
+          className="absolute top-2 left-2 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-950/70 flex items-center justify-center text-white hover:text-[#FA5151] transition-colors scale-95 shadow-md border border-white/10"
         >
           <svg 
             viewBox="0 0 24 24" 
             fill={isFavorite ? "currentColor" : "none"} 
             stroke="currentColor" 
             strokeWidth={2} 
-            className={`h-4.5 w-4.5 ${isFavorite ? "text-[#ef4444]" : "text-white"}`}
+            className={`h-4.5 w-4.5 ${isFavorite ? "text-[#FA5151]" : "text-white"}`}
           >
             <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
           </svg>
@@ -2182,7 +2195,7 @@ const MenuItemCard = memo(function MenuItemCard({
       {/* Card details */}
       <div className="p-3.5 space-y-2 flex flex-col justify-between flex-grow">
         <div className="text-left space-y-1">
-          <h4 className={`font-bold text-xs sm:text-sm transition-colors group-hover:text-[color:var(--qr-accent,#c87a53)] line-clamp-1 leading-tight ${
+          <h4 className={`font-bold text-xs sm:text-sm transition-colors group-hover:text-[color:var(--qr-accent,#07C160)] line-clamp-1 leading-tight ${
             theme === "dark" ? "text-white" : "text-slate-900"
           }`}>
             {lang === "en" ? item.name : (item.nameAm || item.name)}
@@ -2204,7 +2217,7 @@ const MenuItemCard = memo(function MenuItemCard({
             {Number(item.price).toLocaleString()} ETB
           </span>
           <button 
-            className="bg-[color:var(--qr-accent,#c87a53)] hover:bg-[color:var(--qr-accent-hover,#b3663d)] text-white h-7 px-3 rounded-lg text-xxs font-bold flex items-center gap-1 active:scale-95 transition-[background-color,transform] shrink-0"
+            className="bg-[color:var(--qr-accent,#07C160)] hover:bg-[color:var(--qr-accent-hover,#06AD56)] text-white h-7 px-3 rounded-lg text-xxs font-bold flex items-center gap-1 active:scale-95 transition-[background-color,transform] shrink-0"
             onClick={handleAdd}
           >
             <PlusIcon className="h-3 w-3 stroke-[3.5]" />
@@ -2252,14 +2265,14 @@ const MenuItemListItem = memo(function MenuItemListItem({
         {/* Heart icon button overlay */}
         <button 
           onClick={handleToggle}
-          className="absolute top-1.5 left-1.5 h-6.5 w-6.5 rounded-full bg-slate-950/70 flex items-center justify-center text-white hover:text-[#ef4444] transition-colors scale-90 shadow-md border border-white/10"
+          className="absolute top-1.5 left-1.5 h-6.5 w-6.5 rounded-full bg-slate-950/70 flex items-center justify-center text-white hover:text-[#FA5151] transition-colors scale-90 shadow-md border border-white/10"
         >
           <svg 
             viewBox="0 0 24 24" 
             fill={isFavorite ? "currentColor" : "none"} 
             stroke="currentColor" 
             strokeWidth={2.2} 
-            className={`h-3.5 w-3.5 ${isFavorite ? "text-[#ef4444]" : "text-white"}`}
+            className={`h-3.5 w-3.5 ${isFavorite ? "text-[#FA5151]" : "text-white"}`}
           >
             <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
           </svg>
@@ -2268,7 +2281,7 @@ const MenuItemListItem = memo(function MenuItemListItem({
 
       {/* Middle Text Details */}
       <div className="flex-grow min-w-0 text-left space-y-0.5 sm:space-y-1">
-        <h4 className={`font-bold text-xs sm:text-sm transition-colors group-hover:text-[color:var(--qr-accent,#c87a53)] line-clamp-1 leading-tight ${
+        <h4 className={`font-bold text-xs sm:text-sm transition-colors group-hover:text-[color:var(--qr-accent,#07C160)] line-clamp-1 leading-tight ${
           theme === "dark" ? "text-white" : "text-slate-900"
         }`}>
           {lang === "en" ? item.name : (item.nameAm || item.name)}
@@ -2291,7 +2304,7 @@ const MenuItemListItem = memo(function MenuItemListItem({
           {Number(item.price).toLocaleString()} ETB
         </span>
         <button 
-          className="bg-[color:var(--qr-accent,#c87a53)] hover:bg-[color:var(--qr-accent-hover,#b3663d)] text-white h-7 px-2.5 sm:px-3 rounded-lg text-xxs font-bold flex items-center gap-1 active:scale-95 transition-[background-color,transform] shrink-0"
+          className="bg-[color:var(--qr-accent,#07C160)] hover:bg-[color:var(--qr-accent-hover,#06AD56)] text-white h-7 px-2.5 sm:px-3 rounded-lg text-xxs font-bold flex items-center gap-1 active:scale-95 transition-[background-color,transform] shrink-0"
           onClick={handleAdd}
         >
           <PlusIcon className="h-3 w-3 stroke-[3.5]" />
@@ -2337,7 +2350,7 @@ function KioskSuccessScreen({ orderId, tableNumber, lang, theme, onDone }: Kiosk
     <main style={qrAccentVars(theme)} className={`min-h-dvh flex flex-col items-center justify-center p-4 transition-colors duration-500 relative ${
       theme === "dark" 
         ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100" 
-        : "bg-gradient-to-br from-[#faf9f6] via-white to-[#faf9f6] text-slate-800"
+        : "bg-gradient-to-br from-[#EDEDED] via-white to-[#EDEDED] text-slate-800"
     }`}>
       {/* Decorative Blur Backgrounds */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none" />
@@ -2376,7 +2389,7 @@ function KioskSuccessScreen({ orderId, tableNumber, lang, theme, onDone }: Kiosk
           {/* Ticket jagged edge top/bottom */}
           <div className="absolute top-0 inset-x-0 h-1 flex justify-between px-4">
             {Array.from({ length: 15 }).map((_, i) => (
-              <div key={i} className={`w-2 h-2 rounded-full -translate-y-1 ${theme === "dark" ? "bg-slate-950" : "bg-[#faf9f6]"}`} />
+              <div key={i} className={`w-2 h-2 rounded-full -translate-y-1 ${theme === "dark" ? "bg-slate-950" : "bg-[#EDEDED]"}`} />
             ))}
           </div>
           
@@ -2385,7 +2398,7 @@ function KioskSuccessScreen({ orderId, tableNumber, lang, theme, onDone }: Kiosk
               <span className={`text-[10px] uppercase tracking-widest font-semibold ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}>
                 {lang === "en" ? "Your Order Ticket" : "የእርስዎ የትዕዛዝ ትኬት"}
               </span>
-              <div className="font-mono text-3xl font-bold mt-1 text-[color:var(--qr-accent,#c87a53)]">
+              <div className="font-mono text-3xl font-bold mt-1 text-[color:var(--qr-accent,#07C160)]">
                 #{orderId.slice(-8).toUpperCase()}
               </div>
             </div>
@@ -2395,7 +2408,7 @@ function KioskSuccessScreen({ orderId, tableNumber, lang, theme, onDone }: Kiosk
                 theme === "dark" ? "bg-white/5 text-slate-300" : "bg-slate-100 text-slate-700"
               }`}>
                 <span>{lang === "en" ? "Table" : "ጠረጴዛ"}</span>
-                <span className="font-bold text-[color:var(--qr-accent,#c87a53)]">{tableNumber}</span>
+                <span className="font-bold text-[color:var(--qr-accent,#07C160)]">{tableNumber}</span>
               </div>
             )}
 
@@ -2410,7 +2423,7 @@ function KioskSuccessScreen({ orderId, tableNumber, lang, theme, onDone }: Kiosk
 
           <div className="absolute bottom-0 inset-x-0 h-1 flex justify-between px-4">
             {Array.from({ length: 15 }).map((_, i) => (
-              <div key={i} className={`w-2 h-2 rounded-full translate-y-1 ${theme === "dark" ? "bg-slate-950" : "bg-[#faf9f6]"}`} />
+              <div key={i} className={`w-2 h-2 rounded-full translate-y-1 ${theme === "dark" ? "bg-slate-950" : "bg-[#EDEDED]"}`} />
             ))}
           </div>
         </div>
@@ -2419,7 +2432,7 @@ function KioskSuccessScreen({ orderId, tableNumber, lang, theme, onDone }: Kiosk
         <div className="space-y-3 pt-2">
           <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden max-w-[200px] mx-auto">
             <div 
-              className="h-full bg-gradient-to-r from-[#c87a53] to-[#e09b75] transition-all duration-1000 ease-linear"
+              className="h-full bg-gradient-to-r from-[#07C160] to-[#62D89B] transition-all duration-1000 ease-linear"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -2433,7 +2446,7 @@ function KioskSuccessScreen({ orderId, tableNumber, lang, theme, onDone }: Kiosk
         {/* Action Button */}
         <button
           onClick={onDone}
-          className="inline-flex items-center gap-1.5 bg-[color:var(--qr-accent,#c87a53)] text-white hover:bg-[color:var(--qr-accent-hover,#b3663d)] px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-md active:scale-95 group"
+          className="inline-flex items-center gap-1.5 bg-[color:var(--qr-accent,#07C160)] text-white hover:bg-[color:var(--qr-accent-hover,#06AD56)] px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-md active:scale-95 group"
         >
           {lang === "en" ? "Back to Menu Now" : "አሁን ወደ ምናሌ ይመለሱ"}
           <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
