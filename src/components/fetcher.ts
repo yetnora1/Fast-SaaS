@@ -13,6 +13,23 @@ export class ApiError extends Error {
 // a fast failure lets usePoll back off and retry, and lets the user see stale data.
 const REQUEST_TIMEOUT_MS = 15_000;
 
+// Last-good response per URL, module-scoped so it survives client-side navigation.
+// usePoll paints this instantly (stale-while-revalidate) and refreshes in the
+// background — dashboards feel immediate instead of showing a spinner per tab.
+const swrCache = new Map<string, unknown>();
+
+/** Drop every cached response. Call at any session boundary. */
+export function clearApiCache() {
+  swrCache.clear();
+}
+
+// Login/logout/register all navigate with router.push (a client-side transition),
+// so the module-scoped cache would otherwise outlive the session that filled it.
+// The next session then paints the previous user's /api/profile, and role-gated
+// widgets mount against a role they no longer have — e.g. the owner-only status
+// FAB firing /api/owner/status as a saas_owner and 403ing.
+const AUTH_BOUNDARY = /^\/api\/auth\/(login|logout|register)\b/;
+
 export async function api<T = any>(url: string, init?: RequestInit): Promise<T> {
   const controller = init?.signal ? null : new AbortController();
   const timer = controller ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
@@ -32,16 +49,12 @@ export async function api<T = any>(url: string, init?: RequestInit): Promise<T> 
   }
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.ok === false) throw new ApiError(json.error ?? `Request failed (${res.status})`, res.status);
+  // Crossing a session boundary — everything cached belongs to the old session.
+  if (AUTH_BOUNDARY.test(url)) swrCache.clear();
   // Unwrap the { ok, data } envelope — return data even when it is null,
   // otherwise a legitimate null payload leaks the whole envelope to callers.
   return (json && typeof json === "object" && "ok" in json ? json.data : json) as T;
 }
-
-// Last-good response per URL, module-scoped so it survives client-side navigation.
-// usePoll paints this instantly (stale-while-revalidate) and refreshes in the
-// background — dashboards feel immediate instead of showing a spinner per tab.
-// A full page reload clears it, so it never crosses login sessions.
-const swrCache = new Map<string, unknown>();
 
 /** Polling hook — the DB-polling realtime transport for KDS/boards. */
 export function usePoll<T>(url: string | null, intervalMs = 4000) {

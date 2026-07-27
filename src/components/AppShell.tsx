@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { api, usePoll } from "@/components/fetcher";
+import { api, usePoll, clearApiCache } from "@/components/fetcher";
 import { ClockInOut } from "@/components/ClockInOut";
 import { HeaderClock } from "@/components/HeaderClock";
 import { useLang } from "@/lib/i18n";
@@ -65,7 +65,13 @@ export function AppShell({
   }
 
   async function logout() {
-    await api("/api/auth/logout", { method: "POST" });
+    try {
+      await api("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Server unreachable — still drop local state and return to login rather
+      // than leaving the user stuck on a page they can no longer refresh.
+    }
+    clearApiCache();
     router.push("/login");
   }
 
@@ -82,27 +88,30 @@ export function AppShell({
   const showClockActions = Boolean(user?.role && user.role !== "saas_owner" && user.role !== "cafe_owner");
   const isDark = themeMode === "dark";
 
-  // Clean, consistent palette — no per-route color switching
-  const bg = isDark ? "#09090b" : "#ffffff";
-  const surface = isDark ? "#18181b" : "#f4f4f5";
-  const surface2 = isDark ? "#27272a" : "#e4e4e7";
-  const header = isDark ? "#09090b" : "#18181b";
-  const border = isDark ? "#3f3f46" : "#d4d4d8";
-  const muted = isDark ? "#a1a1aa" : "#71717a";
-  const foreground = isDark ? "#fafafa" : "#09090b";
-  const accent = "#14b8a6";
-  const accentHover = "#0d9488";
-  const accentText = isDark ? "#2dd4bf" : "#0d9488";
+  // telebirr × WeChat palette — WeChat gray page + white cards, telebirr green
+  // chrome, WeChat brand green (#07C160) for every primary action.
+  // Keep these in sync with the :root / html.dark blocks in globals.css.
+  const bg = isDark ? "#111111" : "#ededed";
+  const surface = isDark ? "#1a1a1a" : "#ffffff";
+  const surface2 = isDark ? "#242424" : "#f7f7f7";
+  const header = isDark ? "#00602f" : "#00873f";
+  const headerTo = isDark ? "#004a24" : "#006b36";
+  const border = isDark ? "#2e2e2e" : "#e5e5e5";
+  const muted = "#888888";
+  const foreground = isDark ? "#e3e3e3" : "#191919";
+  const accent = "#07c160";
+  const accentHover = "#06ad56";
+  const accentText = isDark ? "#07c160" : "#03733a";
 
   // Chart + status text colors
   const chartColors = isDark
-    ? ["#10b981", "#3b82f6", "#f59e0b", "#a855f7", "#06b6d4", "#ef4444"]
-    : ["#059669", "#2563eb", "#d97706", "#7c3aed", "#0891b2", "#dc2626"];
-  const statusYellowText = isDark ? "#fbbf24" : "#d97706";
-  const statusRedText = isDark ? "#f87171" : "#dc2626";
-  const statusBlueText = isDark ? "#60a5fa" : "#2563eb";
-  const statusGreenText = isDark ? "#34d399" : "#059669";
-  const statusOccupiedText = isDark ? "#22d3ee" : "#0891b2";
+    ? ["#07c160", "#8fa3ce", "#fa9d3b", "#9c8bdd", "#38c6d9", "#fa6a69"]
+    : ["#06ad56", "#576b95", "#e8871f", "#6c5fa8", "#0e9aad", "#e64340"];
+  const statusYellowText = isDark ? "#fbb04f" : "#96560e";
+  const statusRedText = isDark ? "#fa6a69" : "#c5302e";
+  const statusBlueText = isDark ? "#97a6c6" : "#576b95";
+  const statusGreenText = isDark ? "#07c160" : "#03733a";
+  const statusOccupiedText = isDark ? "#57c7d8" : "#0e7c8c";
 
   const themeVars = useMemo(() => {
     const vars: Record<string, string> = {
@@ -110,6 +119,7 @@ export function AppShell({
       "--theme-header": header, "--theme-border": border, "--theme-muted": muted,
       "--theme-foreground": foreground, "--theme-accent": accent,
       "--theme-accent-hover": accentHover, "--theme-accent-text": accentText,
+      "--theme-header-to": headerTo, "--scrollbar-thumb": isDark ? "#3a3a3a" : "#d9d9d9",
       "--chart-1": chartColors[0], "--chart-2": chartColors[1], "--chart-3": chartColors[2],
       "--chart-4": chartColors[3], "--chart-5": chartColors[4], "--chart-6": chartColors[5],
       "--status-yellow-text": statusYellowText, "--status-red-text": statusRedText,
@@ -125,8 +135,6 @@ export function AppShell({
     return vars;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDark]);
-
-  const themeStyles = themeVars as React.CSSProperties;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -147,8 +155,12 @@ export function AppShell({
   const iconBtn = "inline-flex h-9 items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 text-sm text-white/90 transition-colors hover:bg-white/10";
 
   return (
-    <div className="min-h-dvh" style={themeStyles}>
-      <header className="sticky top-0 z-nav border-b border-zinc-800 bg-brand-header relative w-full">
+    // No inline theme vars here: globals.css already defines the whole palette on
+    // :root / html.dark, and layout.tsx applies the saved mode before first paint.
+    // Pinning light-mode vars on this wrapper during SSR would override that and
+    // flash the light theme on dark-mode devices. The effect above owns the toggle.
+    <div className="min-h-dvh">
+      <header className="sticky top-0 z-nav border-b border-black/10 bg-brand-header relative w-full">
         {/* Row 1 */}
         <div className="flex items-center justify-between px-4 py-3 sm:px-6 relative">
           <div className="flex items-center gap-3 z-10">
@@ -199,7 +211,7 @@ export function AppShell({
               >
                 <BellIcon className="h-4 w-4" />
                 {data?.unread ? (
-                  <span className="tabular absolute -right-1 -top-1 min-w-[16px] rounded-full bg-brand-accent px-1 text-center text-[10px] font-bold leading-[16px] text-white">
+                  <span className="tabular absolute -right-1 -top-1 min-w-[16px] rounded-full bg-status-red px-1 text-center text-[10px] font-bold leading-[16px] text-white">
                     {data.unread > 99 ? "99+" : data.unread}
                   </span>
                 ) : null}
@@ -235,9 +247,11 @@ export function AppShell({
                 aria-current={isActive(n.href) ? "page" : undefined}
                 className={cn(
                   "rounded-md px-3 py-1.5 font-medium transition-colors whitespace-nowrap text-xs tracking-wide",
+                  // WeChat/telebirr chrome: the selected tab is a white pill on
+                  // the green bar, not a second green on green.
                   isActive(n.href)
-                    ? "bg-brand-accent text-white"
-                    : "text-white/60 hover:bg-white/5 hover:text-white/90",
+                    ? "bg-white text-brand-accentText shadow-sm"
+                    : "text-white/70 hover:bg-white/10 hover:text-white",
                 )}
               >
                 {navLabel(n.label)}
@@ -286,7 +300,7 @@ export function AppShell({
                 <div className="relative">
                   <BellIcon className="h-4 w-4 text-brand-muted" />
                   {data?.unread ? (
-                    <span className="tabular absolute -right-1.5 -top-1.5 min-w-[14px] rounded-full bg-brand-accent px-1 text-center text-[9px] font-bold leading-[14px] text-white">
+                    <span className="tabular absolute -right-1.5 -top-1.5 min-w-[14px] rounded-full bg-status-red px-1 text-center text-[9px] font-bold leading-[14px] text-white">
                       {data.unread > 99 ? "99+" : data.unread}
                     </span>
                   ) : null}
