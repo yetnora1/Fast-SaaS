@@ -351,6 +351,9 @@ const DICT: Record<string, { en: string; am: string }> = {
   // Notifications
   noNotifications: { en: "No notifications.", am: "ማሳወቂያ የለም።" },
   welcomeBack: { en: "Welcome back", am: "እንኳን ደህና ተመለሱ" },
+  // Distinct from the existing lowercase `remove` (used inline in the QR cart) —
+  // this one is a button label and needs the capital.
+  removeCafe: { en: "Remove", am: "አስወግድ" },
   openConversation: { en: "Open conversation", am: "ውይይቱን ክፈት" },
   // Modals / actions
   cancel: { en: "Cancel", am: "ሰርዝ" },
