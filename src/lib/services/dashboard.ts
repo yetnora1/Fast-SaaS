@@ -6,9 +6,16 @@ export async function ownerDashboardKpis(tenantId: string) {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
+  // "join" resolves payments/items/menuItem in one LATERAL JOIN instead of a
+  // round trip per relation level; `select` keeps only the fields used below.
   const orders = await prisma.order.findMany({
     where: { tenantId, createdAt: { gte: startOfToday } },
-    include: { payments: { where: { status: "CONFIRMED" } }, items: { include: { menuItem: true } } },
+    relationLoadStrategy: "join",
+    select: {
+      status: true,
+      payments: { where: { status: "CONFIRMED" }, select: { amount: true, method: true } },
+      items: { select: { quantity: true, unitPrice: true, menuItemId: true, menuItem: { select: { name: true, cost: true } } } },
+    },
   });
 
   const completed = orders.filter((o) => o.status === "COMPLETED");
@@ -46,22 +53,39 @@ export async function ownerDashboardKpis(tenantId: string) {
 export async function branchComparison(tenantId: string) {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
-  const branches = await prisma.branch.findMany({ where: { tenantId } });
-  const out = [];
-  for (const b of branches) {
-    const orders = await prisma.order.findMany({
-      where: { tenantId, branchId: b.id, status: "COMPLETED", createdAt: { gte: startOfToday } },
-      include: { payments: { where: { status: "CONFIRMED" } }, items: { include: { menuItem: true } } },
-    });
-    const revenue = orders.reduce((s, o) => s + o.payments.reduce((p, x) => p + toNum(x.amount), 0), 0);
-    const cost = orders.reduce((s, o) => s + o.items.reduce((c, it) => c + toNum(it.menuItem.cost) * it.quantity, 0), 0);
-    out.push({
+  // Was an N+1: one nested-include query per branch, awaited in series. Against a
+  // remote DB that is (branches x relation-levels) round trips. Now it is two
+  // queries in a single wave, grouped in memory — same numbers, same order.
+  const [branches, orders] = await Promise.all([
+    prisma.branch.findMany({ where: { tenantId }, select: { id: true, name: true } }),
+    prisma.order.findMany({
+      where: { tenantId, status: "COMPLETED", createdAt: { gte: startOfToday } },
+      relationLoadStrategy: "join",
+      select: {
+        branchId: true,
+        payments: { where: { status: "CONFIRMED" }, select: { amount: true } },
+        items: { select: { quantity: true, menuItem: { select: { cost: true } } } },
+      },
+    }),
+  ]);
+
+  const byBranch = new Map<string, typeof orders>();
+  for (const o of orders) {
+    const list = byBranch.get(o.branchId);
+    if (list) list.push(o);
+    else byBranch.set(o.branchId, [o]);
+  }
+
+  return branches.map((b) => {
+    const branchOrders = byBranch.get(b.id) ?? [];
+    const revenue = branchOrders.reduce((s, o) => s + o.payments.reduce((p, x) => p + toNum(x.amount), 0), 0);
+    const cost = branchOrders.reduce((s, o) => s + o.items.reduce((c, it) => c + toNum(it.menuItem.cost) * it.quantity, 0), 0);
+    return {
       branchId: b.id,
       name: b.name,
       revenue: round2(revenue),
-      orders: orders.length,
+      orders: branchOrders.length,
       margin: revenue > 0 ? round2(((revenue - cost) / revenue) * 100) : 0,
-    });
-  }
-  return out;
+    };
+  });
 }

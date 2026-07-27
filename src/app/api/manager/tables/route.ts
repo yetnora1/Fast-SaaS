@@ -6,14 +6,20 @@ export const GET = handler(async (req: Request) => {
   const me = await requireRole("cafe_manager", "cafe_owner", "waiter");
   const url = new URL(req.url);
   const branchId = url.searchParams.get("branchId") ?? me.branchId ?? undefined;
-  const tables = await prisma.cafeTable.findMany({
-    where: { branchId },
-    orderBy: { number: "asc" },
-    include: { orders: { where: { status: { notIn: ["COMPLETED", "CANCELLED", "DECLINED"] } }, select: { id: true, status: true, waiterId: true } } },
-  });
-  const branch = branchId
-    ? await prisma.branch.findUnique({ where: { id: branchId }, select: { name: true, tenant: { select: { name: true } } } })
-    : null;
+  // Both reads depend only on branchId, so they go out together rather than
+  // costing two serial round trips — this is the floor-plan poll, the single
+  // most-requested endpoint in the app.
+  const [tables, branch] = await Promise.all([
+    prisma.cafeTable.findMany({
+      where: { branchId },
+      orderBy: { number: "asc" },
+      relationLoadStrategy: "join",
+      include: { orders: { where: { status: { notIn: ["COMPLETED", "CANCELLED", "DECLINED"] } }, select: { id: true, status: true, waiterId: true } } },
+    }),
+    branchId
+      ? prisma.branch.findUnique({ where: { id: branchId }, select: { name: true, tenant: { select: { name: true } } } })
+      : Promise.resolve(null),
+  ]);
   return ok({ tables, cafeName: branch?.tenant.name ?? null, branchName: branch?.name ?? null });
 });
 

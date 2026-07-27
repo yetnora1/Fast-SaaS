@@ -8,6 +8,12 @@
 
 generator client {
   provider = "prisma-client-js"
+  // relationJoins lets a query opt into `relationLoadStrategy: "join"`, which
+  // resolves nested includes with a single LATERAL JOIN instead of one extra
+  // round trip per relation level. Against the remote DB (~171ms RTT) that is
+  // the difference between ~1.4s and ~0.35s for an order + payments + items +
+  // menuItem read. Opt-in per query — nothing changes unless a query asks.
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {

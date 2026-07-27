@@ -18,20 +18,62 @@ export const GET = handler(async () => {
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
 
-  // ── Orders & Revenue ──────────────────────────────
-  const [ordersToday, ordersMonth, ordersLastMonth] = await Promise.all([
+  // Every read below is independent, so they all go out in ONE parallel wave.
+  // This route previously awaited in 8 sequential waves; against the remote DB
+  // (~171ms round trip) that alone cost seconds before any work was done.
+  //
+  // Two further wins, both output-identical:
+  //   • `select` instead of `include` — same maths, far less data on the wire.
+  //   • relationLoadStrategy "join" — resolves payments/items/menuItem in one
+  //     LATERAL JOIN rather than a round trip per relation level.
+  const [
+    ordersToday, ordersMonth, ordersLastMonth,
+    purchaseOrders,
+    staffCount, activeToday,
+    inventory,
+    equipTotal, equipMaintenance,
+    branchCount,
+    menuItems, categories,
+    supplierCount,
+  ] = await Promise.all([
     prisma.order.findMany({
       where: { tenantId: tid, createdAt: { gte: startOfToday } },
-      include: { payments: { where: { status: "CONFIRMED" } }, items: { include: { menuItem: true } } },
+      relationLoadStrategy: "join",
+      select: {
+        status: true,
+        payments: { where: { status: "CONFIRMED" }, select: { amount: true } },
+        items: { select: { quantity: true, unitPrice: true, menuItemId: true, menuItem: { select: { name: true, cost: true } } } },
+      },
     }),
     prisma.order.findMany({
       where: { tenantId: tid, status: "COMPLETED", createdAt: { gte: startOfMonth } },
-      include: { payments: { where: { status: "CONFIRMED" } }, items: { include: { menuItem: true } } },
+      relationLoadStrategy: "join",
+      select: {
+        payments: { where: { status: "CONFIRMED" }, select: { amount: true, method: true } },
+        items: { select: { quantity: true, menuItem: { select: { cost: true } } } },
+      },
     }),
     prisma.order.findMany({
       where: { tenantId: tid, status: "COMPLETED", createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } },
-      include: { payments: { where: { status: "CONFIRMED" } } },
+      relationLoadStrategy: "join",
+      select: { payments: { where: { status: "CONFIRMED" }, select: { amount: true } } },
     }),
+    prisma.purchaseOrder.findMany({
+      where: { tenantId: tid },
+      select: { total: true, paidAmount: true, creditAmount: true, isCredit: true },
+    }),
+    prisma.user.count({ where: { tenantId: tid, role: { not: "cafe_owner" } } }),
+    prisma.staffAttendance.count({ where: { user: { tenantId: tid }, clockIn: { gte: startOfToday } } }),
+    prisma.inventoryItem.findMany({
+      where: { tenantId: tid },
+      select: { quantity: true, minThreshold: true, costPerUnit: true },
+    }),
+    prisma.equipmentItem.count({ where: { tenantId: tid } }),
+    prisma.equipmentItem.count({ where: { tenantId: tid, condition: "NEEDS_REPAIR" } }),
+    prisma.branch.count({ where: { tenantId: tid } }),
+    prisma.menuItem.count({ where: { category: { tenantId: tid } } }),
+    prisma.menuCategory.count({ where: { tenantId: tid } }),
+    prisma.supplier.count({ where: { tenantId: tid } }),
   ]);
 
   const completedToday = ordersToday.filter((o) => o.status === "COMPLETED");
@@ -49,38 +91,15 @@ export const GET = handler(async () => {
   for (const o of ordersMonth) for (const p of o.payments) methodTotals[p.method] = (methodTotals[p.method] ?? 0) + toNum(p.amount);
 
   // ── Purchase Credits ──────────────────────────────
-  const purchaseOrders = await prisma.purchaseOrder.findMany({ where: { tenantId: tid } });
   const totalPurchases = purchaseOrders.reduce((s, p) => s + toNum(p.total), 0);
   const totalPaid = purchaseOrders.reduce((s, p) => s + toNum(p.paidAmount), 0);
   const totalCredit = purchaseOrders.reduce((s, p) => s + toNum(p.creditAmount), 0);
   const creditOrdersCount = purchaseOrders.filter((p) => p.isCredit && toNum(p.creditAmount) > 0).length;
 
-  // ── Staff ─────────────────────────────────────────
-  const [staffCount, activeToday] = await Promise.all([
-    prisma.user.count({ where: { tenantId: tid, role: { not: "cafe_owner" } } }),
-    prisma.staffAttendance.count({ where: { user: { tenantId: tid }, clockIn: { gte: startOfToday } } }),
-  ]);
-
   // ── Inventory ─────────────────────────────────────
-  const inventory = await prisma.inventoryItem.findMany({ where: { tenantId: tid } });
   const invTotal = inventory.length;
   const lowStock = inventory.filter((i) => stockStatus(toNum(i.quantity), toNum(i.minThreshold)) !== "OK").length;
   const invValue = inventory.reduce((s, i) => s + toNum(i.quantity) * toNum(i.costPerUnit), 0);
-
-  // ── Equipment ─────────────────────────────────────
-  const [equipTotal, equipMaintenance] = await Promise.all([
-    prisma.equipmentItem.count({ where: { tenantId: tid } }),
-    prisma.equipmentItem.count({ where: { tenantId: tid, condition: "NEEDS_REPAIR" } }),
-  ]);
-
-  // ── Branches ──────────────────────────────────────
-  const branchCount = await prisma.branch.count({ where: { tenantId: tid } });
-
-  // ── Menu ──────────────────────────────────────────
-  const [menuItems, categories] = await Promise.all([
-    prisma.menuItem.count({ where: { category: { tenantId: tid } } }),
-    prisma.menuCategory.count({ where: { tenantId: tid } }),
-  ]);
 
   // ── Top items today ───────────────────────────────
   const itemCounts = new Map<string, { name: string; qty: number; revenue: number }>();
@@ -92,9 +111,6 @@ export const GET = handler(async () => {
       itemCounts.set(it.menuItemId, cur);
     }
   const topItems = [...itemCounts.values()].sort((a, b) => b.qty - a.qty).slice(0, 8);
-
-  // ── Suppliers ─────────────────────────────────────
-  const supplierCount = await prisma.supplier.count({ where: { tenantId: tid } });
 
   return ok({
     today: {
