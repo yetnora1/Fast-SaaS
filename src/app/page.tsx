@@ -131,10 +131,19 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="mx-auto flex max-w-[1240px] flex-col gap-5 px-5 py-9 text-sm text-[#5C6E66] sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <Link href="/" className={`${serif.className} text-2xl font-semibold tracking-[-.04em] text-[#0B3D24]`}>CafeFlow</Link>
-        <p>Made for independent cafes in Ethiopia.</p>
-        <div className="flex gap-5 font-semibold"><Link href="/login" className="hover:text-[#0B3D24]">Sign in</Link><Link href="/register" className="hover:text-[#0B3D24]">Start free</Link></div>
+      <footer className="mx-auto max-w-[1240px] px-5 sm:px-8">
+        <div className="flex flex-col gap-5 py-9 text-sm text-[#5C6E66] sm:flex-row sm:items-center sm:justify-between">
+          <Link href="/" className={`${serif.className} text-2xl font-semibold tracking-[-.04em] text-[#0B3D24]`}>CafeFlow</Link>
+          <p>Made for independent cafes in Ethiopia.</p>
+          <div className="flex gap-5 font-semibold"><Link href="/login" className="hover:text-[#0B3D24]">Sign in</Link><Link href="/register" className="hover:text-[#0B3D24]">Start free</Link></div>
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-[#E5E5E5] py-6 text-xs leading-5 text-[#5C6E66] sm:flex-row sm:items-center sm:justify-between">
+          <p>&copy; {new Date().getFullYear()} getcafeflow. All rights reserved.</p>
+          <p>
+            Built by <span className="font-semibold text-[#0B3D24]">Abrham Minbale</span>
+          </p>
+        </div>
       </footer>
     </main>
   );
