@@ -1,6 +1,19 @@
 import { prisma } from "@/lib/db/client";
 import { toNum, round2 } from "@/lib/money";
 
+/**
+ * Cost of one sold line.
+ *
+ * Prefers the unit cost frozen onto the line at the moment of sale, so a change
+ * to an ingredient price today cannot rewrite a margin already reported. Lines
+ * sold before recipes existed have no snapshot and fall back to the menu item's
+ * manual cost — exactly what they were always costed at.
+ */
+function lineCost(it: { quantity: number; unitCost: unknown; menuItem: { cost: unknown } }): number {
+  const frozen = it.unitCost === null || it.unitCost === undefined ? null : toNum(it.unitCost as never);
+  return (frozen ?? toNum(it.menuItem.cost as never)) * it.quantity;
+}
+
 /** get_dashboard_kpis() equivalent — aggregate Owner dashboard metrics in one call. */
 export async function ownerDashboardKpis(tenantId: string) {
   const startOfToday = new Date();
@@ -14,16 +27,13 @@ export async function ownerDashboardKpis(tenantId: string) {
     select: {
       status: true,
       payments: { where: { status: "CONFIRMED" }, select: { amount: true, method: true } },
-      items: { select: { quantity: true, unitPrice: true, menuItemId: true, menuItem: { select: { name: true, cost: true } } } },
+      items: { select: { quantity: true, unitPrice: true, unitCost: true, menuItemId: true, menuItem: { select: { name: true, cost: true } } } },
     },
   });
 
   const completed = orders.filter((o) => o.status === "COMPLETED");
   const revenue = completed.reduce((s, o) => s + o.payments.reduce((ps, p) => ps + toNum(p.amount), 0), 0);
-  const cost = completed.reduce(
-    (s, o) => s + o.items.reduce((is, it) => is + toNum(it.menuItem.cost) * it.quantity, 0),
-    0,
-  );
+  const cost = completed.reduce((s, o) => s + o.items.reduce((is, it) => is + lineCost(it), 0), 0);
 
   // Payment method split.
   const methodTotals: Record<string, number> = { CASH: 0, TELEBIRR: 0, CBE_BIRR: 0 };
@@ -64,7 +74,7 @@ export async function branchComparison(tenantId: string) {
       select: {
         branchId: true,
         payments: { where: { status: "CONFIRMED" }, select: { amount: true } },
-        items: { select: { quantity: true, menuItem: { select: { cost: true } } } },
+        items: { select: { quantity: true, unitCost: true, menuItem: { select: { cost: true } } } },
       },
     }),
   ]);
@@ -79,7 +89,7 @@ export async function branchComparison(tenantId: string) {
   return branches.map((b) => {
     const branchOrders = byBranch.get(b.id) ?? [];
     const revenue = branchOrders.reduce((s, o) => s + o.payments.reduce((p, x) => p + toNum(x.amount), 0), 0);
-    const cost = branchOrders.reduce((s, o) => s + o.items.reduce((c, it) => c + toNum(it.menuItem.cost) * it.quantity, 0), 0);
+    const cost = branchOrders.reduce((s, o) => s + o.items.reduce((c, it) => c + lineCost(it), 0), 0);
     return {
       branchId: b.id,
       name: b.name,

@@ -1,12 +1,11 @@
 import { handler, ok, fail } from "@/lib/api";
 import { requireSession } from "@/lib/auth/server";
-import { prisma } from "@/lib/db/client";
-import { tenantDb } from "@/lib/db/tenant";
+import { scopedDb } from "@/lib/db/tenant";
 import { storeAvatar } from "@/lib/integrations/storage";
 
 export const POST = handler(async (req: Request) => {
   const me = await requireSession();
-  const db = me.tenantId ? tenantDb(me.tenantId) : prisma;
+  const db = scopedDb(me.tenantId);
 
   const form = await req.formData();
   const file = form.get("avatar");

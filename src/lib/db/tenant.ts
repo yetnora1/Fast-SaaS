@@ -36,6 +36,21 @@ const TENANT_MODELS = new Set([
 
 export type TenantClient = ReturnType<typeof tenantDb>;
 
+/**
+ * Client for a session that may or may not belong to a tenant (the platform
+ * owner has no tenantId).
+ *
+ * `tenantId ? tenantDb(tenantId) : prisma` looks natural but produces a UNION of
+ * the extended and bare clients, and TypeScript cannot call a method through it
+ * — "this expression is not callable", because the two overload sets do not
+ * unify. Widening to the base client keeps the runtime behaviour identical (the
+ * extension still injects tenantId on every query) while giving callers one
+ * callable type.
+ */
+export function scopedDb(tenantId: string | null | undefined): typeof prisma {
+  return (tenantId ? tenantDb(tenantId) : prisma) as unknown as typeof prisma;
+}
+
 export function tenantDb(tenantId: string) {
   return prisma.$extends({
     query: {

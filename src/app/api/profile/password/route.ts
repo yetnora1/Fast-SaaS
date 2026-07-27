@@ -1,7 +1,6 @@
 import { handler, ok, fail } from "@/lib/api";
 import { requireSession, hashPassword } from "@/lib/auth/server";
-import { prisma } from "@/lib/db/client";
-import { tenantDb } from "@/lib/db/tenant";
+import { scopedDb } from "@/lib/db/tenant";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -12,7 +11,7 @@ const schema = z.object({
 
 export const POST = handler(async (req: Request) => {
   const me = await requireSession();
-  const db = me.tenantId ? tenantDb(me.tenantId) : prisma;
+  const db = scopedDb(me.tenantId);
 
   const body = await req.json();
   const { currentPassword, newPassword } = schema.parse(body);

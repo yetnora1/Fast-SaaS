@@ -504,6 +504,8 @@ const LABELS: Record<string, string> = {
   Config: "ውቅር",
   "Audit Log": "የማረጋገጫ መዝገብ",
   Equipment: "ዕቃዎች",
+  // Recipes / ingredient costing
+  Ingredients: "ግብዓቶች",
   // Support (cafe owner ⇄ platform)
   Support: "ድጋፍ",
   "Support Inbox": "የድጋፍ መልእክቶች",

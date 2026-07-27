@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client";
-import { lineTotal } from "@/lib/money";
+import { lineTotal, toNum } from "@/lib/money";
 import { notifyRoleInBranch } from "./notifications";
+import { resolveUnitCosts } from "./recipe-costing";
 import { runRiskCheck } from "./risk";
 import type { OrderItemStatus, OrderStatus } from "@prisma/client";
 
@@ -35,6 +36,12 @@ export async function createOrder(opts: {
   // Determine initial status: DRAFT or SUBMITTED
   const initialStatus: OrderStatus = opts.submit ? "SUBMITTED" : "DRAFT";
 
+  // Freeze the ingredient cost of each line at the moment of sale, using this
+  // branch's prices. Resolved before the transaction so the recipe reads do not
+  // hold it open. Profit reports read this snapshot, so a later price change
+  // cannot rewrite an already-sold margin.
+  const unitCosts = await resolveUnitCosts(opts.items.map((i) => i.menuItemId), opts.branchId);
+
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
       data: {
@@ -61,6 +68,7 @@ export async function createOrder(opts: {
           menuItemId: mi.id,
           quantity: item.quantity,
           unitPrice: mi.price,
+          unitCost: unitCosts.get(mi.id) ?? toNum(mi.cost),
           modifiersJson: (item.modifiers ?? []) as any,
           notes: item.notes,
           allergyNote: item.allergyNote,
@@ -224,6 +232,11 @@ export async function addItemsToOrder(orderId: string, items: NewOrderItemInput[
     throw new Error(`Cannot add items to order in ${order.status} state`);
   }
 
+  // Added lines are sold now, so they freeze at today's cost — which may differ
+  // from the cost frozen on the order's original lines. That is correct: each
+  // line records what it cost when it was actually sold.
+  const unitCosts = await resolveUnitCosts(items.map((i) => i.menuItemId), order.branchId);
+
   await prisma.$transaction(async (tx) => {
     for (const item of items) {
       const mi = byId.get(item.menuItemId);
@@ -234,6 +247,7 @@ export async function addItemsToOrder(orderId: string, items: NewOrderItemInput[
           menuItemId: mi.id,
           quantity: item.quantity,
           unitPrice: mi.price,
+          unitCost: unitCosts.get(mi.id) ?? toNum(mi.cost),
           modifiersJson: (item.modifiers ?? []) as any,
           notes: item.notes,
           allergyNote: item.allergyNote,

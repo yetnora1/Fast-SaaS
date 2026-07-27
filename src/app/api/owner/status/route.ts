@@ -5,6 +5,16 @@ import { toNum, round2 } from "@/lib/money";
 import { stockStatus } from "@/lib/services/inventory";
 
 /**
+ * Cost of one sold line — the unit cost frozen at sale time, falling back to the
+ * menu item's manual cost for lines sold before recipes existed. Reading the
+ * snapshot is what stops a price change today from rewriting a past margin.
+ */
+function lineCost(it: { quantity: number; unitCost: unknown; menuItem: { cost: unknown } }): number {
+  const frozen = it.unitCost === null || it.unitCost === undefined ? null : toNum(it.unitCost as never);
+  return (frozen ?? toNum(it.menuItem.cost as never)) * it.quantity;
+}
+
+/**
  * Comprehensive cafe status — everything in one API call:
  *  revenue, profit, costs, credits, staff, inventory, orders, equipment
  */
@@ -42,7 +52,7 @@ export const GET = handler(async () => {
       select: {
         status: true,
         payments: { where: { status: "CONFIRMED" }, select: { amount: true } },
-        items: { select: { quantity: true, unitPrice: true, menuItemId: true, menuItem: { select: { name: true, cost: true } } } },
+        items: { select: { quantity: true, unitPrice: true, unitCost: true, menuItemId: true, menuItem: { select: { name: true, cost: true } } } },
       },
     }),
     prisma.order.findMany({
@@ -50,7 +60,7 @@ export const GET = handler(async () => {
       relationLoadStrategy: "join",
       select: {
         payments: { where: { status: "CONFIRMED" }, select: { amount: true, method: true } },
-        items: { select: { quantity: true, menuItem: { select: { cost: true } } } },
+        items: { select: { quantity: true, unitCost: true, menuItem: { select: { cost: true } } } },
       },
     }),
     prisma.order.findMany({
@@ -78,11 +88,11 @@ export const GET = handler(async () => {
 
   const completedToday = ordersToday.filter((o) => o.status === "COMPLETED");
   const revenueToday = completedToday.reduce((s, o) => s + o.payments.reduce((ps, p) => ps + toNum(p.amount), 0), 0);
-  const costToday = completedToday.reduce((s, o) => s + o.items.reduce((is, it) => is + toNum(it.menuItem.cost) * it.quantity, 0), 0);
+  const costToday = completedToday.reduce((s, o) => s + o.items.reduce((is, it) => is + lineCost(it), 0), 0);
   const profitToday = revenueToday - costToday;
 
   const revenueMonth = ordersMonth.reduce((s, o) => s + o.payments.reduce((ps, p) => ps + toNum(p.amount), 0), 0);
-  const costMonth = ordersMonth.reduce((s, o) => s + o.items.reduce((is, it) => is + toNum(it.menuItem.cost) * it.quantity, 0), 0);
+  const costMonth = ordersMonth.reduce((s, o) => s + o.items.reduce((is, it) => is + lineCost(it), 0), 0);
   const profitMonth = revenueMonth - costMonth;
   const revenueLastMonth = ordersLastMonth.reduce((s, o) => s + o.payments.reduce((ps, p) => ps + toNum(p.amount), 0), 0);
 

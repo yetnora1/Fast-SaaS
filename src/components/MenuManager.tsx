@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { api, usePoll } from "@/components/fetcher";
 import { Button, Card, Input, Select, Field, StatusChip, PageHeader, EmptyState } from "@/components/ui";
+import { RecipeEditor } from "@/components/RecipeEditor";
 import { useLang } from "@/lib/i18n";
 
 interface Modifier { id?: string; groupName: string; option: string; extraPrice: number | string }
@@ -260,7 +261,7 @@ export function MenuManager() {
                       <Field label="Price (ETB)">
                         <Input type="number" value={(edit.price as string) ?? ""} onChange={(e) => setEdit({ ...edit, price: e.target.value })} placeholder={t("priceEtb")} />
                       </Field>
-                      <Field label="Cost (ETB)">
+                      <Field label="Cost (ETB)" hint="Used only when this item has no recipe below.">
                         <Input type="number" value={(edit.cost as string) ?? ""} onChange={(e) => setEdit({ ...edit, cost: e.target.value })} placeholder="Cost (ETB)" />
                       </Field>
                       <Field label="Station">
@@ -270,6 +271,10 @@ export function MenuManager() {
                         </Select>
                       </Field>
                     </div>
+                    {/* Ingredients drive the real cost; the manual Cost field above
+                        is only a fallback for items with no recipe. */}
+                    <RecipeEditor menuItemId={it.id} price={Number(edit.price ?? it.price)} />
+
                     <div className="flex items-center gap-2">
                       {edit.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element

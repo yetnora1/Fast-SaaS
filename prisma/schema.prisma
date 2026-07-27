@@ -271,6 +271,7 @@ model Tenant {
   auditLogs      AuditLog[]
   features       TenantFeature[]
   supportThreads SupportThread[]
+  ingredients    Ingredient[]
   invitations    Invitation[]
   equipmentItems EquipmentItem[]
   salaryConfigs  SalaryConfig[]
@@ -434,9 +435,10 @@ model MenuItem {
   availableTo   String?       @map("available_to") // "11:00"
   createdAt     DateTime      @default(now()) @map("created_at")
 
-  category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  modifiers  Modifier[]
-  orderItems OrderItem[]
+  category    MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  modifiers   Modifier[]
+  orderItems  OrderItem[]
+  recipeLines RecipeLine[]
 
   @@index([categoryId])
   @@map("menu_items")
@@ -544,6 +546,11 @@ model OrderItem {
   menuItemId    String          @map("menu_item_id")
   quantity      Int             @default(1)
   unitPrice     Decimal         @map("unit_price") @db.Decimal(12, 2)
+  // Ingredient cost of ONE unit, frozen at the moment of sale. Profit reports
+  // read this, so a later change to sugar's price cannot rewrite last month's
+  // margin. Null on rows sold before recipes existed — those fall back to
+  // MenuItem.cost, which is what they were always costed at.
+  unitCost      Decimal?        @map("unit_cost") @db.Decimal(12, 2)
   modifiersJson Json?           @map("modifiers_json")
   notes         String?         @db.Text
   allergyNote   String?         @map("allergy_note")
@@ -723,13 +730,19 @@ model InventoryItem {
   unit         String   @default("unit")
   quantity     Decimal  @default(0) @db.Decimal(14, 3)
   minThreshold Decimal  @default(0) @map("min_threshold") @db.Decimal(14, 3)
+  // Weighted-average cost of the stock actually on hand, in the ingredient's
+  // base unit (per kg / per litre / per piece). Recalculated on every receipt.
   costPerUnit  Decimal  @default(0) @map("cost_per_unit") @db.Decimal(12, 2)
+  // Links this branch's stock row to the cafe-wide ingredient a recipe refers
+  // to. Nullable: not every stocked item is a recipe ingredient (napkins, bags).
+  ingredientId String?  @map("ingredient_id")
   supplierId   String?  @map("supplier_id")
   available    Boolean  @default(true)
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch      Branch              @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  ingredient  Ingredient?         @relation(fields: [ingredientId], references: [id], onDelete: SetNull)
   supplier    Supplier?           @relation(fields: [supplierId], references: [id])
   movements   StockMovement[]
   poItems     PurchaseOrderItem[]
@@ -746,6 +759,9 @@ model StockMovement {
   itemId    String            @map("item_id")
   type      StockMovementType
   quantity  Decimal           @db.Decimal(14, 3)
+  // Price paid per base unit on a RECEIVE, kept so the weighted-average cost
+  // can be audited back to the delivery that moved it.
+  unitCost  Decimal?          @map("unit_cost") @db.Decimal(12, 2)
   reason    String?
   userId    String?           @map("user_id")
   createdAt DateTime          @default(now()) @map("created_at")
@@ -1078,4 +1094,65 @@ model SupportMessage {
 
   @@index([threadId])
   @@map("support_messages")
+}
+
+// ──────────────────── Recipes / ingredient costing ────────────────────
+//
+// A menu item's cost is built from what it actually consumes. The owner encodes
+// a recipe once per menu item ("1 machiato = 8 g coffee + 120 ml milk + 5 g
+// sugar"); the store encodes what it pays per kg/litre; the system multiplies
+// the two out.
+//
+// Ingredient is tenant-level so ONE recipe serves every branch, while each
+// branch's own InventoryItem supplies its own price — so the same machiato can
+// cost 12.40 at Bole and 12.48 at Piassa, and branch margins stay truthful.
+
+// Stocking unit an ingredient is bought and valued in.
+enum IngredientUnit {
+  KG // solids
+  L // liquids
+  PIECE // countable (eggs, cups, teabags)
+}
+
+// Unit a recipe line may be entered in. Converted to the base unit at 1000:1.
+enum RecipeUnit {
+  G
+  KG
+  ML
+  L
+  PIECE
+}
+
+model Ingredient {
+  id        String         @id @default(cuid())
+  tenantId  String         @map("tenant_id")
+  name      String
+  nameAm    String?        @map("name_am")
+  baseUnit  IngredientUnit @default(KG) @map("base_unit")
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  stockItems  InventoryItem[]
+  recipeLines RecipeLine[]
+
+  // One catalog entry per name per cafe — the branches then stock it separately.
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("ingredients")
+}
+
+model RecipeLine {
+  id           String     @id @default(cuid())
+  menuItemId   String     @map("menu_item_id")
+  ingredientId String     @map("ingredient_id")
+  quantity     Decimal    @db.Decimal(14, 3)
+  unit         RecipeUnit
+
+  menuItem   MenuItem   @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  // An ingredient appears at most once per recipe; change the quantity instead.
+  @@unique([menuItemId, ingredientId])
+  @@index([menuItemId])
+  @@map("recipe_lines")
 }

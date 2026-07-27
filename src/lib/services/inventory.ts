@@ -11,12 +11,41 @@ export function stockStatus(quantity: number, min: number): StockStatus {
   return "OK";
 }
 
+/**
+ * Weighted-average cost of stock on hand after a delivery.
+ *
+ *   have     5 kg @ 40  ->  200
+ *   receive 10 kg @ 50  ->  500
+ *   ------------------------------
+ *   15 kg worth 700     ->  46.67 / kg
+ *
+ * Blending rather than jumping to the newest price keeps the valuation tied to
+ * what was actually paid for the stock still on the shelf. Falls back to the
+ * incoming price when there is nothing (or nothing valued) to blend with.
+ */
+export function weightedAverageCost(opts: {
+  currentQty: number;
+  currentCost: number;
+  receivedQty: number;
+  receivedCost: number;
+}): number {
+  // Negative on-hand (from over-issuing) must not drag the average below zero.
+  const heldQty = Math.max(0, opts.currentQty);
+  const totalQty = heldQty + opts.receivedQty;
+  if (totalQty <= 0) return round2(opts.receivedCost);
+  if (opts.currentCost <= 0) return round2(opts.receivedCost);
+  const blended = (heldQty * opts.currentCost + opts.receivedQty * opts.receivedCost) / totalQty;
+  return round2(blended);
+}
+
 export async function applyMovement(opts: {
   itemId: string;
   type: StockMovementType;
   quantity: number; // positive magnitude
   reason?: string;
   userId?: string;
+  /** Price per base unit paid on a RECEIVE. Re-values the item when supplied. */
+  unitCost?: number;
 }) {
   return prisma.$transaction(async (tx) => {
     const item = await tx.inventoryItem.findUnique({ where: { id: opts.itemId } });
@@ -25,19 +54,57 @@ export async function applyMovement(opts: {
     const delta = opts.type === "RECEIVE" ? opts.quantity : -Math.abs(opts.quantity);
     const newQty = round2(toNum(item.quantity) + delta);
 
+    // A delivery with a price re-values the item; every other movement leaves
+    // the valuation alone (issuing sugar does not change what sugar cost).
+    const revalue = opts.type === "RECEIVE" && typeof opts.unitCost === "number" && opts.unitCost > 0;
+    const newCost = revalue
+      ? weightedAverageCost({
+          currentQty: toNum(item.quantity),
+          currentCost: toNum(item.costPerUnit),
+          receivedQty: opts.quantity,
+          receivedCost: opts.unitCost!,
+        })
+      : toNum(item.costPerUnit);
+
     const updated = await tx.inventoryItem.update({
       where: { id: opts.itemId },
-      data: { quantity: newQty },
+      data: { quantity: newQty, ...(revalue ? { costPerUnit: newCost } : {}) },
     });
     await tx.stockMovement.create({
-      data: { itemId: opts.itemId, type: opts.type, quantity: opts.quantity, reason: opts.reason, userId: opts.userId },
+      data: {
+        itemId: opts.itemId,
+        type: opts.type,
+        quantity: opts.quantity,
+        unitCost: revalue ? opts.unitCost : undefined,
+        reason: opts.reason,
+        userId: opts.userId,
+      },
     });
-    return { item: updated, before: toNum(item.quantity), after: newQty, min: toNum(item.minThreshold) };
+    return {
+      item: updated,
+      before: toNum(item.quantity),
+      after: newQty,
+      min: toNum(item.minThreshold),
+      costBefore: toNum(item.costPerUnit),
+      costAfter: newCost,
+    };
   });
 }
 
-/** Receiving stock may resolve a critical alert → notify manager + KDS. */
-export async function receiveStock(opts: { itemId: string; quantity: number; reason?: string; userId?: string }) {
+/**
+ * Receiving stock may resolve a critical alert → notify manager + KDS.
+ *
+ * `unitCost` is the price paid per base unit on this delivery. It re-values the
+ * item by weighted average, which is what makes every recipe using it — and so
+ * every margin on the dashboards — reflect the new price.
+ */
+export async function receiveStock(opts: {
+  itemId: string;
+  quantity: number;
+  reason?: string;
+  userId?: string;
+  unitCost?: number;
+}) {
   const res = await applyMovement({ ...opts, type: "RECEIVE" });
   const wasCritical = res.before <= res.min;
   const nowOk = res.after > res.min;

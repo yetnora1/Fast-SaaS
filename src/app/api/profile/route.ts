@@ -1,7 +1,7 @@
 import { handler, ok, fail } from "@/lib/api";
 import { requireSession } from "@/lib/auth/server";
 import { prisma } from "@/lib/db/client";
-import { tenantDb } from "@/lib/db/tenant";
+import { scopedDb } from "@/lib/db/tenant";
 import { z } from "zod";
 
 const profileSchema = z.object({
@@ -18,7 +18,7 @@ const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{2,19}$/;
 
 export const GET = handler(async () => {
   const me = await requireSession();
-  const db = me.tenantId ? tenantDb(me.tenantId) : prisma;
+  const db = scopedDb(me.tenantId);
 
   const user = await db.user.findUnique({
     where: { id: me.sub },
@@ -54,7 +54,7 @@ export const GET = handler(async () => {
 
 export const PATCH = handler(async (req: Request) => {
   const me = await requireSession();
-  const db = me.tenantId ? tenantDb(me.tenantId) : prisma;
+  const db = scopedDb(me.tenantId);
 
   const body = await req.json();
   const data = profileSchema.parse(body);
