@@ -52,6 +52,14 @@
   --chart-6: #e64340;
 
   --scrollbar-thumb: #d9d9d9;
+
+  /* WeChat chat bubbles: your own messages are the lime-green #95EC69 with near
+     black text, the other party's are plain white. Instantly readable as a chat. */
+  --chat-mine: #95ec69;
+  --chat-mine-text: #191919;
+  --chat-theirs: #ffffff;
+  --chat-theirs-text: #191919;
+  --chat-canvas: #ededed;
 }
 
 html.dark {
@@ -99,6 +107,12 @@ html.dark {
   --chart-6: #fa6a69;
 
   --scrollbar-thumb: #3a3a3a;
+
+  --chat-mine: #2f6b45;
+  --chat-mine-text: #eafff2;
+  --chat-theirs: #242424;
+  --chat-theirs-text: #e3e3e3;
+  --chat-canvas: #111111;
 }
 
 html {

@@ -22,6 +22,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         { href: "/owner/equipment", label: "Equipment" },
         { href: "/owner/qr-codes", label: "QR Codes" },
         { href: "/owner/printer", label: "Printer" },
+        { href: "/owner/support", label: "Support" },
       ]}
     >
       {children}

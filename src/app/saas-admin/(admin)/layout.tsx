@@ -12,6 +12,7 @@ export default async function SaasLayout({ children }: { children: React.ReactNo
         { href: "/saas-admin/dashboard", label: "Dashboard" },
         { href: "/saas-admin/tenants", label: "Tenants" },
         { href: "/saas-admin/billing/approvals", label: "Approvals" },
+        { href: "/saas-admin/support", label: "Support Inbox" },
         { href: "/saas-admin/config", label: "Config" },
         { href: "/saas-admin/audit-log", label: "Audit Log" },
       ]}

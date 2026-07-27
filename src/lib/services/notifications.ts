@@ -13,6 +13,12 @@ export async function notifyRoleInBranch(branchId: string, role: Role, type: str
   await Promise.all(users.map((u) => notifyUser(u.id, type, title, body)));
 }
 
+/** Notify every active platform (SaaS) owner — used for cross-tenant events. */
+export async function notifySaasOwners(type: string, title: string, body: string) {
+  const owners = await prisma.user.findMany({ where: { role: "saas_owner", active: true }, select: { id: true } });
+  await Promise.all(owners.map((u) => notifyUser(u.id, type, title, body)));
+}
+
 export async function notifyTenantOwner(tenantId: string, type: string, title: string, body: string) {
   const owner = await prisma.user.findFirst({ where: { tenantId, role: "cafe_owner", active: true } });
   if (owner) {

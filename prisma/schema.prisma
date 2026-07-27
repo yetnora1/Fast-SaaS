@@ -7,7 +7,7 @@
 //   tenant_id and is always filtered by it.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   // relationJoins lets a query opt into `relationLoadStrategy: "join"`, which
   // resolves nested includes with a single LATERAL JOIN instead of one extra
   // round trip per relation level. Against the remote DB (~171ms RTT) that is
@@ -222,7 +222,7 @@ model EmailTemplate {
   id        String   @id @default(cuid())
   type      String   @unique
   subject   String
-  bodyHtml  String   @db.Text @map("body_html")
+  bodyHtml  String   @map("body_html") @db.Text
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("email_templates")
@@ -241,23 +241,23 @@ model SystemMetric {
 // ──────────────────────────── Tenancy ────────────────────────────
 
 model Tenant {
-  id          String       @id @default(cuid())
-  name        String
-  ownerUserId String?      @map("owner_user_id")
-  status      TenantStatus @default(active)
-  trialEnd    DateTime?    @map("trial_end")
-  subStart    DateTime?    @map("sub_start")
-  subEnd      DateTime?    @map("sub_end")
-  address     String?
-  phone       String?
+  id               String       @id @default(cuid())
+  name             String
+  ownerUserId      String?      @map("owner_user_id")
+  status           TenantStatus @default(active)
+  trialEnd         DateTime?    @map("trial_end")
+  subStart         DateTime?    @map("sub_start")
+  subEnd           DateTime?    @map("sub_end")
+  address          String?
+  phone            String?
   // Cafe's own customer-facing payment accounts (shown on the QR payment screen).
-  cbeAccountName   String? @map("cbe_account_name")
-  cbeAccountNumber String? @map("cbe_account_number")
-  telebirrNumber   String? @map("telebirr_number")
-  telebirrQrUrl    String? @map("telebirr_qr_url") // owner's real Telebirr receiving QR image
-  branchCount Int          @default(1) @map("branch_count")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  cbeAccountName   String?      @map("cbe_account_name")
+  cbeAccountNumber String?      @map("cbe_account_number")
+  telebirrNumber   String?      @map("telebirr_number")
+  telebirrQrUrl    String?      @map("telebirr_qr_url") // owner's real Telebirr receiving QR image
+  branchCount      Int          @default(1) @map("branch_count")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
 
   users          User[]
   branches       Branch[]
@@ -270,6 +270,7 @@ model Tenant {
   wasteLogs      WasteLog[]
   auditLogs      AuditLog[]
   features       TenantFeature[]
+  supportThreads SupportThread[]
   invitations    Invitation[]
   equipmentItems EquipmentItem[]
   salaryConfigs  SalaryConfig[]
@@ -293,40 +294,40 @@ model TenantFeature {
 // ──────────────────────────── Users / Auth ────────────────────────────
 
 model User {
-  id           String   @id @default(cuid())
-  tenantId     String?  @map("tenant_id") // null for platform-level saas_owner
-  name         String
-  email        String
-  username     String?  // self-chosen login handle; globally unique, stored lowercased
-  passwordHash String?  @map("password_hash")
-  role         Role
-  branchId     String?  @map("branch_id")
-  pinHash      String?  @map("pin_hash")
-  active       Boolean  @default(true)
-  emailVerified DateTime? @map("email_verified")
-  mfaSecret    String?  @map("mfa_secret")
-  phone        String?
-  age          Int?
-  bio          String?  @db.Text
-  avatarUrl    String?  @map("avatar_url")
-  emergencyContact String? @map("emergency_contact")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id               String    @id @default(cuid())
+  tenantId         String?   @map("tenant_id") // null for platform-level saas_owner
+  name             String
+  email            String
+  username         String? // self-chosen login handle; globally unique, stored lowercased
+  passwordHash     String?   @map("password_hash")
+  role             Role
+  branchId         String?   @map("branch_id")
+  pinHash          String?   @map("pin_hash")
+  active           Boolean   @default(true)
+  emailVerified    DateTime? @map("email_verified")
+  mfaSecret        String?   @map("mfa_secret")
+  phone            String?
+  age              Int?
+  bio              String?   @db.Text
+  avatarUrl        String?   @map("avatar_url")
+  emergencyContact String?   @map("emergency_contact")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  tenant          Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branch          Branch?          @relation(fields: [branchId], references: [id])
-  ordersAsWaiter  Order[]          @relation("WaiterOrders")
-  paymentsTaken   Payment[]
-  shiftsOpened    Shift[]          @relation("ShiftOpenedBy")
-  goodsIssued     GoodsIssue[]     @relation("GoodsIssuedBy")
-  goodsReceived   GoodsIssue[]     @relation("GoodsReceivedBy")
-  schedules       StaffSchedule[]
-  attendance      StaffAttendance[]
-  notifications   Notification[]
-  ratings          StaffRating[]    @relation("RatedStaff")
-  equipmentCreated EquipmentItem[]  @relation("EquipmentCreatedBy")
-  salaryConfigs    SalaryConfig[]   @relation("SalaryUser")
-  payrollRecords   PayrollRecord[]  @relation("PayrollUser")
+  tenant           Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch           Branch?           @relation(fields: [branchId], references: [id])
+  ordersAsWaiter   Order[]           @relation("WaiterOrders")
+  paymentsTaken    Payment[]
+  shiftsOpened     Shift[]           @relation("ShiftOpenedBy")
+  goodsIssued      GoodsIssue[]      @relation("GoodsIssuedBy")
+  goodsReceived    GoodsIssue[]      @relation("GoodsReceivedBy")
+  schedules        StaffSchedule[]
+  attendance       StaffAttendance[]
+  notifications    Notification[]
+  ratings          StaffRating[]     @relation("RatedStaff")
+  equipmentCreated EquipmentItem[]   @relation("EquipmentCreatedBy")
+  salaryConfigs    SalaryConfig[]    @relation("SalaryUser")
+  payrollRecords   PayrollRecord[]   @relation("PayrollUser")
 
   @@unique([email])
   @@unique([username])
@@ -399,12 +400,12 @@ model CafeTable {
 // ──────────────────────────── Menu ────────────────────────────
 
 model MenuCategory {
-  id        String   @id @default(cuid())
-  tenantId  String   @map("tenant_id")
+  id        String  @id @default(cuid())
+  tenantId  String  @map("tenant_id")
   name      String
-  nameAm    String?  @map("name_am")
-  sortOrder Int      @default(0) @map("sort_order")
-  active    Boolean  @default(true)
+  nameAm    String? @map("name_am")
+  sortOrder Int     @default(0) @map("sort_order")
+  active    Boolean @default(true)
 
   tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   items  MenuItem[]
@@ -430,7 +431,7 @@ model MenuItem {
   prepTargetSec Int           @default(300) @map("prep_target_sec")
   state         MenuItemState @default(DRAFT)
   availableFrom String?       @map("available_from") // "06:00"
-  availableTo   String?       @map("available_to")   // "11:00"
+  availableTo   String?       @map("available_to") // "11:00"
   createdAt     DateTime      @default(now()) @map("created_at")
 
   category   MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -446,7 +447,7 @@ model Modifier {
   itemId     String  @map("item_id")
   groupName  String  @map("group_name") // "Size", "Sugar", "Temperature", "Add-ons"
   option     String
-  extraPrice Decimal @default(0) @db.Decimal(12, 2) @map("extra_price")
+  extraPrice Decimal @default(0) @map("extra_price") @db.Decimal(12, 2)
 
   item MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
@@ -457,32 +458,32 @@ model Modifier {
 // ──────────────────────────── Orders ────────────────────────────
 
 model Order {
-  id            String      @id @default(cuid())
-  tenantId      String      @map("tenant_id")
-  branchId      String      @map("branch_id")
-  tableId       String?     @map("table_id")
-  waiterId      String?     @map("waiter_id")
-  status        OrderStatus @default(DRAFT)
-  type          OrderType   @default(DINE_IN)
-  allergyAck    Boolean     @default(false) @map("allergy_ack")
-  heldForBar    Boolean     @default(false) @map("held_for_bar")
-  txRef         String?     @map("tx_ref")
-  receiptUrl    String?     @map("receipt_url")
-  guestTableNumber Int?     @map("guest_table_number") // table # typed by a QR customer, even if no CafeTable row matches
-  declineReason String?     @map("decline_reason") @db.Text
-  feedbackRating Int?       @map("feedback_rating")
-  feedbackComment String?     @db.Text @map("feedback_comment")
-  submittedAt   DateTime?   @map("submitted_at")
-  createdAt     DateTime    @default(now()) @map("created_at")
-  updatedAt     DateTime    @updatedAt @map("updated_at")
+  id               String      @id @default(cuid())
+  tenantId         String      @map("tenant_id")
+  branchId         String      @map("branch_id")
+  tableId          String?     @map("table_id")
+  waiterId         String?     @map("waiter_id")
+  status           OrderStatus @default(DRAFT)
+  type             OrderType   @default(DINE_IN)
+  allergyAck       Boolean     @default(false) @map("allergy_ack")
+  heldForBar       Boolean     @default(false) @map("held_for_bar")
+  txRef            String?     @map("tx_ref")
+  receiptUrl       String?     @map("receipt_url")
+  guestTableNumber Int?        @map("guest_table_number") // table # typed by a QR customer, even if no CafeTable row matches
+  declineReason    String?     @map("decline_reason") @db.Text
+  feedbackRating   Int?        @map("feedback_rating")
+  feedbackComment  String?     @map("feedback_comment") @db.Text
+  submittedAt      DateTime?   @map("submitted_at")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
 
-  tenant   Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branch   Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  table    CafeTable?  @relation(fields: [tableId], references: [id])
-  waiter   User?       @relation("WaiterOrders", fields: [waiterId], references: [id])
-  items    OrderItem[]
-  payments Payment[]
-  refunds  Refund[]
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch          Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  table           CafeTable?       @relation(fields: [tableId], references: [id])
+  waiter          User?            @relation("WaiterOrders", fields: [waiterId], references: [id])
+  items           OrderItem[]
+  payments        Payment[]
+  refunds         Refund[]
   stateLogs       OrderStateLog[]
   paymentAttempts PaymentAttempt[]
   riskFlags       RiskFlag[]
@@ -498,11 +499,11 @@ model OrderStateLog {
   orderId    String      @map("order_id")
   fromStatus OrderStatus @map("from_status")
   toStatus   OrderStatus @map("to_status")
-  actor      String?     // User ID, or "system"
+  actor      String? // User ID, or "system"
   reason     String?     @db.Text
   createdAt  DateTime    @default(now()) @map("created_at")
 
-  order      Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@map("order_state_logs")
@@ -512,13 +513,13 @@ model PaymentAttempt {
   id            String        @id @default(cuid())
   orderId       String        @map("order_id")
   method        PaymentMethod
-  status        String        // "PENDING", "SUCCESS", "FAILED"
+  status        String // "PENDING", "SUCCESS", "FAILED"
   providerRef   String?       @map("provider_ref")
   attemptNumber Int           @map("attempt_number")
   reason        String?       @db.Text
   createdAt     DateTime      @default(now()) @map("created_at")
 
-  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@map("payment_attempts")
@@ -531,7 +532,7 @@ model RiskFlag {
   resolvedBy String?   @map("resolved_by")
   resolvedAt DateTime? @map("resolved_at")
 
-  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@map("risk_flags")
@@ -542,7 +543,7 @@ model OrderItem {
   orderId       String          @map("order_id")
   menuItemId    String          @map("menu_item_id")
   quantity      Int             @default(1)
-  unitPrice     Decimal         @db.Decimal(12, 2) @map("unit_price")
+  unitPrice     Decimal         @map("unit_price") @db.Decimal(12, 2)
   modifiersJson Json?           @map("modifiers_json")
   notes         String?         @db.Text
   allergyNote   String?         @map("allergy_note")
@@ -569,7 +570,7 @@ model Payment {
   method     PaymentMethod
   amount     Decimal       @db.Decimal(12, 2)
   tendered   Decimal?      @db.Decimal(12, 2)
-  changeDue  Decimal?      @db.Decimal(12, 2) @map("change_due")
+  changeDue  Decimal?      @map("change_due") @db.Decimal(12, 2)
   reference  String?
   status     PaymentStatus @default(PENDING)
   cashierId  String?       @map("cashier_id")
@@ -653,9 +654,9 @@ model Shift {
   openedBy     String      @map("opened_by")
   openTime     DateTime    @default(now()) @map("open_time")
   closeTime    DateTime?   @map("close_time")
-  openingFloat Decimal     @db.Decimal(12, 2) @map("opening_float")
-  actualCash   Decimal?    @db.Decimal(12, 2) @map("actual_cash")
-  expectedCash Decimal?    @db.Decimal(12, 2) @map("expected_cash")
+  openingFloat Decimal     @map("opening_float") @db.Decimal(12, 2)
+  actualCash   Decimal?    @map("actual_cash") @db.Decimal(12, 2)
+  expectedCash Decimal?    @map("expected_cash") @db.Decimal(12, 2)
   variance     Decimal?    @db.Decimal(12, 2)
   status       ShiftStatus @default(OPEN)
 
@@ -674,7 +675,7 @@ model StaffSchedule {
   branchId   String         @map("branch_id")
   date       DateTime       @db.Date
   shiftStart String         @map("shift_start") // "06:00"
-  shiftEnd   String         @map("shift_end")   // "14:00"
+  shiftEnd   String         @map("shift_end") // "14:00"
   status     ScheduleStatus @default(DRAFT)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -721,15 +722,15 @@ model InventoryItem {
   name         String
   unit         String   @default("unit")
   quantity     Decimal  @default(0) @db.Decimal(14, 3)
-  minThreshold Decimal  @default(0) @db.Decimal(14, 3) @map("min_threshold")
-  costPerUnit  Decimal  @default(0) @db.Decimal(12, 2) @map("cost_per_unit")
+  minThreshold Decimal  @default(0) @map("min_threshold") @db.Decimal(14, 3)
+  costPerUnit  Decimal  @default(0) @map("cost_per_unit") @db.Decimal(12, 2)
   supplierId   String?  @map("supplier_id")
   available    Boolean  @default(true)
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branch    Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  supplier  Supplier?       @relation(fields: [supplierId], references: [id])
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch      Branch              @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  supplier    Supplier?           @relation(fields: [supplierId], references: [id])
   movements   StockMovement[]
   poItems     PurchaseOrderItem[]
   wasteLogs   WasteLog[]
@@ -808,8 +809,8 @@ model PurchaseOrder {
   supplierId   String?             @map("supplier_id")
   status       PurchaseOrderStatus @default(DRAFT)
   total        Decimal             @default(0) @db.Decimal(12, 2)
-  paidAmount   Decimal             @default(0) @db.Decimal(12, 2) @map("paid_amount")
-  creditAmount Decimal             @default(0) @db.Decimal(12, 2) @map("credit_amount")
+  paidAmount   Decimal             @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  creditAmount Decimal             @default(0) @map("credit_amount") @db.Decimal(12, 2)
   isCredit     Boolean             @default(false) @map("is_credit")
   notes        String?             @db.Text
   approvedBy   String?             @map("approved_by")
@@ -828,7 +829,7 @@ model PurchaseOrderItem {
   poId            String  @map("po_id")
   inventoryItemId String  @map("inventory_item_id")
   quantity        Decimal @db.Decimal(14, 3)
-  unitCost        Decimal @db.Decimal(12, 2) @map("unit_cost")
+  unitCost        Decimal @map("unit_cost") @db.Decimal(12, 2)
 
   po            PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
   inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
@@ -838,14 +839,14 @@ model PurchaseOrderItem {
 }
 
 model RestockRequest {
-  id        String        @id @default(cuid())
-  tenantId  String        @map("tenant_id")
-  itemId    String        @map("item_id")
-  branchId  String        @map("branch_id")
-  quantity  Decimal       @db.Decimal(14, 3)
-  status    RestockStatus @default(REQUESTED)
-  requestedBy String?     @map("requested_by")
-  createdAt DateTime      @default(now()) @map("created_at")
+  id          String        @id @default(cuid())
+  tenantId    String        @map("tenant_id")
+  itemId      String        @map("item_id")
+  branchId    String        @map("branch_id")
+  quantity    Decimal       @db.Decimal(14, 3)
+  status      RestockStatus @default(REQUESTED)
+  requestedBy String?       @map("requested_by")
+  createdAt   DateTime      @default(now()) @map("created_at")
 
   @@index([tenantId])
   @@map("restock_requests")
@@ -865,13 +866,13 @@ model StockCount {
 }
 
 model StockCountLine {
-  id            String  @id @default(cuid())
-  stockCountId  String  @map("stock_count_id")
-  itemId        String  @map("item_id")
-  systemQty     Decimal @db.Decimal(14, 3) @map("system_qty")
-  countedQty    Decimal? @db.Decimal(14, 3) @map("counted_qty")
-  variance      Decimal? @db.Decimal(14, 3)
-  reason        String?
+  id           String   @id @default(cuid())
+  stockCountId String   @map("stock_count_id")
+  itemId       String   @map("item_id")
+  systemQty    Decimal  @map("system_qty") @db.Decimal(14, 3)
+  countedQty   Decimal? @map("counted_qty") @db.Decimal(14, 3)
+  variance     Decimal? @db.Decimal(14, 3)
+  reason       String?
 
   stockCount StockCount @relation(fields: [stockCountId], references: [id], onDelete: Cascade)
 
@@ -936,7 +937,7 @@ model EquipmentItem {
   id              String              @id @default(cuid())
   tenantId        String              @map("tenant_id")
   name            String
-  category        String              // free text; UI suggests defaults
+  category        String // free text; UI suggests defaults
   department      EquipmentDepartment
   quantity        Int                 @default(0)
   condition       EquipmentCondition  @default(NEW)
@@ -963,7 +964,7 @@ model SalaryConfig {
   id            String   @id @default(cuid())
   tenantId      String   @map("tenant_id")
   userId        String   @map("user_id")
-  grossSalary   Decimal  @db.Decimal(12, 2) @map("gross_salary")
+  grossSalary   Decimal  @map("gross_salary") @db.Decimal(12, 2)
   effectiveFrom DateTime @map("effective_from")
   createdBy     String   @map("created_by")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -982,15 +983,15 @@ model PayrollRecord {
   userId        String        @map("user_id")
   month         Int
   year          Int
-  grossSalary   Decimal       @db.Decimal(12, 2) @map("gross_salary")
+  grossSalary   Decimal       @map("gross_salary") @db.Decimal(12, 2)
   totalDays     Int           @default(30) @map("total_days")
-  workedDays    Decimal       @db.Decimal(5, 2) @map("worked_days")
-  absentDays    Decimal       @db.Decimal(5, 2) @map("absent_days")
-  earnedSalary  Decimal       @db.Decimal(12, 2) @map("earned_salary")
+  workedDays    Decimal       @map("worked_days") @db.Decimal(5, 2)
+  absentDays    Decimal       @map("absent_days") @db.Decimal(5, 2)
+  earnedSalary  Decimal       @map("earned_salary") @db.Decimal(12, 2)
   pension       Decimal       @db.Decimal(12, 2)
-  taxableIncome Decimal       @db.Decimal(12, 2) @map("taxable_income")
-  incomeTax     Decimal       @db.Decimal(12, 2) @map("income_tax")
-  netSalary     Decimal       @db.Decimal(12, 2) @map("net_salary")
+  taxableIncome Decimal       @map("taxable_income") @db.Decimal(12, 2)
+  incomeTax     Decimal       @map("income_tax") @db.Decimal(12, 2)
+  netSalary     Decimal       @map("net_salary") @db.Decimal(12, 2)
   status        PayrollStatus @default(DRAFT)
   processedBy   String?       @map("processed_by")
   approvedBy    String?       @map("approved_by")
@@ -1003,4 +1004,74 @@ model PayrollRecord {
   @@unique([tenantId, userId, month, year])
   @@index([tenantId])
   @@map("payroll_records")
+}
+
+// ──────────────────── Support (cafe owner ⇄ platform) ────────────────────
+//
+// A cafe owner raises a thread; the SaaS owner sees every tenant's threads in
+// one inbox and replies. Only those two roles participate — managers, waiters
+// and the rest of the staff have no access.
+
+enum SupportCategory {
+  PROBLEM
+  MODIFICATION
+  QUESTION
+  BILLING
+}
+
+enum SupportStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model SupportThread {
+  id       String          @id @default(cuid())
+  tenantId String          @map("tenant_id")
+  subject  String
+  category SupportCategory @default(PROBLEM)
+  status   SupportStatus   @default(OPEN)
+
+  // Author is denormalised, same convention as AuditLog: a support history has
+  // to keep reading correctly long after the person who opened it is gone.
+  openedById   String @map("opened_by_id")
+  openedByName String @map("opened_by_name")
+
+  // Sort key for the inbox — a thread with a fresh reply floats to the top
+  // without needing to aggregate over its messages.
+  lastMessageAt DateTime @default(now()) @map("last_message_at")
+
+  // One unread flag per side so each inbox badges independently: the platform
+  // reading a thread must not clear the cafe's badge, or vice versa.
+  unreadForPlatform Boolean @default(true) @map("unread_for_platform")
+  unreadForCafe     Boolean @default(false) @map("unread_for_cafe")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Live relation rather than a snapshotted name: the whole point is that the
+  // platform sees which cafe a message came from, and a cafe that renames
+  // itself should show its current name on every thread it ever opened.
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages SupportMessage[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([lastMessageAt])
+  @@map("support_threads")
+}
+
+model SupportMessage {
+  id         String   @id @default(cuid())
+  threadId   String   @map("thread_id")
+  authorId   String   @map("author_id")
+  authorName String   @map("author_name")
+  authorRole Role     @map("author_role")
+  body       String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  thread SupportThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@map("support_messages")
 }
