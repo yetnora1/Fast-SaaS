@@ -3,7 +3,12 @@
     "allow": [
       "Skill(firecrawl:firecrawl-parse)",
       "Skill(firecrawl:firecrawl-parse:*)",
-      "Bash(netstat -ano)"
+      "Bash(netstat -ano)",
+      "PowerShell(npx prisma db push --skip-generate)",
+      "PowerShell(npx prisma generate)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Select-Object ProcessId, @{N='Cmd';E={$_.CommandLine.Substring\\(0, [Math]::Min\\(160, $_.CommandLine.Length\\)\\)}} | Format-List)",
+      "PowerShell(npx tsc --noEmit)",
+      "PowerShell(npx tsx scratch/verify-payfirst-flow.ts)"
     ]
   }
 }
