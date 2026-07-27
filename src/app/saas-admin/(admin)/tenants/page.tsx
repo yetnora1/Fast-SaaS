@@ -80,15 +80,10 @@ export default function TenantsPage() {
                   ) : (
                     <span className="px-2 py-2 text-xs text-brand-muted">—</span>
                   )}
-                  {/* Ghost, not danger: Suspend is the reversible action and should
-                      stay the loud one. Remove is permanent, so it is deliberately
-                      quiet here and does its shouting inside the confirmation. */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="border-status-red/30 text-status-redText hover:bg-status-red/10"
-                    onClick={() => setRemoving(tn)}
-                  >
+                  {/* Solid red, matching Suspend — the destructive actions read as
+                      one group. The type-the-name confirmation is what actually
+                      guards this, not the button's weight. */}
+                  <Button variant="danger" size="sm" onClick={() => setRemoving(tn)}>
                     {t("removeCafe")}
                   </Button>
                 </td>
